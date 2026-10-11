@@ -1,6 +1,8 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 html, body, #root { height: 100%; margin: 0; }
+/* #root centres the app column. It must be the flex container: the column is its child, not body's. */
+#root { display: flex; align-items: center; justify-content: center; }
 body {
   background: var(--surface-canvas-dark);
   color: var(--text-primary);
@@ -24,7 +26,6 @@ img, svg { display: block; max-width: 100%; }
   color: var(--text-primary);
 }
 @media (min-width: 560px) and (min-height: 760px) {
-  body { display: grid; place-items: center; }
   .app { height: min(100dvh - 48px, 880px); border-radius: var(--radius-xl); box-shadow: var(--shadow-shell); }
 }
 
