@@ -1,0 +1,173 @@
+{
+  "id": "mercury",
+  "title": "Mercury",
+  "url": "https://mercury.com",
+  "tags": [
+    "fintech",
+    "refined",
+    "saas"
+  ],
+  "colors": {
+    "principle": "Deep, muted dark backgrounds with high-contrast light text and a single vibrant blue accent.",
+    "bg": "#171721",
+    "bgSoft": "#1E1E2A",
+    "bgQuiet": "#9CB4E8",
+    "ink": "#EDEDF3",
+    "inkSoft": "#C3C3CC",
+    "muted": "#C3C3CC",
+    "mutedSoft": null,
+    "accent": "#5266EB",
+    "line": "rgba(237,237,243,0.1)"
+  },
+  "typography": {
+    "rules": [
+      "Use transitional-serif for prominent display headlines to establish a premium editorial tone.",
+      "Use humanist-sans for body text and navigation to ensure high readability and a friendly demeanor.",
+      "Avoid decorative or overly stylized typefaces that might detract from the refined aesthetic."
+    ],
+    "scaleUses": [
+      "Hero headline",
+      "Section headers",
+      "Hero subhead",
+      "General text",
+      "Navigation and small labels"
+    ],
+    "display": "transitional-serif",
+    "body": "humanist-sans",
+    "mono": null,
+    "scale": [
+      {
+        "token": "display",
+        "size": 56,
+        "lh": 1.0,
+        "weight": 500,
+        "ls": "-1px"
+      },
+      {
+        "token": "h2",
+        "size": 42,
+        "lh": 1.1,
+        "weight": 500,
+        "ls": "-0.5px"
+      },
+      {
+        "token": "subtitle",
+        "size": 28,
+        "lh": 1.4,
+        "weight": 400,
+        "ls": "0"
+      },
+      {
+        "token": "body",
+        "size": 16,
+        "lh": 1.5,
+        "weight": 420,
+        "ls": "0.24px"
+      },
+      {
+        "token": "caption",
+        "size": 12,
+        "lh": 1.3,
+        "weight": 400,
+        "ls": "0.42px"
+      }
+    ]
+  },
+  "spacing": {
+    "rhythm": "Standard 4px base grid with specific horizontal and vertical padding increments.",
+    "base": 4,
+    "scale": [
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      32,
+      40,
+      48,
+      64,
+      80,
+      96,
+      128
+    ]
+  },
+  "surfaces": {
+    "shadows": [
+      "0px 0px 6px 0px rgba(86, 86, 118, 0.1)"
+    ],
+    "borders": "1px solid rgba(237,237,243,0.1)",
+    "radius": {
+      "sm": 4,
+      "md": 8,
+      "lg": 12,
+      "pill": 999
+    }
+  },
+  "layout": {
+    "skeleton": "Full-bleed photographic hero followed by constrained grid sections.",
+    "container": 1280,
+    "paragraph": 680,
+    "columns": 12,
+    "gutter": 24,
+    "breakpoints": [
+      768,
+      1024
+    ]
+  },
+  "motion": {
+    "patterns": [
+      "Smooth background-color and text-color transitions on hover states.",
+      "Subtle transform transitions for interactive elements."
+    ],
+    "durations": {
+      "micro": 220,
+      "small": 300,
+      "medium": 500
+    },
+    "easing": "cubic-bezier(0, 0, 0.2, 1)"
+  },
+  "identity": {
+    "keywords": [
+      "fintech",
+      "banking",
+      "startup",
+      "trust",
+      "modernity"
+    ],
+    "analogy": "A premium fintech startup that blends editorial photography with clean SaaS UI to project reliability and modern innovation.",
+    "oneLiner": "Premium fintech interface combining cinematic photography with refined, humanist typography."
+  },
+  "components": {
+    "button": "Pill-shaped primary buttons with a solid blue (#5266EB) background and white text.",
+    "card": "Large feature cards with rounded corners (12px) and soft, subtle shadows.",
+    "chip": "Not prominently featured in the visible sections.",
+    "input": "Integrated inline form with a transparent background, rounded pill shape, and placeholder text.",
+    "hero": "Full-viewport height, background image with centered serif headline and inline form."
+  },
+  "interaction": {
+    "hover": "Color and background-color transitions over 300ms.",
+    "click": "Transform scale transitions over 300ms.",
+    "transition": "Unified transition properties applied globally for consistency.",
+    "keyboard": "Standard focus management, though specific focus styles are not highly visible."
+  },
+  "voice": {
+    "tone": "Confident, professional, and forward-thinking.",
+    "headlineStyle": "Bold, concise, and declarative (e.g., 'Radically different banking').",
+    "ctaStyle": "Direct and action-oriented (e.g., 'Open account').",
+    "avoid": [
+      "Jargon-heavy language",
+      "Overly aggressive sales pitches",
+      "Cluttered visual layouts"
+    ]
+  },
+  "donts": [
+    "don't use bright, saturated backgrounds — screenshot shows deep, muted dark backgrounds instead.",
+    "don't use purely geometric or grotesque sans-serif for headlines — screenshot shows a refined transitional serif font.",
+    "don't use sharp, boxy corners — screenshot shows consistently rounded corners (4px to pill-shaped).",
+    "don't use multiple competing accent colors — screenshot shows a single dominant blue (#5266EB) accent.",
+    "don't use dense, cluttered layouts — screenshot shows generous whitespace and centered alignment.",
+    "don't use harsh, high-contrast borders — screenshot shows very subtle, semi-transparent dividers."
+  ],
+  "systemPrompt": "A premium fintech SaaS design system characterized by deep, muted dark backgrounds and a single vibrant blue accent. It features a mix of transitional-serif for display headlines and humanist-sans for body text, creating an editorial yet modern feel. The layout is clean and spacious, utilizing generous whitespace and centered alignment. Key colors include a dark navy background (#171721), light off-white text (#EDEDF3), and a signature blue (#5266EB) for primary actions. Critical constraints: maintain the refined, uncluttered aesthetic; avoid multiple accent colors; and ensure high readability through proper type contrast and spacing."
+}

@@ -1,0 +1,65 @@
+[
+  {
+    "family": "arcadia",
+    "style": "normal",
+    "weight": "360 500",
+    "stretch": "normal",
+    "status": "loaded"
+  },
+  {
+    "family": "arcadia Fallback",
+    "style": "normal",
+    "weight": "normal",
+    "stretch": "normal",
+    "status": "unloaded"
+  },
+  {
+    "family": "arcadiaDisplay",
+    "style": "normal",
+    "weight": "320 480",
+    "stretch": "normal",
+    "status": "loaded"
+  },
+  {
+    "family": "arcadiaDisplay Fallback",
+    "style": "normal",
+    "weight": "normal",
+    "stretch": "normal",
+    "status": "unloaded"
+  },
+  {
+    "family": "tiemposHeadline",
+    "style": "normal",
+    "weight": "400",
+    "stretch": "normal",
+    "status": "unloaded"
+  },
+  {
+    "family": "tiemposHeadline",
+    "style": "italic",
+    "weight": "400",
+    "stretch": "normal",
+    "status": "unloaded"
+  },
+  {
+    "family": "tiemposHeadline",
+    "style": "italic",
+    "weight": "300",
+    "stretch": "normal",
+    "status": "unloaded"
+  },
+  {
+    "family": "tiemposHeadline",
+    "style": "italic",
+    "weight": "500",
+    "stretch": "normal",
+    "status": "unloaded"
+  },
+  {
+    "family": "tiemposHeadline Fallback",
+    "style": "normal",
+    "weight": "normal",
+    "stretch": "normal",
+    "status": "unloaded"
+  }
+]

@@ -1,0 +1,52 @@
+/* SPAL v2 — Depth, motion, atmosphere.
+   Depth: lines over shadows. A hairline ring does the work; shadow only appears when something truly floats.
+   Motion: "settle" — fast out, long gentle stop. No bounce, no spring overshoot.
+   Atmosphere: "the horizon" — a low band of green light rising from the bottom edge of hero surfaces. */
+:root{
+  /* Depth — three levels */
+  --shadow-1:0 0 0 1px rgba(20,26,23,0.06), 0 1px 2px rgba(20,26,23,0.04);                                   /* resting card */
+  --shadow-2:0 0 0 1px rgba(20,26,23,0.06), 0 2px 4px rgba(20,26,23,0.04), 0 12px 32px -12px rgba(20,26,23,0.18); /* menus, toasts, FAB */
+  --shadow-3:0 0 0 1px rgba(20,26,23,0.06), 0 24px 56px -16px rgba(20,26,23,0.32);                            /* sheets, dialogs */
+  --highlight-top:inset 0 1px 0 rgba(255,255,255,0.7); /* @kind shadow */   /* light surfaces catch light on their top edge */
+  --highlight-top-dark:inset 0 1px 0 rgba(255,255,255,0.05); /* @kind shadow */
+
+  /* Tactile controls — a lit top edge and a weighted bottom edge, no glow */
+  --shadow-tactile:inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(0,0,0,0.14), 0 1px 2px rgba(8,51,31,0.30), 0 0 0 1px rgba(8,51,31,0.5);
+  --shadow-tactile-light:inset 0 -1px 0 rgba(20,26,23,0.05), 0 0 0 1px rgba(20,26,23,0.10), 0 1px 2px rgba(20,26,23,0.06);
+  --focus-ring:0 0 0 3px rgba(16,120,67,0.22);
+
+  /* Motion */
+  --ease-out:cubic-bezier(0.2,0,0,1);       /* @kind other */ /* default: enter, move, settle */
+  --ease-in-out:cubic-bezier(0.65,0,0.35,1); /* @kind other */ /* on-screen morphs */
+  --ease-in:cubic-bezier(0.4,0,1,1);        /* @kind other */ /* exits only */
+  --dur-1:120ms; /* @kind other */ /* press */
+  --dur-2:200ms; /* @kind other */ /* hover, color, small state */
+  --dur-3:320ms; /* @kind other */ /* enter, sheets, toasts */
+  --dur-4:560ms; /* @kind other */ /* numbers settling, screen transitions */
+  --stagger:30ms; /* @kind other */
+  --rise:6px;     /* @kind other */ /* entrance travel */
+  --press-scale:0.98; /* @kind other */
+
+  /* Atmosphere — "aura": soft analogous color fields (mint, sage, lime, sand) with eased falloff, settled low like light at the horizon.
+     Static tokens for backgrounds; use the <Aura> component for live, drifting versions on hero surfaces. Always layer --texture-grain first. */
+  --atmos-night:radial-gradient(70% 55% at 18% 96%,rgba(30,122,76,0.75) 0%,rgba(30,122,76,0.555) 19%,rgba(30,122,76,0.405) 34%,rgba(30,122,76,0.285) 47%,rgba(30,122,76,0.195) 56.5%,rgba(30,122,76,0.128) 65%,rgba(30,122,76,0.075) 73%,rgba(30,122,76,0.038) 80.2%,rgba(30,122,76,0.015) 86.1%,rgba(30,122,76,0.007) 91%,rgba(30,122,76,0) 100%),radial-gradient(60% 50% at 92% 82%,rgba(27,92,90,0.7) 0%,rgba(27,92,90,0.518) 19%,rgba(27,92,90,0.378) 34%,rgba(27,92,90,0.266) 47%,rgba(27,92,90,0.182) 56.5%,rgba(27,92,90,0.119) 65%,rgba(27,92,90,0.07) 73%,rgba(27,92,90,0.035) 80.2%,rgba(27,92,90,0.014) 86.1%,rgba(27,92,90,0.007) 91%,rgba(27,92,90,0) 100%),radial-gradient(38% 22% at 46% 104%,rgba(140,211,168,0.45) 0%,rgba(140,211,168,0.333) 19%,rgba(140,211,168,0.243) 34%,rgba(140,211,168,0.171) 47%,rgba(140,211,168,0.117) 56.5%,rgba(140,211,168,0.077) 65%,rgba(140,211,168,0.045) 73%,rgba(140,211,168,0.023) 80.2%,rgba(140,211,168,0.009) 86.1%,rgba(140,211,168,0.005) 91%,rgba(140,211,168,0) 100%),radial-gradient(36% 30% at 78% 100%,rgba(138,95,52,0.35) 0%,rgba(138,95,52,0.259) 19%,rgba(138,95,52,0.189) 34%,rgba(138,95,52,0.133) 47%,rgba(138,95,52,0.091) 56.5%,rgba(138,95,52,0.059) 65%,rgba(138,95,52,0.035) 73%,rgba(138,95,52,0.017) 80.2%,rgba(138,95,52,0.007) 86.1%,rgba(138,95,52,0.003) 91%,rgba(138,95,52,0) 100%),radial-gradient(55% 45% at 0% 0%,rgba(47,74,36,0.35) 0%,rgba(47,74,36,0.259) 19%,rgba(47,74,36,0.189) 34%,rgba(47,74,36,0.133) 47%,rgba(47,74,36,0.091) 56.5%,rgba(47,74,36,0.059) 65%,rgba(47,74,36,0.035) 73%,rgba(47,74,36,0.017) 80.2%,rgba(47,74,36,0.007) 86.1%,rgba(47,74,36,0.003) 91%,rgba(47,74,36,0) 100%),#0B100E; /* @kind other */
+  --atmos-dawn:radial-gradient(70% 55% at 10% 100%,rgba(198,232,210,0.95) 0%,rgba(198,232,210,0.703) 19%,rgba(198,232,210,0.513) 34%,rgba(198,232,210,0.361) 47%,rgba(198,232,210,0.247) 56.5%,rgba(198,232,210,0.162) 65%,rgba(198,232,210,0.095) 73%,rgba(198,232,210,0.048) 80.2%,rgba(198,232,210,0.019) 86.1%,rgba(198,232,210,0.009) 91%,rgba(198,232,210,0) 100%),radial-gradient(60% 50% at 95% 92%,rgba(227,238,190,0.9) 0%,rgba(227,238,190,0.666) 19%,rgba(227,238,190,0.486) 34%,rgba(227,238,190,0.342) 47%,rgba(227,238,190,0.234) 56.5%,rgba(227,238,190,0.153) 65%,rgba(227,238,190,0.09) 73%,rgba(227,238,190,0.045) 80.2%,rgba(227,238,190,0.018) 86.1%,rgba(227,238,190,0.009) 91%,rgba(227,238,190,0) 100%),radial-gradient(45% 35% at 55% 108%,rgba(245,216,189,0.85) 0%,rgba(245,216,189,0.629) 19%,rgba(245,216,189,0.459) 34%,rgba(245,216,189,0.323) 47%,rgba(245,216,189,0.221) 56.5%,rgba(245,216,189,0.145) 65%,rgba(245,216,189,0.085) 73%,rgba(245,216,189,0.043) 80.2%,rgba(245,216,189,0.017) 86.1%,rgba(245,216,189,0.009) 91%,rgba(245,216,189,0) 100%),radial-gradient(55% 45% at 100% 0%,rgba(211,229,236,0.7) 0%,rgba(211,229,236,0.518) 19%,rgba(211,229,236,0.378) 34%,rgba(211,229,236,0.266) 47%,rgba(211,229,236,0.182) 56.5%,rgba(211,229,236,0.119) 65%,rgba(211,229,236,0.07) 73%,rgba(211,229,236,0.035) 80.2%,rgba(211,229,236,0.014) 86.1%,rgba(211,229,236,0.007) 91%,rgba(211,229,236,0) 100%),radial-gradient(50% 45% at 0% 20%,rgba(220,235,223,0.6) 0%,rgba(220,235,223,0.444) 19%,rgba(220,235,223,0.324) 34%,rgba(220,235,223,0.228) 47%,rgba(220,235,223,0.156) 56.5%,rgba(220,235,223,0.102) 65%,rgba(220,235,223,0.06) 73%,rgba(220,235,223,0.03) 80.2%,rgba(220,235,223,0.012) 86.1%,rgba(220,235,223,0.006) 91%,rgba(220,235,223,0) 100%),#F6F6F1; /* @kind other */
+  --atmos-mist:radial-gradient(60% 70% at 15% 15%,rgba(255,255,255,1) 0%,rgba(255,255,255,0.74) 19%,rgba(255,255,255,0.54) 34%,rgba(255,255,255,0.38) 47%,rgba(255,255,255,0.26) 56.5%,rgba(255,255,255,0.17) 65%,rgba(255,255,255,0.1) 73%,rgba(255,255,255,0.05) 80.2%,rgba(255,255,255,0.02) 86.1%,rgba(255,255,255,0.01) 91%,rgba(255,255,255,0) 100%),radial-gradient(65% 60% at 90% 95%,rgba(207,230,215,0.9) 0%,rgba(207,230,215,0.666) 19%,rgba(207,230,215,0.486) 34%,rgba(207,230,215,0.342) 47%,rgba(207,230,215,0.234) 56.5%,rgba(207,230,215,0.153) 65%,rgba(207,230,215,0.09) 73%,rgba(207,230,215,0.045) 80.2%,rgba(207,230,215,0.018) 86.1%,rgba(207,230,215,0.009) 91%,rgba(207,230,215,0) 100%),radial-gradient(45% 40% at 70% 20%,rgba(232,239,208,0.6) 0%,rgba(232,239,208,0.444) 19%,rgba(232,239,208,0.324) 34%,rgba(232,239,208,0.228) 47%,rgba(232,239,208,0.156) 56.5%,rgba(232,239,208,0.102) 65%,rgba(232,239,208,0.06) 73%,rgba(232,239,208,0.03) 80.2%,rgba(232,239,208,0.012) 86.1%,rgba(232,239,208,0.006) 91%,rgba(232,239,208,0) 100%),radial-gradient(40% 40% at 20% 90%,rgba(242,226,208,0.55) 0%,rgba(242,226,208,0.407) 19%,rgba(242,226,208,0.297) 34%,rgba(242,226,208,0.209) 47%,rgba(242,226,208,0.143) 56.5%,rgba(242,226,208,0.094) 65%,rgba(242,226,208,0.055) 73%,rgba(242,226,208,0.028) 80.2%,rgba(242,226,208,0.011) 86.1%,rgba(242,226,208,0.006) 91%,rgba(242,226,208,0) 100%),#EEF0EA; /* @kind other */
+  --horizon-line:linear-gradient(90deg,rgba(70,178,122,0) 0%,rgba(70,178,122,0.55) 50%,rgba(70,178,122,0) 100%); /* @kind other */
+  --texture-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .09 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); /* @kind other */
+
+  --blur-glass:20px; /* @kind other */
+  --backdrop-sheet:rgba(12,17,15,0.36); /* @kind color */
+  --backdrop-modal:rgba(12,17,15,0.44); /* @kind color */
+
+  /* Legacy aliases */
+  --shadow-card:var(--shadow-1); --shadow-card-lg:var(--shadow-2); --shadow-card-elevated:var(--shadow-2);
+  --shadow-popover:var(--shadow-2); --shadow-menu:var(--shadow-2); --shadow-sheet:var(--shadow-3); --shadow-toast:var(--shadow-2);
+  --shadow-btn-primary:var(--shadow-tactile); --shadow-fab:var(--shadow-2); --shadow-avatar:var(--shadow-1);
+  --shadow-shell:0 0 0 1px rgba(255,255,255,0.05), 0 40px 120px rgba(0,0,0,0.55);
+  --ease-flow:var(--ease-out); --ease-out-soft:var(--ease-out); --ease-delight:var(--ease-out);
+  --duration-fast:var(--dur-1); --duration-base:var(--dur-2); --duration-slow:var(--dur-3); --duration-splash:var(--dur-4);
+  --press-scale-btn:0.98; /* @kind other */ --press-scale-cta:0.98; /* @kind other */ --press-scale-icon:0.96; /* @kind other */
+  --stagger-step:var(--stagger);
+  --gradient-soft-wash:var(--atmos-mist); --gradient-brand:var(--atmos-night);
+}

@@ -1,0 +1,14 @@
+<!-- @dsCard group="Components" viewport="700x220" name="Gamification — Weekly challenge" subtitle="Discrete segments, not a candy progress bar" -->
+<html><head><link rel="stylesheet" href="../../styles.css"><script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script><script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script><script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script><script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--surface-app);padding:24px;color:var(--text-primary)}.lbl{font-size:12.5px;font-weight:500;color:var(--text-secondary);margin:0 0 10px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:24px}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { WeeklyChallengeCard } = window.SpalDesignSystem_6a1cb4;
+function Demo(){
+  return (<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+    <WeeklyChallengeCard label="Record a sale 5 days this week" current={3} target={5}/>
+    <WeeklyChallengeCard label="Log every expense for 7 days" current={7} target={7} completed/>
+  </div>);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);</script>
+<template id="__bundler_thumbnail" data-bg-color="#F6F6F1"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#141A17" stroke-width="1.25"><circle cx="32" cy="32" r="26" opacity=".28"/><circle cx="32" cy="32" r="18" opacity=".55"/><circle cx="32" cy="32" r="10"/><circle cx="32" cy="32" r="2.5" fill="#107843" stroke="none"/></svg></template></body></html>

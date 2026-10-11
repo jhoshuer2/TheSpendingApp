@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Design System Overview Deck" description="A 13-slide SPAL foundations deck: signature, color, type, spacing, depth, motion, voice." -->
+<helmet><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap"><style>body{margin:0}</style></helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
+<section data-label="Title" data-screen-label="01" style="width:1920px;height:1080px;box-sizing:border-box;background:#EEF3E9;padding:120px 140px;display:flex;flex-direction:column;justify-content:space-between;font-family:'Inter Tight',sans-serif;color:#0F172A;position:relative;overflow:hidden">
+<div style="position:absolute;right:-160px;top:-160px;width:620px;height:620px;border-radius:9999px;background:radial-gradient(circle at 30% 30%,rgba(34,197,94,0.18),rgba(34,197,94,0) 70%)"></div>
+<div style="background:#fff;border-radius:20px;padding:22px 34px;align-self:flex-start;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.06)"><img src="../../assets/logo/spal-wordmark.webp" alt="SPAL" style="display:block;height:56px"></div>
+<div style="display:flex;flex-direction:column;gap:32px;max-width:1280px">
+<div style="font-family:'Satoshi',sans-serif;font-size:150px;font-weight:900;letter-spacing:-0.03em;line-height:0.94">Spal Design<br>System</div>
+<div style="font-size:38px;line-height:1.5;color:#52525B;max-width:1080px;text-wrap:pretty">The visual language of a voice-first business companion — rebuilt from the production codebase, then elevated for craft.</div>
+</div>
+<div style="display:flex;align-items:center;gap:20px;font-size:26px;color:#71717A"><span style="width:14px;height:14px;border-radius:9999px;background:#22C55E"></span><span>Spending · Profiting · Analysing · Looping</span></div>
+</section>
+<section data-label="The product" data-screen-label="02" style="width:1920px;height:1080px;box-sizing:border-box;background:#fff;padding:120px 140px;display:flex;flex-direction:column;justify-content:center;gap:88px;font-family:'Inter Tight',sans-serif;color:#0F172A">
+<div style="font-family:'Satoshi',sans-serif;font-size:76px;font-weight:700;letter-spacing:-0.02em;line-height:1.14;max-width:1480px;text-wrap:pretty">It replaces spreadsheets and mental math with a friendly, conversational assistant.</div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:56px">
+<div style="display:flex;flex-direction:column;gap:18px"><div style="height:6px;width:72px;border-radius:9999px;background:#22C55E"></div><div style="font-family:'Satoshi',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.02em">Spending</div><div style="font-size:27px;line-height:1.55;color:#52525B">Record an expense in seconds, by voice or tap.</div></div>
+<div style="display:flex;flex-direction:column;gap:18px"><div style="height:6px;width:72px;border-radius:9999px;background:#2563EB"></div><div style="font-family:'Satoshi',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.02em">Profiting</div><div style="font-size:27px;line-height:1.55;color:#52525B">Real cash-basis profit, not a ledger abstraction.</div></div>
+<div style="display:flex;flex-direction:column;gap:18px"><div style="height:6px;width:72px;border-radius:9999px;background:#8B5CF6"></div><div style="font-family:'Satoshi',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.02em">Analysing</div><div style="font-size:27px;line-height:1.55;color:#52525B">An AI coach that explains the numbers plainly.</div></div>
+<div style="display:flex;flex-direction:column;gap:18px"><div style="height:6px;width:72px;border-radius:9999px;background:#F97316"></div><div style="font-family:'Satoshi',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.02em">Looping</div><div style="font-size:27px;line-height:1.55;color:#52525B">Daily habits, streaks and goals that compound.</div></div>
+</div>
+<div style="font-size:26px;color:#71717A">Mobile-first PWA for informal and small entrepreneurs across Africa.</div>
+</section>
+<section data-label="The signature" data-screen-label="03" style="width:1920px;height:1080px;box-sizing:border-box;background:#0F172A;padding:120px 140px;display:flex;flex-direction:column;justify-content:center;gap:72px;font-family:'Inter Tight',sans-serif;color:#fff">
+<div style="display:flex;flex-direction:column;gap:24px"><div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#22C55E">The signature</div><div style="font-family:'Satoshi',sans-serif;font-size:82px;font-weight:700;letter-spacing:-0.02em;line-height:1.1;max-width:1400px">Five things that make a screen recognizably SPAL before you see the logo.</div></div>
+<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px;padding-top:32px;border-top:1.5px solid rgba(255,255,255,0.16)"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;color:#22C55E">01</div><div style="font-family:'Satoshi',sans-serif;font-size:32px;font-weight:700;letter-spacing:-0.01em">Spacing</div><div style="font-size:24px;line-height:1.55;color:rgba(255,255,255,0.7)">Tight inside, generous between. Seven radius steps, never uniform.</div></div>
+<div style="display:flex;flex-direction:column;gap:16px;padding-top:32px;border-top:1.5px solid rgba(255,255,255,0.16)"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;color:#22C55E">02</div><div style="font-family:'Satoshi',sans-serif;font-size:32px;font-weight:700;letter-spacing:-0.01em">Color</div><div style="font-size:24px;line-height:1.55;color:rgba(255,255,255,0.7)">Navy-dominant, one confident green accent, purpose-bound support.</div></div>
+<div style="display:flex;flex-direction:column;gap:16px;padding-top:32px;border-top:1.5px solid rgba(255,255,255,0.16)"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;color:#22C55E">03</div><div style="font-family:'Satoshi',sans-serif;font-size:32px;font-weight:700;letter-spacing:-0.01em">Motion</div><div style="font-size:24px;line-height:1.55;color:rgba(255,255,255,0.7)">Flow. Fade and rise, tactile press, zero bounce.</div></div>
+<div style="display:flex;flex-direction:column;gap:16px;padding-top:32px;border-top:1.5px solid rgba(255,255,255,0.16)"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;color:#22C55E">04</div><div style="font-family:'Satoshi',sans-serif;font-size:32px;font-weight:700;letter-spacing:-0.01em">Typography</div><div style="font-size:24px;line-height:1.55;color:rgba(255,255,255,0.7)">Satoshi display, Inter Tight body, oversized tabular money.</div></div>
+<div style="display:flex;flex-direction:column;gap:16px;padding-top:32px;border-top:1.5px solid rgba(255,255,255,0.16)"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;color:#22C55E">05</div><div style="font-family:'Satoshi',sans-serif;font-size:32px;font-weight:700;letter-spacing:-0.01em">Motif</div><div style="font-size:24px;line-height:1.55;color:rgba(255,255,255,0.7)">A geometric symbol language standing in for mascots and spot art.</div></div>
+</div>
+</section>
+<section data-label="Color philosophy" data-screen-label="04" style="width:1920px;height:1080px;box-sizing:border-box;background:#fff;padding:120px 140px;display:flex;flex-direction:column;justify-content:center;gap:76px;font-family:'Inter Tight',sans-serif;color:#0F172A">
+<div style="display:flex;flex-direction:column;gap:22px"><div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#71717A">Color</div><div style="font-family:'Satoshi',sans-serif;font-size:80px;font-weight:700;letter-spacing:-0.02em;line-height:1.08">One confident accent.</div><div style="font-size:32px;line-height:1.5;color:#52525B;max-width:1180px;text-wrap:pretty">Navy carries text and structure. Green is the only primary accent. Blue, purple and orange are purpose-bound and never appear at equal weight to green on one screen.</div></div>
+<div style="display:grid;grid-template-columns:1.6fr 1.6fr 1fr 1fr 1fr;gap:28px">
+<div style="display:flex;flex-direction:column;gap:18px"><div style="height:230px;border-radius:24px;background:#0F172A"></div><div style="display:flex;flex-direction:column;gap:4px"><div style="font-family:'Satoshi',sans-serif;font-size:30px;font-weight:700">Navy</div><div style="font-size:24px;color:#71717A;font-variant-numeric:tabular-nums">#0F172A · dominant</div></div></div>
+<div style="display:flex;flex-direction:column;gap:18px"><div style="height:230px;border-radius:24px;background:#22C55E"></div><div style="display:flex;flex-direction:column;gap:4px"><div style="font-family:'Satoshi',sans-serif;font-size:30px;font-weight:700">Green</div><div style="font-size:24px;color:#71717A;font-variant-numeric:tabular-nums">#22C55E · primary accent</div></div></div>
+<div style="display:flex;flex-direction:column;gap:18px"><div style="height:230px;border-radius:24px;background:#2563EB"></div><div style="display:flex;flex-direction:column;gap:4px"><div style="font-family:'Satoshi',sans-serif;font-size:30px;font-weight:700">Blue</div><div style="font-size:24px;color:#71717A">profit · AI</div></div></div>
+<div style="display:flex;flex-direction:column;gap:18px"><div style="height:230px;border-radius:24px;background:#8B5CF6"></div><div style="display:flex;flex-direction:column;gap:4px"><div style="font-family:'Satoshi',sans-serif;font-size:30px;font-weight:700">Purple</div><div style="font-size:24px;color:#71717A">coach · learn</div></div></div>
+<div style="display:flex;flex-direction:column;gap:18px"><div style="height:230px;border-radius:24px;background:#F97316"></div><div style="display:flex;flex-direction:column;gap:4px"><div style="font-family:'Satoshi',sans-serif;font-size:30px;font-weight:700">Orange</div><div style="font-size:24px;color:#71717A">expenses only</div></div></div>
+</div>
+</section>
+<section data-label="The canvas" data-screen-label="05" style="width:1920px;height:1080px;box-sizing:border-box;background:#EEF3E9;padding:120px 140px;display:flex;align-items:center;gap:120px;font-family:'Inter Tight',sans-serif;color:#0F172A">
+<div style="display:flex;flex-direction:column;gap:30px;max-width:820px">
+<div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#4A5D38">The canvas</div>
+<div style="font-family:'Satoshi',sans-serif;font-size:80px;font-weight:700;letter-spacing:-0.02em;line-height:1.08">Not white. Not gray.</div>
+<div style="font-size:32px;line-height:1.55;color:#3F3F46;text-wrap:pretty">Every screen sits on a soft sage-green tint. It is the cheapest possible signature and the most effective one — the tint alone reads as SPAL, and it makes white cards feel like objects rather than background.</div>
+<div style="font-family:'Satoshi',sans-serif;font-size:56px;font-weight:900;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">#EEF3E9</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:28px">
+<div style="background:#fff;border-radius:20px;border:1px solid #E4E4E7;padding:40px 44px;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:12px"><div style="font-size:27px;color:#71717A">Your sales today</div><div style="font-family:'Satoshi',sans-serif;font-size:76px;font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">₦48,500</div></div>
+<div style="background:#D3E0C7;border:1px solid #BBCDA8;border-radius:20px;padding:36px 44px;display:flex;flex-direction:column;gap:8px"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;color:#2E3D22">₦12,000 owed to you</div><div style="font-size:26px;color:#4A5D38">3 customers · tap to review</div></div>
+</div>
+</section>
+<section data-label="Typography" data-screen-label="06" style="width:1920px;height:1080px;box-sizing:border-box;background:#fff;padding:120px 140px;display:flex;flex-direction:column;justify-content:center;gap:64px;font-family:'Inter Tight',sans-serif;color:#0F172A">
+<div style="display:flex;flex-direction:column;gap:20px"><div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#71717A">Typography</div><div style="font-family:'Satoshi',sans-serif;font-size:80px;font-weight:700;letter-spacing:-0.02em">Two voices, one rhythm.</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:96px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:20px;padding-top:34px;border-top:2px solid #0F172A"><div style="font-size:26px;color:#71717A">Satoshi · display &amp; brand voice</div><div style="font-family:'Satoshi',sans-serif;font-size:96px;font-weight:900;letter-spacing:-0.03em;line-height:1">Aa</div><div style="font-family:'Satoshi',sans-serif;font-size:44px;font-weight:700;letter-spacing:-0.02em;line-height:1.2">Headings, buttons and every number that matters.</div><div style="font-size:25px;color:#52525B;line-height:1.5">Bold and black weights only. Tracking tightens to −0.02em / −0.03em as size grows.</div></div>
+<div style="display:flex;flex-direction:column;gap:20px;padding-top:34px;border-top:2px solid #E4E4E7"><div style="font-size:26px;color:#71717A">Inter Tight · body</div><div style="font-size:96px;font-weight:500;line-height:1">Aa</div><div style="font-size:36px;line-height:1.5;color:#3F3F46">Track your sales, understand your profit, and grow. Body copy stays at 400–500 and never competes with the display face.</div><div style="font-size:25px;color:#52525B;line-height:1.5">Never Poppins — explicitly banned in source for reading as generic startup software.</div></div>
+</div>
+</section>
+<section data-label="Money" data-screen-label="07" style="width:1920px;height:1080px;box-sizing:border-box;background:#0F172A;padding:120px 140px;display:flex;flex-direction:column;justify-content:center;gap:64px;font-family:'Inter Tight',sans-serif;color:#fff">
+<div style="display:flex;flex-direction:column;gap:20px"><div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#22C55E">Numbers</div><div style="font-family:'Satoshi',sans-serif;font-size:76px;font-weight:700;letter-spacing:-0.02em;max-width:1300px;line-height:1.1">Money is the emotional core of every screen. It gets its own type treatment.</div></div>
+<div style="display:flex;align-items:flex-end;gap:110px">
+<div style="display:flex;flex-direction:column;gap:14px"><div style="font-size:28px;color:rgba(255,255,255,0.7)">Profit today</div><div style="font-family:'Satoshi',sans-serif;font-size:190px;font-weight:900;letter-spacing:-0.04em;line-height:0.9;font-variant-numeric:tabular-nums;color:#22C55E">₦31,200</div></div>
+<div style="display:flex;flex-direction:column;gap:28px;padding-bottom:22px">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:25px;color:rgba(255,255,255,0.7)">Sales</div><div style="font-family:'Satoshi',sans-serif;font-size:56px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-0.02em">₦48,500</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:25px;color:rgba(255,255,255,0.7)">Expenses</div><div style="font-family:'Satoshi',sans-serif;font-size:56px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;color:#F97316">₦17,300</div></div>
+</div>
+</div>
+<div style="font-size:28px;color:rgba(255,255,255,0.7);max-width:1200px;line-height:1.5">Tabular figures always, so digits never shift as values update. Currency defaults to ₦ via <span style="font-family:ui-monospace,monospace;font-size:25px">formatCurrency()</span>.</div>
+</section>
+<section data-label="Spacing &amp; radius" data-screen-label="08" style="width:1920px;height:1080px;box-sizing:border-box;background:#fff;padding:120px 140px;display:flex;flex-direction:column;justify-content:center;gap:72px;font-family:'Inter Tight',sans-serif;color:#0F172A">
+<div style="display:flex;flex-direction:column;gap:20px"><div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#71717A">Spacing &amp; radius</div><div style="font-family:'Satoshi',sans-serif;font-size:80px;font-weight:700;letter-spacing:-0.02em">Tight inside, generous between.</div><div style="font-size:32px;line-height:1.5;color:#52525B;max-width:1240px;text-wrap:pretty">4–12px gaps within a component, 24–32px between sections, a constant 20px page margin. The contrast is what reads as considered rather than padded.</div></div>
+<div style="display:flex;flex-direction:column;gap:26px">
+<div style="font-size:26px;color:#71717A">Seven radius steps — each a distinct size class, never one blanket rounding</div>
+<div style="display:flex;align-items:flex-end;gap:24px">
+<div style="display:flex;flex-direction:column;gap:14px;align-items:center"><div style="width:180px;height:150px;background:#EEF3E9;border:1.5px solid #BBCDA8;border-radius:10px"></div><div style="font-size:25px;color:#52525B;font-variant-numeric:tabular-nums">10 · chip</div></div>
+<div style="display:flex;flex-direction:column;gap:14px;align-items:center"><div style="width:180px;height:150px;background:#EEF3E9;border:1.5px solid #BBCDA8;border-radius:14px"></div><div style="font-size:25px;color:#52525B;font-variant-numeric:tabular-nums">14 · input</div></div>
+<div style="display:flex;flex-direction:column;gap:14px;align-items:center"><div style="width:180px;height:150px;background:#EEF3E9;border:1.5px solid #BBCDA8;border-radius:18px"></div><div style="font-size:25px;color:#52525B;font-variant-numeric:tabular-nums">18 · button</div></div>
+<div style="display:flex;flex-direction:column;gap:14px;align-items:center"><div style="width:180px;height:150px;background:#EEF3E9;border:1.5px solid #BBCDA8;border-radius:20px"></div><div style="font-size:25px;color:#52525B;font-variant-numeric:tabular-nums">20 · card</div></div>
+<div style="display:flex;flex-direction:column;gap:14px;align-items:center"><div style="width:180px;height:150px;background:#EEF3E9;border:1.5px solid #BBCDA8;border-radius:24px"></div><div style="font-size:25px;color:#52525B;font-variant-numeric:tabular-nums">24 · hero</div></div>
+<div style="display:flex;flex-direction:column;gap:14px;align-items:center"><div style="width:180px;height:150px;background:#EEF3E9;border:1.5px solid #BBCDA8;border-radius:28px"></div><div style="font-size:25px;color:#52525B;font-variant-numeric:tabular-nums">28 · sheet</div></div>
+<div style="display:flex;flex-direction:column;gap:14px;align-items:center"><div style="width:180px;height:150px;background:#EEF3E9;border:1.5px solid #BBCDA8;border-radius:9999px"></div><div style="font-size:25px;color:#52525B">full · pill</div></div>
+</div>
+</div>
+</section>
+<section data-label="Depth" data-screen-label="09" style="width:1920px;height:1080px;box-sizing:border-box;background:#EEF3E9;padding:120px 140px;display:flex;flex-direction:column;justify-content:center;gap:80px;font-family:'Inter Tight',sans-serif;color:#0F172A">
+<div style="display:flex;flex-direction:column;gap:20px"><div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#4A5D38">Depth</div><div style="font-family:'Satoshi',sans-serif;font-size:80px;font-weight:700;letter-spacing:-0.02em">Layered, not heavy.</div><div style="font-size:32px;line-height:1.5;color:#3F3F46;max-width:1300px;text-wrap:pretty">Every shadow is two co-authored layers: a tight near-black contact shadow and a soft, larger, low-opacity ambient falloff. Never a single heavy drop shadow.</div></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:56px">
+<div style="background:#fff;border-radius:20px;border:1px solid #E4E4E7;padding:44px;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:14px"><div style="font-family:'Satoshi',sans-serif;font-size:36px;font-weight:700;letter-spacing:-0.01em">Card</div><div style="font-size:24px;color:#52525B;line-height:1.5;font-family:ui-monospace,monospace">0 1px 3px /0.04<br>0 4px 16px /0.06</div></div>
+<div style="background:#fff;border-radius:24px;border:1px solid #E4E4E7;padding:44px;box-shadow:0 2px 6px rgba(0,0,0,0.05),0 8px 32px rgba(0,0,0,0.08);display:flex;flex-direction:column;gap:14px"><div style="font-family:'Satoshi',sans-serif;font-size:36px;font-weight:700;letter-spacing:-0.01em">Elevated</div><div style="font-size:24px;color:#52525B;line-height:1.5;font-family:ui-monospace,monospace">0 2px 6px /0.05<br>0 8px 32px /0.08</div></div>
+<div style="background:#22C55E;border-radius:18px;padding:44px;box-shadow:0 2px 12px rgba(34,197,94,0.28);display:flex;flex-direction:column;gap:14px;color:#fff"><div style="font-family:'Satoshi',sans-serif;font-size:36px;font-weight:700;letter-spacing:-0.01em">Primary CTA</div><div style="font-size:24px;line-height:1.5;font-family:ui-monospace,monospace;color:rgba(255,255,255,0.88)">0 2px 12px<br>rgba(34,197,94,0.28)</div></div>
+</div>
+</section>
+<section data-label="Motion" data-screen-label="10" style="width:1920px;height:1080px;box-sizing:border-box;background:#fff;padding:120px 140px;display:flex;flex-direction:column;justify-content:center;gap:72px;font-family:'Inter Tight',sans-serif;color:#0F172A">
+<div style="display:flex;flex-direction:column;gap:20px"><div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#71717A">Motion</div><div style="font-family:'Satoshi',sans-serif;font-size:80px;font-weight:700;letter-spacing:-0.02em">Flow, never bounce.</div><div style="font-size:32px;line-height:1.5;color:#52525B;max-width:1300px;text-wrap:pretty">Entrances fade and rise 8–12px, staggered 40ms apart. Real spring physics are banned. Press states are tactile, not chromatic — nothing darkens on tap.</div></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:56px 96px">
+<div style="display:flex;flex-direction:column;gap:12px;padding-top:30px;border-top:1.5px solid #E4E4E7"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;letter-spacing:-0.01em">Default easing</div><div style="font-size:28px;color:#52525B;font-family:ui-monospace,monospace">cubic-bezier(0.4, 0, 0.2, 1) · 220ms</div></div>
+<div style="display:flex;flex-direction:column;gap:12px;padding-top:30px;border-top:1.5px solid #E4E4E7"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;letter-spacing:-0.01em">Entrances</div><div style="font-size:28px;color:#52525B;font-family:ui-monospace,monospace">cubic-bezier(0.22, 1, 0.36, 1) · 400ms</div></div>
+<div style="display:flex;flex-direction:column;gap:12px;padding-top:30px;border-top:1.5px solid #E4E4E7"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;letter-spacing:-0.01em">Delight — onboarding only</div><div style="font-size:28px;color:#52525B;font-family:ui-monospace,monospace">cubic-bezier(0.34, 1.2, 0.64, 1)</div></div>
+<div style="display:flex;flex-direction:column;gap:12px;padding-top:30px;border-top:1.5px solid #E4E4E7"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;letter-spacing:-0.01em">Press scale</div><div style="font-size:28px;color:#52525B;font-family:ui-monospace,monospace">0.96 button · 0.98 CTA · 0.95 icon</div></div>
+</div>
+</section>
+<section data-label="Voice" data-screen-label="11" style="width:1920px;height:1080px;box-sizing:border-box;background:#EEF3E9;padding:120px 140px;display:flex;flex-direction:column;justify-content:center;gap:72px;font-family:'Inter Tight',sans-serif;color:#0F172A">
+<div style="display:flex;flex-direction:column;gap:20px"><div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#4A5D38">Voice</div><div style="font-family:'Satoshi',sans-serif;font-size:80px;font-weight:700;letter-spacing:-0.02em">A coach, not a spreadsheet.</div><div style="font-size:32px;line-height:1.5;color:#3F3F46;max-width:1300px;text-wrap:pretty">Plain WhatsApp-level language, held to the three-second rule. Accounting jargon is banned outright: expenditure, revenue, liabilities, assets, ledger, reconcile.</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:56px">
+<div style="background:#fff;border:1px solid #BBF7D0;border-radius:24px;padding:48px;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;align-items:center;gap:14px;font-size:26px;letter-spacing:0.1em;text-transform:uppercase;color:#15803D"><span style="width:12px;height:12px;border-radius:9999px;background:#22C55E"></span>Write this</div>
+<div style="font-family:'Satoshi',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.01em;line-height:1.3">“You spent more money than you made today.”</div>
+<div style="font-size:28px;line-height:1.55;color:#52525B">“Your Sales Today” · “Mark paid” · “No activity yet today” · “Head Back Home”</div>
+</div>
+<div style="background:#fff;border:1px solid #E4E4E7;border-radius:24px;padding:48px;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;align-items:center;gap:14px;font-size:26px;letter-spacing:0.1em;text-transform:uppercase;color:#71717A"><span style="width:12px;height:12px;border-radius:9999px;background:#A1A1AA"></span>Not this</div>
+<div style="font-family:'Satoshi',sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;color:#71717A">“Your expenditure exceeded your revenue.”</div>
+<div style="font-size:28px;line-height:1.55;color:#71717A">“Reconcile ledger” · “Liabilities summary” · “No records found” · “Return to dashboard”</div>
+</div>
+</div>
+</section>
+<section data-label="Components" data-screen-label="12" style="width:1920px;height:1080px;box-sizing:border-box;background:#fff;padding:120px 140px;display:flex;gap:110px;align-items:center;font-family:'Inter Tight',sans-serif;color:#0F172A">
+<div style="flex:1;display:flex;flex-direction:column;gap:52px">
+<div style="display:flex;flex-direction:column;gap:20px"><div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#71717A">What ships</div><div style="font-family:'Satoshi',sans-serif;font-size:74px;font-weight:700;letter-spacing:-0.02em;line-height:1.1">Thirteen components, one UI kit.</div></div>
+<div style="display:flex;flex-direction:column;gap:30px">
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:26px;border-top:1.5px solid #E4E4E7"><div style="font-family:'Satoshi',sans-serif;font-size:30px;font-weight:700">Core</div><div style="font-size:27px;color:#52525B">Button · Card · Badge · Input · PillChip</div></div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:26px;border-top:1.5px solid #E4E4E7"><div style="font-family:'Satoshi',sans-serif;font-size:30px;font-weight:700">Feedback</div><div style="font-size:27px;color:#52525B">InsightCard · UndoToast · Skeleton</div></div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:26px;border-top:1.5px solid #E4E4E7"><div style="font-family:'Satoshi',sans-serif;font-size:30px;font-weight:700">Navigation</div><div style="font-size:27px;color:#52525B">BottomNav · TopNavPills · QuickMenuFab</div></div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:26px;border-top:1.5px solid #E4E4E7"><div style="font-family:'Satoshi',sans-serif;font-size:30px;font-weight:700">Brand &amp; gamification</div><div style="font-size:27px;color:#52525B">SparkAvatar · SpalSymbol · WeeklyChallengeCard</div></div>
+</div>
+</div>
+<div style="width:520px;display:flex;justify-content:center"><img src="../../assets/illustrations/home-screen-preview.webp" alt="SPAL home screen" style="display:block;width:420px;border-radius:28px;box-shadow:0 2px 8px rgba(0,0,0,0.06),0 8px 32px rgba(0,0,0,0.08)"></div>
+</section>
+<section data-label="Next" data-screen-label="13" style="width:1920px;height:1080px;box-sizing:border-box;background:#0F172A;padding:120px 140px;display:flex;flex-direction:column;justify-content:center;gap:72px;font-family:'Inter Tight',sans-serif;color:#fff">
+<div style="display:flex;flex-direction:column;gap:22px"><div style="font-size:26px;letter-spacing:0.14em;text-transform:uppercase;color:#22C55E">Where to help next</div><div style="font-family:'Satoshi',sans-serif;font-size:80px;font-weight:700;letter-spacing:-0.02em">Three open decisions.</div></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:64px">
+<div style="display:flex;flex-direction:column;gap:16px;padding-top:32px;border-top:1.5px solid rgba(255,255,255,0.16)"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;letter-spacing:-0.01em">More screens</div><div style="font-size:26px;line-height:1.55;color:rgba(255,255,255,0.7)">Insights, Goals, the AI chat, Inventory, Profile and the full onboarding flow all exist in source but aren't recreated yet.</div></div>
+<div style="display:flex;flex-direction:column;gap:16px;padding-top:32px;border-top:1.5px solid rgba(255,255,255,0.16)"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;letter-spacing:-0.01em">Remaining components</div><div style="font-size:26px;line-height:1.55;color:rgba(255,255,255,0.7)">Ten source families are flagged but unbuilt — sheets, swipeable rows, voice recorder, paywall, achievements.</div></div>
+<div style="display:flex;flex-direction:column;gap:16px;padding-top:32px;border-top:1.5px solid rgba(255,255,255,0.16)"><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:700;letter-spacing:-0.01em">The symbol system</div><div style="font-size:26px;line-height:1.55;color:rgba(255,255,255,0.7)">New code, not a copy of anything shipped. Highest leverage for a memorable identity — do the shapes feel right?</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:20px;font-size:26px;color:rgba(255,255,255,0.7);padding-top:20px"><span style="width:14px;height:14px;border-radius:9999px;background:#22C55E"></span><span>github.com/MrItrends/spal · branch master</span></div>
+</section>
+</x-import>
+</x-dc>
+</body>
+</html>

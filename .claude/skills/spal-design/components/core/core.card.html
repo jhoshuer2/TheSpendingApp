@@ -1,0 +1,42 @@
+<!-- @dsCard group="Components" viewport="700x640" name="Core — Button, Money, Input, Chip, Badge, Card, Icon" subtitle="Tactile pills, quiet currency, hairline rings" -->
+<html><head><link rel="stylesheet" href="../../styles.css"><script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script><script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script><script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script><script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--surface-app);padding:24px;color:var(--text-primary)}.lbl{font-size:12.5px;font-weight:500;color:var(--text-secondary);margin:0 0 10px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:24px}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { Button, Card, Badge, Input, PillChip, Money, Icon } = window.SpalDesignSystem_6a1cb4;
+function Demo(){
+  const [sel,setSel]=React.useState("Food");
+  return (<div>
+    <p className="lbl">Buttons</p>
+    <div className="row">
+      <Button>Save sale</Button>
+      <Button variant="secondary" icon={<Icon name="plus" size={18}/>}>Add item</Button>
+      <Button variant="ghost">Skip</Button>
+      <Button variant="danger" size="sm">Delete</Button>
+      <Button loading>Saving</Button>
+      <Button disabled>Disabled</Button>
+    </div>
+    <p className="lbl">Money</p>
+    <div className="row" style={{gap:28,alignItems:"flex-end"}}>
+      <Money value={48200} size={48}/>
+      <Money value={4500} direction="in" size={17}/>
+      <Money value={3000} direction="out" size={17}/>
+      <Money value={6500} direction="owed" size={17}/>
+      <Money value={1250.5} decimals size={17}/>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:24}}>
+      <div><p className="lbl">Input</p><Input large prefix="₦" placeholder="0" defaultValue="12,500"/></div>
+      <div><p className="lbl">Chips</p><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{["Food","Drinks","Transport","Rent"].map(c=>(<PillChip key={c} size="sm" label={c} selected={sel===c} onClick={()=>setSel(c)}/>))}</div>
+      <p className="lbl" style={{marginTop:16}}>Badges</p><div style={{display:"flex",gap:6,flexWrap:"wrap"}}><Badge label="Owing" color="ochre" dot/><Badge label="Paid" color="green"/><Badge label="AI" color="blue"/><Badge label="Draft"/><Badge label="Failed" color="red"/></div></div>
+    </div>
+    <p className="lbl">Cards &amp; icons</p>
+    <div className="row" style={{alignItems:"stretch"}}>
+      <Card style={{width:150}}><p style={{margin:0,fontWeight:500}}>Raised</p><p style={{margin:"4px 0 0",fontSize:13,color:"var(--text-secondary)"}}>Hairline ring</p></Card>
+      <Card surface="sunken" style={{width:150}}><p style={{margin:0,fontWeight:500}}>Sunken</p><p style={{margin:"4px 0 0",fontSize:13,color:"var(--text-secondary)"}}>Recessed well</p></Card>
+      <Card surface="night" style={{width:150}}><p style={{margin:0,fontWeight:500}}>Night</p><p style={{margin:"4px 0 0",fontSize:13,color:"var(--text-secondary)"}}>Horizon hero</p></Card>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(6,24px)",gap:12,alignContent:"center",color:"var(--text-primary)",marginLeft:8}}>{["home","list","chart","user","bell","search","arrow-down-left","arrow-up-right","message","target","archive","wallet"].map(n=><Icon key={n} name={n}/>)}</div>
+    </div>
+  </div>);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);</script>
+<template id="__bundler_thumbnail" data-bg-color="#F6F6F1"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#141A17" stroke-width="1.25"><circle cx="32" cy="32" r="26" opacity=".28"/><circle cx="32" cy="32" r="18" opacity=".55"/><circle cx="32" cy="32" r="10"/><circle cx="32" cy="32" r="2.5" fill="#107843" stroke="none"/></svg></template></body></html>

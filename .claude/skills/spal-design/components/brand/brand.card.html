@@ -1,0 +1,18 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Brand — Aura, Symbols & Ask SPAL orb" subtitle="Hairline marks, one accent point" -->
+<html><head><link rel="stylesheet" href="../../styles.css"><script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script><script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script><script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script><script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--surface-app);padding:24px;color:var(--text-primary)}.lbl{font-size:12.5px;font-weight:500;color:var(--text-secondary);margin:0 0 10px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:24px}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { SpalSymbol, SparkAvatar, Aura } = window.SpalDesignSystem_6a1cb4;
+const S=["profit","flow","growth","focus","consistency","momentum","insight","cashflow"];
+function Demo(){
+  return (<div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:8,marginBottom:20}}>{S.map(s=>(<div key={s} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10}}><SpalSymbol symbol={s} size={56}/><span style={{fontSize:12,color:"var(--text-secondary)"}}>{s}</span></div>))}</div>
+    <div style={{display:"flex",gap:16,alignItems:"center"}}>
+      <div data-theme="night" style={{position:"relative",flex:1,height:100,borderRadius:20,overflow:"hidden"}}><Aura variant="night"/><div style={{position:"relative",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:28}}>{["profit","insight","flow"].map(s=><SpalSymbol key={s} symbol={s} size={52} color="#EEF1ED" accent="#8CD3A8"/>)}</div></div>
+      <div style={{width:120,height:100,borderRadius:20,background:"var(--surface-card)",boxShadow:"var(--shadow-1)",display:"flex",alignItems:"center",justifyContent:"center"}}><SparkAvatar src="../../assets/brand/spal-ai-orb.webp"/></div>
+    </div>
+  </div>);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);</script>
+<template id="__bundler_thumbnail" data-bg-color="#F6F6F1"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#141A17" stroke-width="1.25"><circle cx="32" cy="32" r="26" opacity=".28"/><circle cx="32" cy="32" r="18" opacity=".55"/><circle cx="32" cy="32" r="10"/><circle cx="32" cy="32" r="2.5" fill="#107843" stroke="none"/></svg></template></body></html>

@@ -1,0 +1,14 @@
+<!-- @dsCard group="Brand" viewport="700x300" name="Aura" subtitle="Signature atmosphere: soft analogous color fields that settle low and drift" -->
+<html><head><link rel="stylesheet" href="../styles.css"><script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script><script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script><script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script><script src="../_ds_bundle.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;background:var(--surface-app);color:var(--text-primary)}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const { Aura } = window.SpalDesignSystem_6a1cb4;
+function T({v,name,use,dark,wide}){return <div style={{position:"relative",borderRadius:20,overflow:"hidden",gridRow:wide?"span 2":undefined,boxShadow:dark?"none":"var(--shadow-1)"}}><Aura variant={v}/><div style={{position:"relative",height:"100%",padding:16,display:"flex",flexDirection:"column",justifyContent:"space-between",color:dark?"#EEF1ED":"var(--ink-900)"}}><span style={{fontSize:13,fontWeight:500}}>{name}</span><span style={{fontSize:12,opacity:.66}}>{use}</span></div></div>}
+function Demo(){return (<div style={{display:"grid",gridTemplateColumns:"1.3fr 1fr",gridTemplateRows:"1fr 1fr",gap:12,padding:16,height:300}}>
+  <T v="night" name="Night" use="Forest · teal · mint · ember — profit hero, onboarding, celebrations" dark wide/>
+  <T v="dawn" name="Dawn" use="Mint · lime · sand · sky — light onboarding, empty states"/>
+  <T v="mist" name="Mist" use="White into mint — tips, feature wells"/>
+</div>);}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script>
+<template id="__bundler_thumbnail" data-bg-color="#0B100E"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#EEF1ED" stroke-width="1.25"><circle cx="32" cy="32" r="26" opacity=".28"/><circle cx="32" cy="32" r="18" opacity=".55"/><circle cx="32" cy="32" r="10"/><circle cx="32" cy="32" r="2.5" fill="#6CC796" stroke="none"/></svg></template></body></html>
