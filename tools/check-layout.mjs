@@ -27,18 +27,48 @@ const VIEWPORTS = [
   [320, 568], [360, 640], [375, 667], [390, 844], [430, 932], [768, 1024], [1280, 800],
 ];
 const SESSION = JSON.stringify({ name: "Ada Okafor", email: "ada@example.com" });
+const PROFILE_KEY = "spal.profile.v1:ada@example.com";
+const ANSWERS = { stage: "y1to3", goal: "customers", type: "food", team: "solo", sales: "k100to500", have: ["registered", "bank"], pain: "customers" };
+const nowIso = new Date().toISOString();
+// An onboarded person with one finished step and one in progress.
+const SEED_READY = JSON.stringify({
+  answers: ANSWERS, completed: true,
+  progress: { "setup-name": { steps: [0, 1, 2, 3], doneAt: nowIso }, "customers-ask": { steps: [0, 1] } },
+});
+// Answers given, onboarding not finished yet.
+const SEED_PARTIAL = JSON.stringify({ answers: ANSWERS, completed: false, progress: {} });
+
+const pick = (name) => async (p) => p.getByRole("radio", { name }).click();
+const cont = async (p) => p.getByRole("button", { name: /Continue|Finish/ }).click();
+const walk = (steps) => async (p) => { for (const s of steps) { await s(p); await cont(p); } };
 
 const SCREENS = [
-  { name: "splash", path: "/", holdSplash: true },
+  { name: "splash", path: "/", hold: true },
   { name: "welcome-1", path: "/welcome" },
   { name: "welcome-2", path: "/welcome", act: async (p) => p.getByRole("button", { name: "Next" }).click() },
   { name: "welcome-3", path: "/welcome", act: async (p) => { await p.getByRole("button", { name: "Next" }).click(); await p.getByRole("button", { name: "Next" }).click(); } },
   { name: "signup", path: "/signup" },
   { name: "signup-errors", path: "/signup", act: async (p) => p.getByRole("button", { name: "Create account" }).click() },
   { name: "login", path: "/login" },
-  { name: "onboarding", path: "/onboarding", authed: true },
-  { name: "today", path: "/app/today", authed: true },
-  { name: "profile", path: "/app/profile", authed: true },
+  { name: "q-stage", path: "/onboarding", authed: true },
+  { name: "q-stage-picked", path: "/onboarding", authed: true, act: pick(/running 1 to 3/) },
+  {
+    name: "q-have", path: "/onboarding", authed: true,
+    act: async (p) => {
+      await walk([pick(/running 1 to 3/), pick(/Get more customers/), pick(/Food and drinks/), pick(/Just me/), pick(/Under/)])(p);
+      await p.getByRole("checkbox", { name: /registered business name/ }).click();
+      await p.getByRole("checkbox", { name: /logo/ }).click();
+    },
+  },
+  { name: "building", path: "/onboarding/building", authed: true, seed: SEED_PARTIAL, hold: true },
+  { name: "summary", path: "/onboarding/summary", authed: true, seed: SEED_PARTIAL },
+  { name: "today", path: "/app/today", authed: true, seed: SEED_READY },
+  { name: "module-progress", path: "/module/customers-ask", authed: true, seed: SEED_READY },
+  { name: "module-finished", path: "/module/setup-name", authed: true, seed: SEED_READY },
+  { name: "library", path: "/app/library", authed: true, seed: SEED_READY },
+  { name: "journey", path: "/app/journey", authed: true, seed: SEED_READY },
+  { name: "journey-empty", path: "/app/journey", authed: true, seed: JSON.stringify({ answers: ANSWERS, completed: true, progress: {} }) },
+  { name: "profile", path: "/app/profile", authed: true, seed: SEED_READY },
   { name: "not-found", path: "/nope" },
 ];
 
@@ -49,9 +79,10 @@ for (const [w, h] of VIEWPORTS) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, hasTouch: w < 600, serviceWorkers: "block" });
   for (const s of SCREENS) {
     const page = await ctx.newPage();
-    // Keep the splash on screen: ignore its 1200ms auto-navigation timer.
-    if (s.holdSplash) await page.addInitScript(() => { const st = window.setTimeout; window.setTimeout = (fn, ms, ...a) => (ms === 1200 ? 0 : st(fn, ms, ...a)); });
+    // Keep timed screens (splash, "building") on screen: ignore their auto-navigation timers.
+    if (s.hold) await page.addInitScript(() => { const st = window.setTimeout; window.setTimeout = (fn, ms, ...a) => (ms === 1200 || ms === 2000 ? 0 : st(fn, ms, ...a)); });
     if (s.authed) await page.addInitScript((v) => localStorage.setItem("spal.session", v), SESSION);
+    if (s.seed) await page.addInitScript(([k, v]) => localStorage.setItem(k, v), [PROFILE_KEY, s.seed]);
     await page.goto(BASE + s.path, { waitUntil: "networkidle" });
     await page.evaluate(() => document.fonts.ready);
     if (s.act) await s.act(page);
