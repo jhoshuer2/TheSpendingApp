@@ -86,4 +86,27 @@ reset role;
 delete from auth.users where id = (select ada from _ids);
 select pg_temp.assert((select count(*) from public.profiles where id = (select ada from _ids)) = 0 and (select count(*) from public.step_progress) = 0, 'deleting an account deletes its profile and progress');
 
+-- 7. Learning columns: sensible defaults, still private, still bounded.
+insert into auth.users (id, email, raw_user_meta_data) select gen_random_uuid(), 'tunde@example.com', '{}' from _ids;
+select pg_temp.assert((select learning from public.profiles where id = (select id from auth.users where email = 'tunde@example.com')), 'learning is on by default and can be turned off');
+select pg_temp.assert((select active_days from public.profiles where id = (select id from auth.users where email = 'tunde@example.com')) = '{}', 'a new profile starts with no active days');
+select pg_temp.as_user((select id from auth.users where email = 'tunde@example.com'));
+update public.profiles set learning = false, active_days = '{2026-10-10,2026-10-11}', last_seen = now() where id = auth.uid();
+insert into public.step_progress (user_id, module_id, steps, opened_at, snoozed_until, dismissed)
+  values (auth.uid(), 'setup-name', '{0}', now(), now() + interval '7 days', false), (auth.uid(), 'setup-plan', '{}', null, null, true);
+select pg_temp.assert((select count(*) from public.step_progress where dismissed) = 1, 'a user can hide and snooze their own steps');
+select pg_temp.assert(not (select learning from public.profiles where id = auth.uid()), 'a user can turn learning off');
+do $$ begin
+  begin
+    update public.profiles set active_days = array(select (date '2026-01-01' + g) from generate_series(0, 90) g) where id = auth.uid();
+    raise exception 'FAILED: accepted more than 90 active days';
+  exception when check_violation then raise notice 'ok - rejects an unbounded list of active days'; end;
+end $$;
+reset role;
+-- Ada's learning data is invisible to Tunde, and the old rows were untouched by the migration.
+select pg_temp.as_user((select kemi from _ids));
+select pg_temp.assert((select count(*) from public.step_progress) = 0 and (select count(*) from public.profiles where active_days <> '{}') = 0, 'learning data is as private as everything else');
+reset role;
+delete from auth.users where email = 'tunde@example.com';
+
 select 'ALL DATABASE CHECKS PASSED' as result;

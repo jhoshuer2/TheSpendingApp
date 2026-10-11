@@ -1,3 +1,4 @@
+import type { Activity, Progress } from "../profile/state";
 import type { Answers } from "../profile/types";
 
 export interface Session {
@@ -22,14 +23,12 @@ export interface AuthApi {
   updatePassword(password: string): Promise<AuthResult>;
 }
 
-export interface RemoteProgress {
-  steps: number[];
-  doneAt?: string;
-}
+export type RemoteProgress = Progress;
 
 export interface RemoteProfile {
   answers: Answers;
   completed: boolean;
+  activity: Activity;
   progress: Record<string, RemoteProgress>;
 }
 
@@ -37,7 +36,7 @@ export interface RemoteProfile {
 export interface RemoteStore {
   /** null when the person has no profile row yet. */
   load(): Promise<RemoteProfile | null>;
-  saveAnswers(answers: Answers, completed: boolean): Promise<void>;
+  saveProfile(p: { answers: Answers; completed: boolean; activity: Activity }): Promise<void>;
   saveProgress(moduleId: string, progress: RemoteProgress): Promise<void>;
 }
 

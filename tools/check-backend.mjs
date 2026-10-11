@@ -110,6 +110,35 @@ await step("a second device logs in and sees the same business, with no onboardi
   await B.p.getByText(title).first().waitFor();
 });
 
+await step("learning data is saved on the server and follows you to another device", async () => {
+  const saved = await poll("activity saved", async () => {
+    const st = await state();
+    return st.profiles.find((x) => x.name === "Ada Okafor")?.active_days?.length ? st : null;
+  });
+  const prof = saved.profiles.find((x) => x.name === "Ada Okafor");
+  assert.equal(prof.learning, true);
+  assert.ok(prof.last_seen, "last_seen should be saved");
+  assert.ok(saved.step_progress.some((r) => r.opened_at), "opened_at should be saved");
+
+  // Device A says "not for me" to the next step; it reaches the server and device B sees it hidden.
+  await A.p.goto(APP + "/app/today");
+  await A.p.getByRole("button", { name: "Not for me" }).click();
+  await poll("dismissal saved", async () => (await state()).step_progress.some((r) => r.dismissed === true));
+  await B.p.goto(APP + "/app/profile");
+  await B.p.getByText("Hidden for good").waitFor({ timeout: 8000 });
+
+  // B brings it back; the server follows.
+  await B.p.getByRole("button", { name: "Bring back" }).click();
+  await poll("restore saved", async () => !(await state()).step_progress.some((r) => r.dismissed === true));
+
+  // Turning learning off is saved too (and back on, so later steps behave normally).
+  const sw = () => B.p.getByRole("switch", { name: /Learn from how I use SPAL/ });
+  await sw().click();
+  await poll("learning off saved", async () => (await state()).profiles.find((x) => x.name === "Ada Okafor").learning === false);
+  await sw().click();
+  await poll("learning on saved", async () => (await state()).profiles.find((x) => x.name === "Ada Okafor").learning === true);
+});
+
 await step("wrong password and duplicate sign-up show clear messages", async () => {
   const C = await device();
   await logIn(C.p, "ada@example.com", "wrong-password");
@@ -125,13 +154,15 @@ await step("offline: changes are kept, shown as waiting, and sent when back onli
   await A.p.getByRole("checkbox").first().click();
   await A.p.getByRole("checkbox").nth(1).click();
   await A.p.waitForTimeout(1500);
-  assert.ok(!(await state()).step_progress.some((r) => r.module_id === "setup-register"), "offline write reached the server");
+  // Opening the step (online, a moment earlier) saved a row with no ticks. The offline ticks must not have arrived.
+  const early = (await state()).step_progress.find((r) => r.module_id === "setup-register");
+  assert.ok(!early || early.steps.length === 0, "offline ticks reached the server");
   await A.p.goBack();
   await A.p.getByRole("link", { name: "Profile" }).click();
   await A.p.getByText(/Waiting for a connection/).waitFor();
   await fake("offline?on=0");
   await A.p.evaluate(() => window.dispatchEvent(new Event("online")));
-  const row = await poll("synced after reconnect", async () => (await state()).step_progress.find((r) => r.module_id === "setup-register"));
+  const row = await poll("synced after reconnect", async () => (await state()).step_progress.find((r) => r.module_id === "setup-register" && r.steps.length > 0));
   assert.deepEqual(row.steps, [0, 1]);
   await A.p.getByText("All changes saved").waitFor();
 });

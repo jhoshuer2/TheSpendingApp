@@ -2,6 +2,8 @@
 
 Status: draft for creative-director review. Visual language is defined by the design system in `.claude/skills/spal-design/` (tokens, Satoshi, components). This doc defines *product*, not visuals.
 
+> **Where this is heading:** see `PRD-DO-IT-IN-SPAL.md`. Steps are not checklists to tick; every step should be doable inside SPAL, with an assistant that can help.
+
 ## 1. Vision
 SPAL is a personal business companion for entrepreneurs in Nigeria. It is not a feature catalogue. It is **modular**: the full library exists, but each person sees only the one thing they need right now. It learns how each entrepreneur works, tracks their journey, spots gaps, celebrates progress, and encourages (never forces) them to come back.
 

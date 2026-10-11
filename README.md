@@ -1,8 +1,8 @@
 # SPAL
 
-A personal business companion for entrepreneurs in Nigeria. It shows one next step at a time and learns how each person works. See [`docs/VISION.md`](docs/VISION.md) for the product and [`docs/DESIGN-DIRECTION.md`](docs/DESIGN-DIRECTION.md) for the visual rules. The design system lives in `.claude/skills/spal-design/` and is the source of truth for colour, type (Satoshi) and components.
+A personal business companion for entrepreneurs in Nigeria. It shows one next step at a time and learns how each person works. See [`docs/VISION.md`](docs/VISION.md) for the product, [`docs/PRD-DO-IT-IN-SPAL.md`](docs/PRD-DO-IT-IN-SPAL.md) for where it is heading (every step doable inside SPAL, with an assistant), [`docs/LEARNING.md`](docs/LEARNING.md) for how it adapts, and [`docs/DESIGN-DIRECTION.md`](docs/DESIGN-DIRECTION.md) for the visual rules. The design system lives in `.claude/skills/spal-design/` and is the source of truth for colour, type (Satoshi) and components.
 
-**Status:** Stage 3 (backend) on top of Stage 2: adaptive onboarding builds a profile (stage band plus a ranked needs map), and Today shows one next step with the reason for it. You can open a step, tick it off and finish it; Library, Journey and Profile are live. Accounts and saved data use Supabase (see [`docs/BACKEND.md`](docs/BACKEND.md)); with no Supabase settings it runs in local demo mode.
+**Status:** Stage 4 (learning from use) on top of Stage 3 (backend) and Stage 2: adaptive onboarding builds a profile (stage band plus a ranked needs map), and Today shows one next step with the reason for it. You can open a step, tick it off and finish it; Library, Journey and Profile are live. Accounts and saved data use Supabase (see [`docs/BACKEND.md`](docs/BACKEND.md)); with no Supabase settings it runs in local demo mode.
 
 ## Run
 
@@ -14,7 +14,8 @@ npm test               # unit tests
 npm run preview -- --port 4173
 npm run check:layout   # needs the preview server; screenshots land in tools/out/
 npm run check:flow     # needs the preview server; drives sign up > onboarding > finish a step > reload
-npm run check:backend  # fake Supabase + real browser: accounts, sync, offline, password reset
+npm run check:learning # needs the preview server; hide/undo, learning switch, welcome back
+npm run check:backend  # fake Supabase + real browser: accounts, sync, offline, password reset, learning data
 npm run test:db        # migration + security rules on a disposable Postgres (PGURL=...)
 ```
 
@@ -26,6 +27,7 @@ npm run test:db        # migration + security rules on a disposable Postgres (PG
 |---|---|
 | `src/styles/` | Design tokens copied from the design system (colour, type, spacing, depth, motion), plus base, component and screen CSS. `effects.css` omits the atmosphere/gradient tokens on purpose. |
 | `src/design-system/` | Components ported to TypeScript: Button, Field, Icon, SpalSymbol, PageDots, BottomNav. |
+| `src/learning/` | What SPAL notices and says about how someone is doing: weekly rhythm, areas, milestones, gaps, welcome back. Pure TypeScript, unit tested. |
 | `src/profile/` | The product logic, pure TypeScript and unit tested: questions, scoring (band and needs map), the module library, the recommender, and the local store. |
 | `src/screens/` | Splash, Welcome, Auth, Onboarding (questions, building, summary), Today, ModuleDetail, Library, Journey, Profile, Shell. |
 | `src/backend/` | Auth and server storage behind one interface: Supabase, or local demo mode. |

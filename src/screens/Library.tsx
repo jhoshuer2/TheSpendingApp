@@ -30,7 +30,15 @@ export function Library() {
                 </span>
                 <span className="row__main">
                   <span className="row__title">{m.title}</span>
-                  <span className="row__sub">{done.has(m.id) ? "Finished" : `${m.minutes} min`}</span>
+                  <span className="row__sub">
+                    {done.has(m.id)
+                      ? "Finished"
+                      : stored.progress[m.id]?.dismissed
+                        ? `${m.minutes} min · Hidden from suggestions`
+                        : stored.progress[m.id]?.snoozedUntil && Date.parse(stored.progress[m.id].snoozedUntil!) > Date.now()
+                          ? `${m.minutes} min · Back in your suggestions later`
+                          : `${m.minutes} min`}
+                  </span>
                 </span>
                 <span className="row__end">
                   <Icon name="chevron-right" size={18} />

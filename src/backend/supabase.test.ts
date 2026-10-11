@@ -58,7 +58,7 @@ describe("remote store", () => {
           : { select: () => ({ eq: async () => ({ data: [{ module_id: "setup-name", steps: [1, 1, 99], done_at: null }, { module_id: "gone", steps: [0], done_at: null }], error: null }) }) },
     } as unknown as SupabaseClient;
     const loaded = await createStore(client, "u1").load();
-    expect(loaded).toEqual({ answers: { stage: "idea" }, completed: false, progress: { "setup-name": { steps: [1] } } });
+    expect(loaded).toEqual({ answers: { stage: "idea" }, completed: false, activity: { days: [], learning: true }, progress: { "setup-name": { steps: [1] } } });
   });
   it("returns null when the person has no profile row yet", async () => {
     const client = { from: (t: string) => (t === "profiles" ? table(null) : { select: () => ({ eq: async () => ({ data: [], error: null }) }) }) } as unknown as SupabaseClient;

@@ -97,13 +97,13 @@ describe("recommend", () => {
     expect([second.next!, ...second.upNext].map((r) => r.module.id)).not.toContain(first);
   });
   it("only offers business-type steps to that type", () => {
-    const food = recommend(profile, answers, new Set(), 20);
+    const food = recommend(profile, answers, new Set(), { upNextCount: 20 });
     const ids = [food.next!, ...food.upNext].map((r) => r.module.id);
     expect(ids).toContain("food-price");
     expect(ids).not.toContain("fashion-deposit");
   });
   it("does not offer scaling steps to a beginner", () => {
-    const all = recommend(profile, answers, new Set(), 50);
+    const all = recommend(profile, answers, new Set(), { upNextCount: 50 });
     expect([all.next!, ...all.upNext].map((r) => r.module.id)).not.toContain("team-delegate");
   });
   it("mixes needs instead of repeating one back to back", () => {
