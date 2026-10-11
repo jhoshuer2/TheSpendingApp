@@ -4,6 +4,7 @@ import { BottomNav, type NavTab } from "../design-system/BottomNav";
 import { SpalSymbol } from "../design-system/SpalSymbol";
 import { useAuth } from "../lib/auth";
 import { useProfile } from "../profile/store";
+import { LoadError, Loading } from "./Loading";
 
 const TABS: NavTab[] = [
   { to: "/app/today", label: "Today", icon: "home" },
@@ -12,25 +13,31 @@ const TABS: NavTab[] = [
   { to: "/app/profile", label: "Profile", icon: "user" },
 ];
 
-/** Signed in AND onboarded. Anyone else is sent where they need to go. */
-export function RequireReady({ children }: { children: ReactNode }) {
-  const { session } = useAuth();
-  const { stored } = useProfile();
+/**
+ * Guards a screen. Waits until we know who is signed in and have their data, then sends anyone who
+ * shouldn't be here elsewhere. `onboarded={false}` is for the onboarding screens themselves.
+ */
+export function Gate({ children, onboarded = true }: { children: ReactNode; onboarded?: boolean }) {
+  const { session, status: authStatus } = useAuth();
+  const { stored, status, retry } = useProfile();
+  if (authStatus === "loading") return <Loading />;
   if (!session) return <Navigate to="/welcome" replace />;
-  if (!stored.completed) return <Navigate to="/onboarding" replace />;
+  if (status === "loading") return <Loading />;
+  if (status === "error") return <LoadError onRetry={retry} />;
+  if (onboarded && !stored.completed) return <Navigate to="/onboarding" replace />;
   return <>{children}</>;
 }
 
 export function Shell() {
   return (
-    <RequireReady>
+    <Gate>
       <div className="screen has-nav">
         <main className="screen__body">
           <Outlet />
         </main>
         <BottomNav tabs={TABS} />
       </div>
-    </RequireReady>
+    </Gate>
   );
 }
 
