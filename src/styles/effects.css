@@ -1,0 +1,28 @@
+/* Depth and motion tokens from the SPAL design system.
+   Atmosphere / aura / grain / gradient tokens are intentionally NOT included:
+   product UI uses flat paper and night surfaces until a gradient direction is decided. */
+:root {
+  --shadow-1: 0 0 0 1px rgba(20, 26, 23, 0.06), 0 1px 2px rgba(20, 26, 23, 0.04);
+  --shadow-2: 0 0 0 1px rgba(20, 26, 23, 0.06), 0 2px 4px rgba(20, 26, 23, 0.04), 0 12px 32px -12px rgba(20, 26, 23, 0.18);
+  --shadow-3: 0 0 0 1px rgba(20, 26, 23, 0.06), 0 24px 56px -16px rgba(20, 26, 23, 0.32);
+  --highlight-top: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  --shadow-tactile: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 -1px 0 rgba(0, 0, 0, 0.14), 0 1px 2px rgba(8, 51, 31, 0.3), 0 0 0 1px rgba(8, 51, 31, 0.5);
+  --shadow-tactile-light: inset 0 -1px 0 rgba(20, 26, 23, 0.05), 0 0 0 1px rgba(20, 26, 23, 0.1), 0 1px 2px rgba(20, 26, 23, 0.06);
+  --focus-ring: 0 0 0 3px rgba(16, 120, 67, 0.22);
+
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+  --dur-4: 560ms;
+  --stagger: 30ms;
+  --rise: 6px;
+  --press-scale: 0.98;
+
+  --blur-glass: 20px;
+}
+
+:root { --shadow-shell: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 40px 120px rgba(0, 0, 0, 0.55); }
