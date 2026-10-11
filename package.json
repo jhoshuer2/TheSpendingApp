@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "check:layout": "node tools/check-layout.mjs"
+    "check:layout": "node tools/check-layout.mjs",
+    "check:flow": "node tools/check-flow.mjs"
   },
   "dependencies": {
     "react": "18.3.1",

@@ -17,3 +17,9 @@
   border: 0; border-radius: var(--radius-full); background: transparent; cursor: pointer; color: var(--text-secondary);
 }
 .auth-switch { display: flex; justify-content: center; }
+
+/* ---------- Building (transition) ---------- */
+.building { flex: 1; display: grid; place-items: center; align-content: center; gap: var(--space-8); text-align: center; padding: 0 var(--space-page-x); }
+.building svg { width: clamp(96px, 26dvh, 160px); height: auto; aspect-ratio: 1; animation: spin 14s linear infinite; }
+.building p { min-height: 3em; font-size: var(--text-title-3); line-height: var(--lh-title-3); color: var(--text-secondary); }
+@keyframes spin { to { transform: rotate(360deg); } }

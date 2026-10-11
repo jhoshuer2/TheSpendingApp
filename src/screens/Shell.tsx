@@ -1,8 +1,9 @@
+import type { ReactNode } from "react";
 import { Navigate, NavLink, Outlet } from "react-router-dom";
 import { BottomNav, type NavTab } from "../design-system/BottomNav";
-import { Button } from "../design-system/Button";
-import { SpalSymbol, type SymbolName } from "../design-system/SpalSymbol";
+import { SpalSymbol } from "../design-system/SpalSymbol";
 import { useAuth } from "../lib/auth";
+import { useProfile } from "../profile/store";
 
 const TABS: NavTab[] = [
   { to: "/app/today", label: "Today", icon: "home" },
@@ -11,74 +12,25 @@ const TABS: NavTab[] = [
   { to: "/app/profile", label: "Profile", icon: "user" },
 ];
 
-export function Shell() {
+/** Signed in AND onboarded. Anyone else is sent where they need to go. */
+export function RequireReady({ children }: { children: ReactNode }) {
   const { session } = useAuth();
+  const { stored } = useProfile();
   if (!session) return <Navigate to="/welcome" replace />;
-  return (
-    <div className="screen has-nav">
-      <main className="screen__body">
-        <Outlet />
-      </main>
-      <BottomNav tabs={TABS} />
-    </div>
-  );
+  if (!stored.completed) return <Navigate to="/onboarding" replace />;
+  return <>{children}</>;
 }
 
-function Empty({ symbol, title, body }: { symbol: SymbolName; title: string; body: string }) {
+export function Shell() {
   return (
-    <div className="empty enter">
-      <SpalSymbol symbol={symbol} size={72} />
-      <h2>{title}</h2>
-      <p>{body}</p>
-    </div>
-  );
-}
-
-const Heading = ({ children }: { children: string }) => (
-  <h1 className="title title--page" style={{ paddingTop: "var(--space-4)" }}>
-    {children}
-  </h1>
-);
-
-export function Today() {
-  const { session } = useAuth();
-  return (
-    <>
-      <Heading>{`Hi, ${session?.name.split(" ")[0] ?? "there"}`}</Heading>
-      <Empty symbol="focus" title="Your first step will show here" body="Once SPAL knows your business, your next step appears on this screen." />
-    </>
-  );
-}
-
-export const Library = () => (
-  <>
-    <Heading>Library</Heading>
-    <Empty symbol="insight" title="Guides and tools live here" body="Ask for more whenever you're ready. Nothing is pushed on you." />
-  </>
-);
-
-export const Journey = () => (
-  <>
-    <Heading>Journey</Heading>
-    <Empty symbol="growth" title="Your progress will build up here" body="Finish a step and you'll start to see how far you've come." />
-  </>
-);
-
-export function Profile() {
-  const { session, signOut } = useAuth();
-  return (
-    <>
-      <Heading>Profile</Heading>
-      <div style={{ marginTop: "var(--space-6)", display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-        <p style={{ fontSize: "var(--text-title-3)", fontWeight: 500 }}>{session?.name}</p>
-        <p style={{ color: "var(--text-secondary)" }}>{session?.email}</p>
+    <RequireReady>
+      <div className="screen has-nav">
+        <main className="screen__body">
+          <Outlet />
+        </main>
+        <BottomNav tabs={TABS} />
       </div>
-      <div style={{ marginTop: "var(--space-8)" }}>
-        <Button variant="secondary" size="md" onClick={signOut}>
-          Log out
-        </Button>
-      </div>
-    </>
+    </RequireReady>
   );
 }
 
@@ -86,7 +38,11 @@ export function NotFound() {
   return (
     <div className="screen">
       <main className="screen__body" style={{ display: "grid", placeItems: "center" }}>
-        <Empty symbol="focus" title="We can't find that page" body="It may have moved. Head back and pick up from the start." />
+        <div className="empty enter">
+          <SpalSymbol symbol="focus" size={72} />
+          <h2>We can't find that page</h2>
+          <p>It may have moved. Head back and pick up from the start.</p>
+        </div>
       </main>
       <footer className="screen__footer">
         <NavLink to="/" className="btn btn--primary btn--lg btn--full">
@@ -96,3 +52,4 @@ export function NotFound() {
     </div>
   );
 }
+
