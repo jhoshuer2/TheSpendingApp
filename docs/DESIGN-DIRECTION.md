@@ -49,3 +49,25 @@ Source of truth for visuals: `.claude/skills/spal-design/` (tokens, Satoshi, com
 - Small strict type scale, no ad-hoc sizes.
 - No decoration without purpose; no lorem ipsum.
 - Check each screen at several viewport sizes before review.
+
+## Addendum: onboarding, auth and stat patterns (final reference batch)
+
+### Onboarding screens
+- Structure: visual at top, page indicator (small dash/pill row, current one filled) above the headline, centred headline, one short grey line, stacked actions at the bottom.
+- Actions: primary pill (full width) with a secondary quieter pill below ("Skip"/"Back"). Skip stays visible and reachable, never hidden or tiny.
+- One idea per screen. Copy is short, plain and benefit-led.
+- Visual slot: a system-colour illustration, the SPAL symbol or a product preview. No photography or gradient backdrops.
+
+### Question-per-screen flow (profile building)
+Taken from the onboarding video: one question per screen, big question headline, selectable option cards or tiles with a clear selected state, a single Continue button, then a short "building your plan" transition screen before the first Today card. This is how SPAL's profile questions run. Add a progress indicator and a Back affordance. Selection never relies on colour alone (check mark plus border).
+
+### Sign up / login
+Primary "Continue with email" pill, a quiet divider ("or continue with"), Google and Apple as secondary buttons, "Already have an account? Log in" as a text link. Short reassurance line under the title.
+
+### Stat tiles and charts
+- 2x2 tiles: small label with icon above a big tabular number and a small delta ("+12.5%") in the semantic colour with an arrow or sign, not colour alone.
+- Bar chart idea worth keeping: filled bar for actual, hatched/lighter bar for remaining capacity or goal. Suits "progress toward your goal".
+- Charts follow the dataviz rules: tokens only, labelled, accessible.
+
+### Not adopting
+Photographic or gradient backgrounds, saturated per-screen palettes, dark-by-default screens, paywall screens (later stage), and italic-serif accent words in headlines. The design system is Satoshi only. If you want an emphasis style in headlines, Satoshi Italic is available in the system; this is an open question.
