@@ -29,6 +29,7 @@ const VIEWPORTS = [
 const SESSION = JSON.stringify({ name: "Ada Okafor", email: "ada@example.com" });
 
 const SCREENS = [
+  { name: "splash", path: "/", holdSplash: true },
   { name: "welcome-1", path: "/welcome" },
   { name: "welcome-2", path: "/welcome", act: async (p) => p.getByRole("button", { name: "Next" }).click() },
   { name: "welcome-3", path: "/welcome", act: async (p) => { await p.getByRole("button", { name: "Next" }).click(); await p.getByRole("button", { name: "Next" }).click(); } },
@@ -48,6 +49,8 @@ for (const [w, h] of VIEWPORTS) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, hasTouch: w < 600, serviceWorkers: "block" });
   for (const s of SCREENS) {
     const page = await ctx.newPage();
+    // Keep the splash on screen: ignore its 1200ms auto-navigation timer.
+    if (s.holdSplash) await page.addInitScript(() => { const st = window.setTimeout; window.setTimeout = (fn, ms, ...a) => (ms === 1200 ? 0 : st(fn, ms, ...a)); });
     if (s.authed) await page.addInitScript((v) => localStorage.setItem("spal.session", v), SESSION);
     await page.goto(BASE + s.path, { waitUntil: "networkidle" });
     await page.evaluate(() => document.fonts.ready);
@@ -64,6 +67,9 @@ for (const [w, h] of VIEWPORTS) {
           issues.push(`overflow-x: <${el.tagName.toLowerCase()} class="${el.className}">`);
         }
       }
+      // The app column must be the same width on every screen: min(480, viewport).
+      const expected = Math.min(480, vw);
+      if (Math.abs(app.width - expected) > 1) issues.push(`app column is ${Math.round(app.width)}px wide, expected ${expected}px`);
       const body = document.querySelector(".screen__body");
       if (body && body.scrollWidth > body.clientWidth + 1) issues.push(`body scrolls horizontally (${body.scrollWidth} > ${body.clientWidth})`);
 
@@ -86,7 +92,8 @@ for (const [w, h] of VIEWPORTS) {
         if (last && last.getBoundingClientRect().bottom > nav.getBoundingClientRect().top - 4) issues.push("content hidden behind nav");
         body.scrollTop = 0;
       }
-      const fs = getComputedStyle(document.querySelector("h1, h2") ?? document.body).fontFamily;
+      const heading = document.querySelector("h1, h2");
+      const fs = heading ? getComputedStyle(heading).fontFamily : "Satoshi";
       if (!/Satoshi/.test(fs)) issues.push(`heading font is not Satoshi: ${fs}`);
       return issues;
     });
