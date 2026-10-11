@@ -188,3 +188,6 @@
 .stack { display: flex; flex-direction: column; gap: var(--space-3); }
 .page-head { padding-top: var(--space-4); }
 .page-head p { margin-top: var(--space-1); color: var(--text-secondary); font-size: var(--text-body); }
+
+.form-error { padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--red-50); color: var(--red-700); font-size: var(--text-body-sm); line-height: var(--lh-body-sm); font-weight: 500; }
+.note { margin-top: var(--space-4); font-size: var(--text-body-sm); line-height: var(--lh-body-sm); color: var(--text-secondary); }

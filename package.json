@@ -10,9 +10,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check:layout": "node tools/check-layout.mjs",
-    "check:flow": "node tools/check-flow.mjs"
+    "check:flow": "node tools/check-flow.mjs",
+    "check:backend": "bash tools/check-backend.sh",
+    "test:db": "bash tools/test-db.sh"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.117.3",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router-dom": "6.28.0"

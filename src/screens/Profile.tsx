@@ -8,8 +8,10 @@ import { NEED_ICON } from "../profile/ui";
 
 export function Profile() {
   const navigate = useNavigate();
-  const { session, signOut } = useAuth();
-  const { profile } = useProfile();
+  const { session, signOut, mode } = useAuth();
+  const { profile, sync, prepareSignOut } = useProfile();
+  const saved =
+    mode === "local" ? "Saved on this device only (demo mode)" : sync === "saving" ? "Saving…" : sync === "offline" ? "Waiting for a connection. We'll save your changes when you're back online." : "All changes saved";
 
   return (
     <>
@@ -22,6 +24,9 @@ export function Profile() {
           {session?.name}
         </p>
         <p className="row__sub">{session?.email}</p>
+        <p className="row__sub" role="status">
+          {saved}
+        </p>
       </div>
 
       <h2 className="section-title">Your business</h2>
@@ -49,7 +54,14 @@ export function Profile() {
         <Button variant="secondary" size="md" onClick={() => navigate("/onboarding")}>
           Change my answers
         </Button>
-        <Button variant="ghost" size="md" onClick={signOut}>
+        <Button
+          variant="ghost"
+          size="md"
+          onClick={async () => {
+            await prepareSignOut();
+            await signOut();
+          }}
+        >
           Log out
         </Button>
       </div>

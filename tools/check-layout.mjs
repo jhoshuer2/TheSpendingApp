@@ -50,6 +50,8 @@ const SCREENS = [
   { name: "signup", path: "/signup" },
   { name: "signup-errors", path: "/signup", act: async (p) => p.getByRole("button", { name: "Create account" }).click() },
   { name: "login", path: "/login" },
+  { name: "forgot-password", path: "/forgot-password" },
+  { name: "reset-expired", path: "/reset-password" },
   { name: "q-stage", path: "/onboarding", authed: true },
   { name: "q-stage-picked", path: "/onboarding", authed: true, act: pick(/running 1 to 3/) },
   {

@@ -1,57 +1,60 @@
-import { useMemo, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { AuthContext, readSession, writeSession, type AuthContextValue, type Session } from "../lib/auth";
+import { AuthProvider } from "../lib/auth";
 import { ProfileProvider } from "../profile/store";
-import { Auth } from "../screens/Auth";
+import { Auth, ForgotPassword, ResetPassword } from "../screens/Auth";
 import { Journey } from "../screens/Journey";
 import { Library } from "../screens/Library";
 import { ModuleDetail } from "../screens/ModuleDetail";
 import { Building, Onboarding, Summary } from "../screens/Onboarding";
 import { Profile } from "../screens/Profile";
-import { NotFound, RequireReady, Shell } from "../screens/Shell";
+import { Gate, NotFound, Shell } from "../screens/Shell";
 import { Splash } from "../screens/Splash";
 import { Today } from "../screens/Today";
 import { Welcome } from "../screens/Welcome";
 
 export function App() {
-  const [session, setSession] = useState<Session | null>(readSession);
-
-  const auth = useMemo<AuthContextValue>(
-    () => ({
-      session,
-      signIn: (s) => {
-        writeSession(s);
-        setSession(s);
-      },
-      signOut: () => {
-        writeSession(null);
-        setSession(null);
-      },
-    }),
-    [session],
-  );
-
-  const signedIn = (el: JSX.Element) => (session ? el : <Navigate to="/welcome" replace />);
-
   return (
-    <AuthContext.Provider value={auth}>
+    <AuthProvider>
       <ProfileProvider>
         <BrowserRouter>
           <div className="app">
             <Routes>
               <Route path="/" element={<Splash />} />
               <Route path="/welcome" element={<Welcome />} />
-              <Route path="/signup" element={<Auth mode="signup" />} />
-              <Route path="/login" element={<Auth mode="login" />} />
-              <Route path="/onboarding" element={signedIn(<Onboarding />)} />
-              <Route path="/onboarding/building" element={signedIn(<Building />)} />
-              <Route path="/onboarding/summary" element={signedIn(<Summary />)} />
+              <Route path="/signup" element={<Auth key="signup" mode="signup" />} />
+              <Route path="/login" element={<Auth key="login" mode="login" />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route
+                path="/onboarding"
+                element={
+                  <Gate onboarded={false}>
+                    <Onboarding />
+                  </Gate>
+                }
+              />
+              <Route
+                path="/onboarding/building"
+                element={
+                  <Gate onboarded={false}>
+                    <Building />
+                  </Gate>
+                }
+              />
+              <Route
+                path="/onboarding/summary"
+                element={
+                  <Gate onboarded={false}>
+                    <Summary />
+                  </Gate>
+                }
+              />
               <Route
                 path="/module/:id"
                 element={
-                  <RequireReady>
+                  <Gate>
                     <ModuleDetail />
-                  </RequireReady>
+                  </Gate>
                 }
               />
               <Route path="/app" element={<Shell />}>
@@ -66,6 +69,6 @@ export function App() {
           </div>
         </BrowserRouter>
       </ProfileProvider>
-    </AuthContext.Provider>
+    </AuthProvider>
   );
 }
