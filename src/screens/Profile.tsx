@@ -7,6 +7,7 @@ import { shortDate } from "../lib/format";
 import { useAuth } from "../lib/auth";
 import { moduleById } from "../profile/modules";
 import { BAND_LABEL, NEED_LABEL } from "../profile/scoring";
+import { useAssistant } from "../assistant/store";
 import { useProfile } from "../profile/store";
 import { useRecords } from "../records/store";
 import { NEED_ICON } from "../profile/ui";
@@ -14,6 +15,7 @@ import { NEED_ICON } from "../profile/ui";
 export function Profile() {
   const navigate = useNavigate();
   const { session, signOut, mode } = useAuth();
+  const assistant = useAssistant();
   const { profile, sync, prepareSignOut, stored, insights, setLearning, resetLearning, restore } = useProfile();
   const records = useRecords();
   const [confirmReset, setConfirmReset] = useState(false);
@@ -153,6 +155,7 @@ export function Profile() {
           variant="ghost"
           size="md"
           onClick={async () => {
+            assistant.prepareSignOut();
             await Promise.all([prepareSignOut(), records.prepareSignOut()]);
             await signOut();
           }}

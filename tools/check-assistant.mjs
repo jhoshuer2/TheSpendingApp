@@ -28,8 +28,14 @@ p.on("console", (m) => m.type() === "error" && !/Failed to load resource|net::ER
 
 const books = () => p.evaluate(() => { const k = Object.keys(localStorage).find((x) => x.startsWith("spal.records")); return JSON.parse(localStorage.getItem(k) ?? "{}"); });
 const live = async (t) => Object.values((await books())[t] ?? {}).filter((r) => !r.deletedAt);
-const say = async (t) => { await p.getByLabel("Message").fill(t); await p.getByRole("button", { name: "Send" }).click(); };
-const reply = (re) => p.locator(".msg--assistant .msg__text", { hasText: re }).last().waitFor({ timeout: 6000 });
+const replies = () => p.locator(".msg--assistant .msg__text, .msg__note").count();
+let mark = 0; // how many replies were on screen when we last spoke, so we only accept a NEW one
+const say = async (t) => { await p.getByLabel("Message").waitFor(); mark = await replies(); await p.getByLabel("Message").fill(t); await p.getByRole("button", { name: "Send" }).click(); };
+const reply = async (re) => {
+  await poll(`a new reply matching ${re}`, async () => (await replies()) > mark && re.test(await p.locator(".msg--assistant .msg__text, .msg__note").last().innerText()), 8000);
+  // and let it finish before the next step talks
+  await p.getByRole("status").waitFor({ state: "detached", timeout: 8000 }).catch(() => {});
+};
 const card = () => p.getByTestId("proposal").last();
 const open = async () => { await p.goto(APP + "/assistant"); await p.getByLabel("Message").waitFor(); };
 
@@ -107,8 +113,9 @@ await step("'Not right' saves nothing, and the assistant is told", async () => {
 });
 
 await step("ignoring a card and carrying on counts as not saved", async () => {
+  const n0 = await p.getByTestId("proposal").count();
   await say("I spent 1,200 on bus");
-  await card().waitFor();
+  await p.getByTestId("proposal").nth(n0).waitFor();
   await say("who owes me money?");
   await reply(/Nobody owes you/);
   assert.equal((await live("expenses")).length, 0);
@@ -144,6 +151,7 @@ await step("Pidgin: settings change the reply language and the starters", async 
   await p.getByRole("button", { name: "Clear this chat" }).click();
   await p.waitForURL("**/assistant");
   await p.getByRole("button", { name: /Who dey owe me/ }).waitFor();
+  mark = await replies();
   await p.getByRole("button", { name: /Who dey owe me/ }).click();
   await reply(/./);
   const log = await fake("assistant-log");
@@ -153,8 +161,9 @@ await step("Pidgin: settings change the reply language and the starters", async 
 });
 
 await step("the conversation survives a reload, including an unanswered card", async () => {
+  const n1 = await p.getByTestId("proposal").count();
   await say("I sell 2 bag rice for 5,000 naira");
-  await card().waitFor();
+  await p.getByTestId("proposal").nth(n1).waitFor();
   await p.reload();
   await p.getByLabel("Message").waitFor();
   assert.equal(await p.locator(".acard--pending").count(), 1, "the card is still waiting");
@@ -168,8 +177,9 @@ await step("save-without-asking mode saves small amounts straight away and offer
   await p.getByRole("switch", { name: /Save without asking/ }).click();
   await p.goBack();
   const before = (await live("expenses")).length;
+  const savedBefore = await p.locator(".acard--saved").count();
   await say("I spent 700 on bus");
-  await p.locator(".acard--saved").last().waitFor();
+  await poll("the new card is saved", async () => (await p.locator(".acard--saved").count()) > savedBefore);
   assert.equal((await live("expenses")).length, before + 1);
   assert.match(await p.locator(".acard--saved").last().innerText(), /Saved for you/);
   await p.locator(".acard--saved").last().getByRole("button", { name: "Undo" }).click();
@@ -185,6 +195,7 @@ await step("offline: the message is kept and 'Try again' works once back online"
   await say("who owes me money?");
   await p.getByText(/Your message is kept|couldn't answer|busy/).waitFor({ timeout: 8000 });
   await fake("offline?on=0");
+  mark = await replies();
   await p.getByRole("button", { name: "Try again" }).click();
   await reply(/sales are not paid yet|Nobody owes/);
   assert.equal(await p.locator(".msg--user", { hasText: "who owes me money?" }).count() >= 1, true);

@@ -58,12 +58,12 @@ if (args.includes("--self-test")) {
   // A perfect answerer must score 100%; one that never does anything must fail every case that wants an action. This proves the scoring can fail.
   const oracle = (c) => async () => {
     const sales = [], expenses = [];
-    if (c.saleTotal !== undefined) sales.push({ amount: c.saleTotal, ...(c.unpaid ? { paid: false, customer: c.unpaid } : {}), ...(c.when ? { when: c.when } : {}) });
+    if (c.saleTotal !== undefined) sales.push({ amount: c.saleTotal, ...(c.customer ? { customer: c.customer } : {}), ...(c.unpaid ? { paid: false, customer: c.unpaid } : {}), ...(c.when ? { when: c.when } : {}) });
     if (c.expenseTotal !== undefined) expenses.push({ amount: c.expenseTotal, category: c.categories?.[0] ?? "other", ...(c.when ? { when: c.when } : {}) });
     const content = [];
     if (c.markPaid) content.push({ type: "tool_use", id: "t1", name: "propose_mark_paid", input: { customer: c.markPaid } });
     else if (c.tool) content.push({ type: "tool_use", id: "t1", name: c.tool, input: {} });
-    else if (sales.length || expenses.length) content.push({ type: "tool_use", id: "t1", name: "propose_records", input: { sales, expenses } });
+    else if (sales.length || expenses.length) content.push({ type: "text", text: "Please check this and tap Save." }, { type: "tool_use", id: "t1", name: "propose_records", input: { sales, expenses } });
     else content.push({ type: "text", text: "Can you tell me more?" });
     return { content, usage: { input: 1000, output: 100 } };
   };

@@ -6,6 +6,8 @@
 //   unpaid        a customer name that must appear on an unpaid sale
 //   categories    allowed expense categories (any proposed expense must be one of these)
 //   when          every proposed record must be dated this (YYYY-MM-DD or "yesterday")
+//   customer      a customer name that must appear on a proposed sale (even a paid one)
+//   text          the assistant must also say something in words alongside its proposal
 //   markPaid      the customer passed to propose_mark_paid
 //   tool          a read tool that must have been called
 //   nothing       true = no write tool may be called at all (it should ask, or decline)
@@ -47,6 +49,8 @@ export const CASES = [
   { id: "pcm-vague", say: "I sell something today", nothing: true },
   { id: "pcm-owes-me", say: "Madam Ngozi owe me 6k for the cloth", saleTotal: 6000, unpaid: "Ngozi" },
   { id: "pcm-words", say: "I sell am for two thousand five hundred", saleTotal: 2500 },
+  { id: "pcm-credit-then-paid", say: "Chidi collect 2 bag rice for 25k, e never pay, then Chidi don pay", saleTotal: 25000, customer: "Chidi", text: true },
+  { id: "pcm-wig-and-owed", say: "I sell 2 wig for 30k, then Chidi collect 2 bag rice for 25k, e never pay", saleTotal: 55000, unpaid: "Chidi", text: true },
   { id: "pcm-two-lines", say: "I sell 1 bag rice 45k, 2 bag beans 60k", saleTotal: 105000 },
   { id: "pcm-last-friday", say: "Last Friday I sell 4 shirt for 20k", saleTotal: 20000, when: "2026-10-09" },
 ];
@@ -77,6 +81,8 @@ export function judge(c, calls, text) {
   if (c.saleTotal !== undefined && sum(sales) !== c.saleTotal) problems.push(`sale total ${sales.length ? sum(sales) : "none"}, wanted ${c.saleTotal}`);
   if (c.expenseTotal !== undefined && sum(expenses) !== c.expenseTotal) problems.push(`expense total ${expenses.length ? sum(expenses) : "none"}, wanted ${c.expenseTotal}`);
   if (c.saleTotal === undefined && c.expenseTotal === undefined && !c.nothing && !c.markPaid && !c.tool && sales.length + expenses.length) problems.push("recorded something unasked");
+  if (c.customer && !sales.some((s) => norm(s.customer).includes(norm(c.customer)))) problems.push(`customer ${c.customer} missing from the sale`);
+  if (c.text && writes.length && !text.trim()) problems.push("proposed with no words alongside it");
   if (c.unpaid && !sales.some((s) => s.paid === false && norm(s.customer).includes(norm(c.unpaid)))) problems.push(`no unpaid sale for ${c.unpaid}`);
   if (c.unpaid === undefined && c.saleTotal !== undefined && sales.some((s) => s.paid === false)) problems.push("marked a sale unpaid that was paid");
   if (c.categories && !expenses.every((e) => c.categories.includes(e.category))) problems.push(`expense category ${expenses.map((e) => e.category)} not in ${c.categories}`);

@@ -158,7 +158,7 @@ export function describeProposal(p: Proposal): string[] {
   const lines: string[] = [];
   for (const s of p.sales) {
     const what = s.items.length ? s.items.map((i) => `${i.qty > 1 ? `${i.qty} × ` : ""}${i.name}`).join(", ") : s.note || "Sale";
-    lines.push(`${what}: ${money(s.amount)}${s.paid ? "" : ` (${s.customer} owes this)`}`);
+    lines.push(`${what}: ${money(s.amount)}${s.paid ? (s.customer ? ` · ${s.customer}, paid` : "") : ` · ${s.customer} owes this`}`);
   }
   for (const e of p.expenses) lines.push(`${e.note || categoryName(e.category)}: ${money(e.amount)} spent`);
   if (p.markPaid) lines.push(`${p.markPaid.customer} paid ${money(p.markPaid.total)}`);

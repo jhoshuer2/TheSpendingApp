@@ -67,9 +67,13 @@ describe("propose_records", () => {
     expect(buildRecordsProposal({ sales: Array.from({ length: 21 }, () => ({ amount: 1 })) }, books(), NOW).ok).toBe(false);
     expect(buildRecordsProposal("nonsense", books(), NOW).ok).toBe(false);
   });
+  it("always shows who the customer is, whether they owe or have paid", () => {
+    const r = buildRecordsProposal({ sales: [{ amount: 25000, customer: "Chidi", note: "2 bags of rice" }] }, books(), NOW);
+    expect(r.ok && describeProposal(r.proposal)).toEqual(["2 bags of rice: ₦25,000 · Chidi, paid"]);
+  });
   it("describes in plain words", () => {
     const r = buildRecordsProposal({ sales: [{ amount: 4500, items: [{ name: "jollof rice", qty: 3 }] }, { amount: 2000, paid: false, customer: "Ada", note: "Cake" }], expenses: [{ amount: 500, category: "transport" }] }, books(), NOW);
-    expect(r.ok && describeProposal(r.proposal)).toEqual(["3 × Jollof rice: ₦4,500", "Cake: ₦2,000 (Ada owes this)", "Transport: ₦500 spent"]);
+    expect(r.ok && describeProposal(r.proposal)).toEqual(["3 × Jollof rice: ₦4,500", "Cake: ₦2,000 · Ada owes this", "Transport: ₦500 spent"]);
   });
 });
 

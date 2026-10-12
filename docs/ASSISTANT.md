@@ -76,7 +76,7 @@ Most people will send far fewer than 25 a day, so real averages will be much low
 ```
 ANTHROPIC_API_KEY=sk-ant-... node tools/eval-assistant.mjs
 ```
-Runs 35 realistic messages (19 English, 16 Pidgin) against Opus, Sonnet and Haiku with the real instructions and tools, and prints accuracy for each language, what it got wrong, and cost per message. It costs a few cents per model. Add cases to `tools/eval-assistant-lib.mjs` as you find real phrases, especially from your own customers. `node tools/eval-assistant.mjs --self-test` checks the scoring without a key.
+Runs 37 realistic messages (19 English, 18 Pidgin) against Opus, Sonnet and Haiku with the real instructions and tools, and prints accuracy for each language, what it got wrong, and cost per message. It costs a few cents per model. Add cases to `tools/eval-assistant-lib.mjs` as you find real phrases, especially from your own customers. `node tools/eval-assistant.mjs --self-test` checks the scoring without a key.
 
 The model-facing instructions explain Pidgin money and phrasing ("don pay", "dey owe me", "5k", "two thousand five hundred") and include examples, but **understanding Pidgin well is unproven until that eval is run**. Yoruba, Igbo and Hausa aren't in v1.
 
