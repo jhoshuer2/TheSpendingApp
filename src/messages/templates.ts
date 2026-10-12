@@ -33,7 +33,8 @@ export function whatOf(s: Sale): string {
     const parts = s.items.slice(0, 3).map((i) => (i.qty > 1 ? `${i.qty} ${i.name}` : i.name));
     return parts.join(", ") + (s.items.length > 3 ? " and more" : "");
   }
-  return s.note || "your order";
+  // A bare "Sale" says nothing to a customer.
+  return s.note && s.note.trim().toLowerCase() !== "sale" ? s.note : "your order";
 }
 
 export interface ReminderInput {

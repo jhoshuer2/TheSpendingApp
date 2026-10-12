@@ -52,6 +52,7 @@ describe("reminderMessage", () => {
   it("describes sales plainly", () => {
     expect(whatOf(sale("a", {}))).toBe("your order");
     expect(whatOf(sale("a", { note: "Cake order" }))).toBe("Cake order");
+    expect(whatOf(sale("a", { note: "Sale" }))).toBe("your order");
     expect(whatOf(sale("a", { items: [1, 2, 3, 4].map((n) => ({ name: `P${n}`, qty: n, unitPrice: 100 })) }))).toBe("P1, 2 P2, 3 P3 and more");
   });
 });
