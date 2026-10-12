@@ -3,7 +3,7 @@ import type { Module } from "./types";
 /** The module library. One step is shown at a time; the rest wait here until they fit. */
 export const MODULES: Module[] = [
   {
-    id: "setup-name", need: "setup", bands: ["starting", "growing"], minutes: 10,
+    id: "setup-name", kind: "guide", need: "setup", bands: ["starting", "growing"], minutes: 10,
     title: "Choose your business name",
     why: "A clear name is the base for registering, branding and your pages.",
     steps: [
@@ -14,7 +14,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "setup-register", need: "setup", bands: ["starting", "growing"], minutes: 20,
+    id: "setup-register", kind: "guide", need: "setup", bands: ["starting", "growing"], minutes: 20,
     title: "Register your business name",
     why: "Registering lets you open a business account and look trustworthy to bigger customers.",
     steps: [
@@ -26,7 +26,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "setup-plan", need: "setup", bands: ["starting"], minutes: 20,
+    id: "setup-plan", kind: "guide", need: "setup", bands: ["starting"], minutes: 20,
     title: "Write your one-page plan",
     why: "Putting it on paper shows you what you need before you spend.",
     steps: [
@@ -37,7 +37,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "money-account", need: "money", bands: ["starting", "growing"], minutes: 15,
+    id: "money-account", kind: "guide", need: "money", bands: ["starting", "growing"], minutes: 15,
     title: "Open a separate business account",
     why: "Keeping business money apart shows you what the business really earns.",
     steps: [
@@ -48,18 +48,20 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "money-profit", need: "money", bands: ["growing", "scaling"], minutes: 20,
+    id: "money-profit", kind: "do", need: "money", bands: ["growing", "scaling"], minutes: 20,
     title: "Work out what you really keep",
     why: "Sales are not profit. Knowing the difference tells you where to act.",
+    tool: { label: "Open Money", to: "/app/money" },
+    auto: { 0: "salesMonth>=3", 1: "expenses>=1" },
     steps: [
-      "Add up what you sold this month.",
-      "Add up what you spent on stock, transport, data and helpers.",
-      "Take the second number from the first. That is what you keep.",
+      "Record at least three sales this month.",
+      "Record what you spent: stock, transport, data and helpers.",
+      "Open Money and look at what you kept this month.",
       "Pick one cost you can cut next month.",
     ],
   },
   {
-    id: "food-price", need: "money", bands: ["starting", "growing"], minutes: 20, types: ["food"],
+    id: "food-price", kind: "guide", need: "money", bands: ["starting", "growing"], minutes: 20, types: ["food"],
     title: "Price a plate so you make money",
     why: "Many food sellers price by guessing. A proper price protects your pocket.",
     steps: [
@@ -70,7 +72,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "fashion-deposit", need: "money", bands: ["starting", "growing"], minutes: 15, types: ["fashion"],
+    id: "fashion-deposit", kind: "guide", need: "money", bands: ["starting", "growing"], minutes: 15, types: ["fashion"],
     title: "Set a deposit and pickup rule",
     why: "A deposit covers your materials and stops orders going uncollected.",
     steps: [
@@ -81,7 +83,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "brand-logo", need: "brand", bands: ["starting", "growing"], minutes: 20,
+    id: "brand-logo", kind: "guide", need: "brand", bands: ["starting", "growing"], minutes: 20,
     title: "Get a simple logo",
     why: "A logo makes your business easy to spot and remember.",
     steps: [
@@ -92,7 +94,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "brand-look", need: "brand", bands: ["growing", "scaling"], minutes: 15,
+    id: "brand-look", kind: "guide", need: "brand", bands: ["growing", "scaling"], minutes: 15,
     title: "Make everything look the same",
     why: "A consistent look makes a small business feel established.",
     steps: [
@@ -102,7 +104,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "online-whatsapp", need: "online", bands: ["starting", "growing"], minutes: 15,
+    id: "online-whatsapp", kind: "guide", need: "online", bands: ["starting", "growing"], minutes: 15,
     title: "Set up WhatsApp Business",
     why: "Most of your customers are already on WhatsApp. Make it easy to order there.",
     steps: [
@@ -113,7 +115,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "online-instagram", need: "online", bands: ["starting", "growing"], minutes: 20,
+    id: "online-instagram", kind: "guide", need: "online", bands: ["starting", "growing"], minutes: 20,
     title: "Start a page customers can trust",
     why: "Strangers check your page before they buy. A clear page earns their trust.",
     steps: [
@@ -124,7 +126,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "online-store", need: "online", bands: ["growing", "scaling"], minutes: 30,
+    id: "online-store", kind: "guide", need: "online", bands: ["growing", "scaling"], minutes: 30,
     title: "Open a simple online store",
     why: "A store lets customers order any time, even when you're busy.",
     steps: [
@@ -135,7 +137,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "customers-ask", need: "customers", bands: ["growing", "scaling"], minutes: 15,
+    id: "customers-ask", kind: "guide", need: "customers", bands: ["growing", "scaling"], minutes: 15,
     title: "Ask ten customers one question",
     why: "Your customers can tell you quickly what would bring in more people like them.",
     steps: [
@@ -146,7 +148,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "customers-referral", need: "customers", bands: ["starting", "growing"], minutes: 15,
+    id: "customers-referral", kind: "guide", need: "customers", bands: ["starting", "growing"], minutes: 15,
     title: "Ask happy customers to tell others",
     why: "People trust a friend's word more than any advert.",
     steps: [
@@ -157,7 +159,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "customers-offer", need: "customers", bands: ["growing", "scaling"], minutes: 20,
+    id: "customers-offer", kind: "guide", need: "customers", bands: ["growing", "scaling"], minutes: 20,
     title: "Run a one-week offer",
     why: "A short, clear offer gives people a reason to buy now.",
     steps: [
@@ -168,18 +170,19 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "records-sales", need: "records", bands: ["starting", "growing", "scaling"], minutes: 10,
+    id: "records-sales", kind: "do", need: "records", bands: ["starting", "growing", "scaling"], minutes: 10,
     title: "Write down every sale",
-    why: "You can't improve what you can't see. A few lines a day is enough.",
+    why: "You can't improve what you can't see. A few taps a day is enough.",
+    tool: { label: "Record a sale", to: "/money/sale" },
+    auto: { 0: "sales>=1", 1: "salesDays>=3", 2: "expenses>=1" },
     steps: [
-      "Pick one place: a notebook or the notes app on your phone.",
-      "For each sale, write the date, the item and the amount.",
-      "Do it for three days in a row.",
-      "On Sunday, add up the week.",
+      "Record your first sale in SPAL.",
+      "Record sales on three different days.",
+      "Add one thing you spent money on, so SPAL can show what you kept.",
     ],
   },
   {
-    id: "demand-capacity", need: "demand", bands: ["growing", "scaling"], minutes: 20,
+    id: "demand-capacity", kind: "guide", need: "demand", bands: ["growing", "scaling"], minutes: 20,
     title: "Know what you can supply in a week",
     why: "Knowing your limit lets you promise only what you can deliver.",
     steps: [
@@ -190,7 +193,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "team-first-helper", need: "team", bands: ["growing", "scaling"], minutes: 20,
+    id: "team-first-helper", kind: "guide", need: "team", bands: ["growing", "scaling"], minutes: 20,
     title: "Plan your first helper",
     why: "The right helper gives you back time to do what only you can do.",
     steps: [
@@ -201,7 +204,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "team-delegate", need: "team", bands: ["scaling"], minutes: 20,
+    id: "team-delegate", kind: "guide", need: "team", bands: ["scaling"], minutes: 20,
     title: "Hand over one task for good",
     why: "A task that runs without you is how a business grows past one person.",
     steps: [
@@ -212,7 +215,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "direction-goal", need: "direction", bands: ["starting", "growing", "scaling"], minutes: 10,
+    id: "direction-goal", kind: "guide", need: "direction", bands: ["starting", "growing", "scaling"], minutes: 10,
     title: "Pick one goal for the next 30 days",
     why: "One clear goal beats ten half-started ones.",
     steps: [
@@ -223,7 +226,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "direction-mentor", need: "direction", bands: ["starting", "growing"], minutes: 20,
+    id: "direction-mentor", kind: "guide", need: "direction", bands: ["starting", "growing"], minutes: 20,
     title: "Find someone to learn from",
     why: "Someone a few steps ahead can save you months of trial and error.",
     steps: [

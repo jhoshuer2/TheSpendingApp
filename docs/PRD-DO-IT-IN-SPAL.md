@@ -1,6 +1,6 @@
 # SPAL: Do it in SPAL (PRD, draft v0.1)
 
-Status: draft for creative-director review. Extends `VISION.md`. Nothing here is built yet except where marked.
+Status: draft for creative-director review. Extends `VISION.md`. **Built so far:** the records engine (section 7, step 1; see `RECORDS.md`). Everything else is still to build.
 
 ## 1. The principle
 
@@ -87,7 +87,7 @@ The learning layer in progress today (hiding steps, variety, recap, welcome back
 `business` (the business brain: facts, preferences) · `products` · `sales` · `expenses` · `customers` · `staff` · `tasks` (steps, now with a kind and a tool) · `agent_actions` (what it did, with undo). Everything is row-level-secured to the owner, as today.
 
 ## 7. Build order (proposed)
-1. **Records engine (the in-app notebook):** products, record a sale, record an expense, this week's and month's profit. Turns "write down every sale" from advice into a tool. Works by tapping, no AI needed.
+1. **Records engine (the in-app notebook): BUILT.** Products, record a sale (paid or owed), record an expense, what you kept today / this week / this month, and insights from the numbers. "Write down every sale" and "Work out what you really keep" are now real tools whose steps tick themselves. See `RECORDS.md`.
 2. **Finish the learning layer** on top of steps and records, so insights use real numbers.
 3. **Assistant, v1 (text):** talk to it to record and to ask about the numbers; business brain screen; action log with undo; server-side model call with limits.
 4. **Draft tools:** bios, messages, plans, price lists, using the business brain.

@@ -139,6 +139,104 @@ await step("learning data is saved on the server and follows you to another devi
   await poll("learning on saved", async () => (await state()).profiles.find((x) => x.name === "Ada Okafor").learning === true);
 });
 
+const sales = async () => (await state()).sales;
+const key = async (p, ...ks) => { for (const k of ks) await p.getByRole("button", { name: k, exact: true }).click(); };
+
+await step("a sale recorded on one device appears on another, and a deletion follows", async () => {
+  await A.p.goto(APP + "/app/money");
+  await A.p.getByRole("button", { name: "Record a sale" }).first().click();
+  await key(A.p, "4", "5", "0", "0");
+  await A.p.getByRole("button", { name: "Record ₦4,500" }).click();
+  await A.p.waitForURL("**/app/money");
+  const row = await poll("sale saved", async () => (await sales()).find((r) => r.amount === 450000));
+  assert.equal(row.paid, true);
+  assert.deepEqual(row.items, []);
+  assert.equal(row.deleted_at, null);
+  assert.ok(row.id && row.user_id);
+  await B.p.goto(APP + "/app/money");
+  await B.p.getByText("Sale", { exact: true }).first().waitFor({ timeout: 8000 });
+  await B.p.getByRole("link", { name: /4,500 naira/ }).first().waitFor();
+  // Delete on A; B learns about it.
+  await A.p.getByRole("link", { name: /4,500 naira/ }).first().click();
+  await A.p.getByRole("button", { name: /Delete this sale/ }).click();
+  await poll("deletion saved", async () => (await sales()).find((r) => r.amount === 450000)?.deleted_at);
+  await B.p.reload();
+  await B.p.getByText("Record your first sale").waitFor({ timeout: 8000 });
+});
+
+await step("offline: sales and expenses are kept on the phone and sent once, when back online", async () => {
+  await fake("offline?on=1");
+  await A.p.getByRole("button", { name: "Record a sale" }).first().click();
+  await key(A.p, "2", "Three zeros");
+  await A.p.getByRole("button", { name: "Record ₦2,000" }).click();
+  await A.p.waitForURL("**/app/money");
+  await A.p.getByRole("link", { name: /2,000 naira/ }).first().waitFor();
+  await A.p.waitForTimeout(1200);
+  assert.ok(!(await sales()).some((r) => r.amount === 200000), "offline sale reached the server");
+  await A.p.getByRole("link", { name: "Profile" }).click();
+  await A.p.getByText(/Waiting for a connection/).waitFor();
+  await fake("offline?on=0");
+  await A.p.evaluate(() => { window.dispatchEvent(new Event("online")); window.dispatchEvent(new Event("online")); });
+  await poll("offline sale synced", async () => (await sales()).some((r) => r.amount === 200000));
+  await A.p.waitForTimeout(1500);
+  assert.equal((await sales()).filter((r) => r.amount === 200000).length, 1, "sent more than once");
+  await A.p.getByText("All changes saved").waitFor();
+});
+
+await step("a big set of books loads completely (2,500 sales, three pages), and the next load only asks for what changed", async () => {
+  await fake("seed-sales?email=ada@example.com&n=2500");
+  const C = await device();
+  await logIn(C.p, "ada@example.com", "correct-horse");
+  await C.p.waitForURL("**/app/today", { timeout: 10000 });
+  const count = () => C.p.evaluate(() => { const k = Object.keys(localStorage).find((x) => x.startsWith("spal.records")); return Object.keys(JSON.parse(localStorage.getItem(k) ?? "{}").sales ?? {}).length; });
+  await poll("all 2,500 loaded", async () => (await count()) >= 2500, 15000);
+  const full = (await state()).log.filter((l) => l.startsWith("GET /rest/v1/sales") && !l.includes("updated_at=gte"));
+  assert.ok(full.length >= 3, `a full load should page (saw ${full.length} requests)`);
+  await C.p.getByRole("link", { name: "Money", exact: true }).click();
+  await C.p.getByRole("button", { name: "Show earlier" }).waitFor();
+  await C.p.reload();
+  await C.p.getByRole("heading", { name: "Money", exact: true }).waitFor().catch(() => {});
+  await poll("incremental pull", async () => (await state()).log.some((l) => l.startsWith("GET /rest/v1/sales") && l.includes("updated_at=gte")), 8000);
+  await C.ctx.close();
+});
+
+await step("one record the server refuses for good doesn't block the others, and the person is told", async () => {
+  await A.p.goto(APP + "/app/money");
+  await fake("reject-amount?amount=777700");
+  const record = async (digits, label) => {
+    await A.p.getByRole("button", { name: "Record a sale" }).first().click();
+    await key(A.p, ...digits);
+    await A.p.getByRole("button", { name: label }).click();
+    await A.p.waitForURL("**/app/money");
+  };
+  await record(["7", "7", "7", "7"], "Record ₦7,777");
+  await record(["3", "Three zeros"], "Record ₦3,000"); // recorded after the bad one
+  await poll("the good sale still reached the server", async () => (await sales()).some((r) => r.amount === 300000));
+  assert.ok(!(await sales()).some((r) => r.amount === 777700), "the refused row should not be on the server");
+  await A.p.goto(APP + "/app/profile");
+  await A.p.getByText(/1 record couldn't be saved to your account/).waitFor({ timeout: 8000 });
+  // A fresh visit gives it one more try; after that it is left alone, not retried forever. It is still on the phone.
+  await A.p.waitForTimeout(3000);
+  const before = (await state()).log.length;
+  await A.p.waitForTimeout(2500);
+  assert.equal((await state()).log.slice(before).filter((l) => l.startsWith("POST /rest/v1/sales")).length, 0, "refused row keeps being retried");
+  await A.p.goto(APP + "/app/money");
+  await A.p.getByRole("link", { name: /7,777 naira/ }).first().waitFor();
+  await fake("reject-amount");
+});
+
+await step("products sync to the server", async () => {
+  await A.p.goto(APP + "/money/product/new");
+  await A.p.getByLabel("Name").fill("Jollof rice (plate)");
+  await A.p.getByLabel("Price you sell it for").fill("2500");
+  await A.p.getByLabel(/What it costs you/).fill("1400");
+  await A.p.getByRole("button", { name: "Save product" }).click();
+  const prod = await poll("product saved", async () => (await state()).products.find((r) => r.name === "Jollof rice (plate)"));
+  assert.equal(prod.price, 250000);
+  assert.equal(prod.cost, 140000);
+  assert.equal(prod.archived, false);
+});
+
 await step("wrong password and duplicate sign-up show clear messages", async () => {
   const C = await device();
   await logIn(C.p, "ada@example.com", "wrong-password");
@@ -157,8 +255,7 @@ await step("offline: changes are kept, shown as waiting, and sent when back onli
   // Opening the step (online, a moment earlier) saved a row with no ticks. The offline ticks must not have arrived.
   const early = (await state()).step_progress.find((r) => r.module_id === "setup-register");
   assert.ok(!early || early.steps.length === 0, "offline ticks reached the server");
-  await A.p.goBack();
-  await A.p.getByRole("link", { name: "Profile" }).click();
+  await A.p.goto(APP + "/app/profile"); // a fresh load while offline: the unsent ticks must still be there, and still waiting
   await A.p.getByText(/Waiting for a connection/).waitFor();
   await fake("offline?on=0");
   await A.p.evaluate(() => window.dispatchEvent(new Event("online")));

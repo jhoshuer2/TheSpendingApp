@@ -53,4 +53,4 @@ export const localAuth: AuthApi = {
   updatePassword: async () => DEMO_ONLY,
 };
 
-export const localBackend: Backend = { auth: localAuth, storeFor: () => null };
+export const localBackend: Backend = { auth: localAuth, storeFor: () => null, recordsFor: () => null };

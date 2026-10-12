@@ -109,4 +109,78 @@ select pg_temp.assert((select count(*) from public.step_progress) = 0 and (selec
 reset role;
 delete from auth.users where email = 'tunde@example.com';
 
+-- 8. Records engine: products, sales, expenses.
+insert into auth.users (id, email, raw_user_meta_data) select gen_random_uuid(), 'bola@example.com', '{}' from _ids;
+create temp table _bola as select id from auth.users where email = 'bola@example.com';
+grant select on _bola to authenticated;
+select pg_temp.as_user((select id from _bola));
+insert into public.products (user_id, id, name, price, cost) values (auth.uid(), gen_random_uuid(), 'Jollof rice (plate)', 250000, 140000);
+insert into public.sales (user_id, id, at, amount, items, paid, customer) values
+  (auth.uid(), 'aaaaaaaa-0000-0000-0000-000000000001', now(), 450000, '[{"name":"Jollof","qty":2,"unitPrice":225000}]', true, null),
+  (auth.uid(), 'aaaaaaaa-0000-0000-0000-000000000002', now() - interval '2 days', 100000, '[]', false, 'Mama Tosin');
+insert into public.expenses (user_id, id, at, amount, category, note) values (auth.uid(), gen_random_uuid(), now(), 80000, 'stock', 'Rice and oil');
+select pg_temp.assert((select count(*) from public.sales) = 2 and (select count(*) from public.products) = 1 and (select count(*) from public.expenses) = 1, 'a user can add their own products, sales and expenses');
+-- Saving the same sale twice (a retry after a weak connection) must not duplicate it.
+insert into public.sales (user_id, id, at, amount) values (auth.uid(), 'aaaaaaaa-0000-0000-0000-000000000001', now(), 450000)
+  on conflict (user_id, id) do update set amount = excluded.amount;
+select pg_temp.assert((select count(*) from public.sales) = 2, 'saving the same sale twice does not duplicate it (retries are safe)');
+update public.sales set paid = true, paid_at = now() where id = 'aaaaaaaa-0000-0000-0000-000000000002';
+update public.sales set deleted_at = now() where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+select pg_temp.assert((select count(*) from public.sales where deleted_at is not null) = 1, 'a sale can be marked paid and soft-deleted');
+select pg_temp.assert((select updated_at from public.sales where id = 'aaaaaaaa-0000-0000-0000-000000000002') > now() - interval '1 minute', 'the server sets updated_at on records');
+reset role;
+
+-- Bounds and shape.
+select pg_temp.as_user((select id from _bola));
+do $$ begin
+  begin insert into public.sales (user_id, id, at, amount) values (auth.uid(), gen_random_uuid(), now(), 0);
+    raise exception 'FAILED: accepted a zero-value sale';
+  exception when check_violation then raise notice 'ok - rejects a sale of zero or less'; end;
+  begin insert into public.sales (user_id, id, at, amount) values (auth.uid(), gen_random_uuid(), now(), -500);
+    raise exception 'FAILED: accepted a negative sale';
+  exception when check_violation then raise notice 'ok - rejects a negative amount'; end;
+  begin insert into public.sales (user_id, id, at, amount) values (auth.uid(), gen_random_uuid(), now() + interval '30 days', 100);
+    raise exception 'FAILED: accepted a sale dated far in the future';
+  exception when check_violation then raise notice 'ok - rejects a sale dated far in the future'; end;
+  begin insert into public.sales (user_id, id, at, amount) values (auth.uid(), gen_random_uuid(), now() - interval '20 years', 100);
+    raise exception 'FAILED: accepted a sale dated 20 years ago';
+  exception when check_violation then raise notice 'ok - rejects a sale dated absurdly long ago'; end;
+  begin insert into public.expenses (user_id, id, at, amount, category) values (auth.uid(), gen_random_uuid(), now(), 100, 'yachts');
+    raise exception 'FAILED: accepted an unknown expense category';
+  exception when check_violation then raise notice 'ok - rejects an unknown expense category'; end;
+  begin insert into public.sales (user_id, id, at, amount, items) values (auth.uid(), gen_random_uuid(), now(), 100, '{"a":1}');
+    raise exception 'FAILED: accepted non-array items';
+  exception when check_violation then raise notice 'ok - rejects malformed sale items'; end;
+  begin insert into public.products (user_id, id, name, price) values (auth.uid(), gen_random_uuid(), '', 100);
+    raise exception 'FAILED: accepted an empty product name';
+  exception when check_violation then raise notice 'ok - rejects an empty product name'; end;
+  begin insert into public.products (user_id, id, name, price) values (auth.uid(), gen_random_uuid(), 'Free', -1);
+    raise exception 'FAILED: accepted a negative price';
+  exception when check_violation then raise notice 'ok - rejects a negative price'; end;
+end $$;
+reset role;
+
+-- Privacy: nobody else sees or touches them, and anonymous visitors get nothing.
+select pg_temp.as_user((select kemi from _ids));
+select pg_temp.assert((select count(*) from public.sales) = 0 and (select count(*) from public.products) = 0 and (select count(*) from public.expenses) = 0, 'records are invisible to other users');
+update public.sales set amount = 1 where true;
+delete from public.expenses where true;
+do $$ begin
+  begin insert into public.sales (user_id, id, at, amount) values ((select id from _bola), gen_random_uuid(), now(), 100);
+    raise exception 'FAILED: inserted a sale into someone else''s books';
+  exception when insufficient_privilege then raise notice 'ok - cannot add a sale to someone else''s books'; end;
+end $$;
+reset role;
+select pg_temp.assert((select amount from public.sales where id = 'aaaaaaaa-0000-0000-0000-000000000002') = 100000 and (select count(*) from public.expenses) = 1, 'other users'' update and delete attempts on records changed nothing');
+set role anon;
+do $$ begin
+  begin perform 1 from public.sales; raise exception 'FAILED: anon could read sales';
+  exception when insufficient_privilege then raise notice 'ok - anonymous visitors cannot read sales'; end;
+end $$;
+reset role;
+
+-- Deleting an account deletes its books.
+delete from auth.users where email = 'bola@example.com';
+select pg_temp.assert((select count(*) from public.sales) = 0 and (select count(*) from public.products) = 0 and (select count(*) from public.expenses) = 0, 'deleting an account deletes its records');
+
 select 'ALL DATABASE CHECKS PASSED' as result;

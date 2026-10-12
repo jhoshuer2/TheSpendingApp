@@ -1,11 +1,10 @@
-import { useCallback, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
 import { SpalSymbol } from "../design-system/SpalSymbol";
-import { Toast } from "../design-system/Toast";
 import { WeekStrip } from "../design-system/WeekStrip";
 import { firstName, todayLabel } from "../lib/format";
+import { useToast } from "../lib/toast";
 import { useAuth } from "../lib/auth";
 import { moduleById } from "../profile/modules";
 import { NEED_LABEL } from "../profile/scoring";
@@ -20,8 +19,7 @@ export function Today() {
   const { session } = useAuth();
   const { recs, stored, done, insights, welcome, snooze, dismiss, restore } = useProfile();
   const { next, upNext } = recs;
-  const [toast, setToast] = useState<{ message: string; undo: () => void } | null>(null);
-  const closeToast = useCallback(() => setToast(null), []);
+  const { show } = useToast();
 
   const finished = Object.entries(stored.progress)
     .filter(([, p]) => p.doneAt)
@@ -42,10 +40,7 @@ export function Today() {
     const m = next.module;
     if (kind === "snooze") snooze(m.id);
     else dismiss(m.id);
-    setToast({
-      message: kind === "snooze" ? `Okay. We'll bring "${m.title}" back in a week.` : `Okay. We won't suggest "${m.title}" again.`,
-      undo: () => restore(m.id),
-    });
+    show(kind === "snooze" ? `Okay. We'll bring "${m.title}" back in a week.` : `Okay. We won't suggest "${m.title}" again.`, () => restore(m.id));
   };
 
   return (
@@ -100,6 +95,7 @@ export function Today() {
               {next.module.minutes} min
             </span>
             <span className="chip">{NEED_LABEL[next.module.need]}</span>
+            {next.module.kind === "do" && <span className="chip">Do it in SPAL</span>}
           </div>
           <h2 id="next-title" className="hero__title">
             {next.module.title}
@@ -204,7 +200,6 @@ export function Today() {
         </>
       )}
 
-      {toast && <Toast message={toast.message} actionLabel="Undo" onAction={toast.undo} onClose={closeToast} />}
     </>
   );
 }

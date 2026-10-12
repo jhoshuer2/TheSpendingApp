@@ -13,7 +13,8 @@
     "check:flow": "node tools/check-flow.mjs",
     "check:backend": "bash tools/check-backend.sh",
     "test:db": "bash tools/test-db.sh",
-    "check:learning": "node tools/check-learning.mjs"
+    "check:learning": "node tools/check-learning.mjs",
+    "check:money": "node tools/check-money.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3",

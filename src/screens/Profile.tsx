@@ -8,16 +8,19 @@ import { useAuth } from "../lib/auth";
 import { moduleById } from "../profile/modules";
 import { BAND_LABEL, NEED_LABEL } from "../profile/scoring";
 import { useProfile } from "../profile/store";
+import { useRecords } from "../records/store";
 import { NEED_ICON } from "../profile/ui";
 
 export function Profile() {
   const navigate = useNavigate();
   const { session, signOut, mode } = useAuth();
   const { profile, sync, prepareSignOut, stored, insights, setLearning, resetLearning, restore } = useProfile();
+  const records = useRecords();
   const [confirmReset, setConfirmReset] = useState(false);
   const learning = stored.activity.learning;
+  const refused = records.rejectedCount > 0 ? ` ${records.rejectedCount === 1 ? "1 record couldn't" : `${records.rejectedCount} records couldn't`} be saved to your account. ${records.rejectedCount === 1 ? "It's" : "They're"} kept on this phone.` : "";
   const saved =
-    mode === "local" ? "Saved on this device only (demo mode)" : sync === "saving" ? "Saving…" : sync === "offline" ? "Waiting for a connection. We'll save your changes when you're back online." : "All changes saved";
+    mode === "local" ? "Saved on this device only (demo mode)" : sync === "saving" || records.sync === "saving" ? "Saving…" : sync === "offline" || records.sync === "offline" ? "Waiting for a connection. We'll save your changes when you're back online." : "All changes saved";
 
   // Steps the person hid: "not for me" for good, "not now" until the date.
   const hidden = Object.entries(stored.progress).flatMap(([id, p]) => {
@@ -50,6 +53,7 @@ export function Profile() {
         <p className="row__sub">{session?.email}</p>
         <p className="row__sub" role="status">
           {saved}
+          {mode !== "local" && refused}
         </p>
       </div>
 
@@ -149,7 +153,7 @@ export function Profile() {
           variant="ghost"
           size="md"
           onClick={async () => {
-            await prepareSignOut();
+            await Promise.all([prepareSignOut(), records.prepareSignOut()]);
             await signOut();
           }}
         >

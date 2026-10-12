@@ -1,4 +1,5 @@
 import type { Activity, Progress } from "../profile/state";
+import type { Expense, Product, Sale } from "../records/types";
 import type { Answers } from "../profile/types";
 
 export interface Session {
@@ -40,8 +41,27 @@ export interface RemoteStore {
   saveProgress(moduleId: string, progress: RemoteProgress): Promise<void>;
 }
 
+/** The server refused this data and always will (a bad value, or a rule it breaks). Retrying can't help; a lost connection is different. */
+export class PermanentError extends Error {}
+
+export interface RecordsBatch {
+  products: Product[];
+  sales: Sale[];
+  expenses: Expense[];
+}
+
+/** One person's books on the server. Methods throw when the server can't be reached. */
+export interface RemoteRecords {
+  /** Everything, or only what changed since `since` (the cursor from the last pull). */
+  pull(since?: string): Promise<RecordsBatch & { cursor?: string }>;
+  /** Save rows. Safe to repeat: rows are matched by id. */
+  push(batch: RecordsBatch): Promise<void>;
+}
+
 export interface Backend {
   auth: AuthApi;
   /** Server storage for a person, or null in local demo mode. */
   storeFor(userId: string): RemoteStore | null;
+  /** The person's books on the server, or null in local demo mode. */
+  recordsFor(userId: string): RemoteRecords | null;
 }

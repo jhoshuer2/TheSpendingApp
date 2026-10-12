@@ -4,10 +4,12 @@ import { BottomNav, type NavTab } from "../design-system/BottomNav";
 import { SpalSymbol } from "../design-system/SpalSymbol";
 import { useAuth } from "../lib/auth";
 import { useProfile } from "../profile/store";
+import { useRecords } from "../records/store";
 import { LoadError, Loading } from "./Loading";
 
 const TABS: NavTab[] = [
   { to: "/app/today", label: "Today", icon: "home" },
+  { to: "/app/money", label: "Money", icon: "wallet" },
   { to: "/app/library", label: "Library", icon: "book-open" },
   { to: "/app/journey", label: "Journey", icon: "trending-up" },
   { to: "/app/profile", label: "Profile", icon: "user" },
@@ -20,10 +22,12 @@ const TABS: NavTab[] = [
 export function Gate({ children, onboarded = true }: { children: ReactNode; onboarded?: boolean }) {
   const { session, status: authStatus } = useAuth();
   const { stored, status, retry } = useProfile();
+  const records = useRecords();
   if (authStatus === "loading") return <Loading />;
   if (!session) return <Navigate to="/welcome" replace />;
-  if (status === "loading") return <Loading />;
+  if (status === "loading" || (onboarded && records.status === "loading")) return <Loading />;
   if (status === "error") return <LoadError onRetry={retry} />;
+  if (onboarded && records.status === "error") return <LoadError onRetry={records.retry} />;
   if (onboarded && !stored.completed) return <Navigate to="/onboarding" replace />;
   return <>{children}</>;
 }

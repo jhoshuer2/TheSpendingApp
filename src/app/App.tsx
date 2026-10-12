@@ -1,6 +1,15 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "../lib/auth";
+import { ToastProvider } from "../lib/toast";
 import { ProfileProvider } from "../profile/store";
+import { RecordsProvider } from "../records/store";
+import { AutoSteps } from "./AutoSteps";
+import { MoneyHome } from "../screens/money/MoneyHome";
+import { ProductForm } from "../screens/money/ProductForm";
+import { Products } from "../screens/money/Products";
+import { RecordDetail } from "../screens/money/RecordDetail";
+import { RecordExpense } from "../screens/money/RecordExpense";
+import { RecordSale } from "../screens/money/RecordSale";
 import { Auth, ForgotPassword, ResetPassword } from "../screens/Auth";
 import { Journey } from "../screens/Journey";
 import { Library } from "../screens/Library";
@@ -16,8 +25,11 @@ export function App() {
   return (
     <AuthProvider>
       <ProfileProvider>
+        <RecordsProvider>
+        <AutoSteps />
         <BrowserRouter>
           <div className="app">
+            <ToastProvider>
             <Routes>
               <Route path="/" element={<Splash />} />
               <Route path="/welcome" element={<Welcome />} />
@@ -57,17 +69,25 @@ export function App() {
                   </Gate>
                 }
               />
+              <Route path="/money/sale" element={<Gate><RecordSale /></Gate>} />
+              <Route path="/money/expense" element={<Gate><RecordExpense /></Gate>} />
+              <Route path="/money/products" element={<Gate><Products /></Gate>} />
+              <Route path="/money/product/:id" element={<Gate><ProductForm /></Gate>} />
+              <Route path="/money/record/:kind/:id" element={<Gate><RecordDetail /></Gate>} />
               <Route path="/app" element={<Shell />}>
                 <Route index element={<Navigate to="today" replace />} />
                 <Route path="today" element={<Today />} />
+                <Route path="money" element={<MoneyHome />} />
                 <Route path="library" element={<Library />} />
                 <Route path="journey" element={<Journey />} />
                 <Route path="profile" element={<Profile />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </ToastProvider>
           </div>
         </BrowserRouter>
+        </RecordsProvider>
       </ProfileProvider>
     </AuthProvider>
   );

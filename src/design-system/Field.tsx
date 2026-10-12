@@ -5,10 +5,12 @@ interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id"> {
   hint?: string;
   error?: string;
   suffix?: ReactNode;
+  /** A small fixed label before the text, like the ₦ sign. */
+  prefix?: string;
 }
 
 /** Labelled text field. Label is always visible; error and hint are announced via aria-describedby. */
-export function Field({ label, hint, error, suffix, ...input }: FieldProps) {
+export function Field({ label, hint, error, suffix, prefix, ...input }: FieldProps) {
   const id = useId();
   const msgId = `${id}-msg`;
   const message = error ?? hint;
@@ -18,6 +20,11 @@ export function Field({ label, hint, error, suffix, ...input }: FieldProps) {
         {label}
       </label>
       <div className="field__box">
+        {prefix && (
+          <span className="field__prefix" aria-hidden="true">
+            {prefix}
+          </span>
+        )}
         <input
           id={id}
           className="field__input"
