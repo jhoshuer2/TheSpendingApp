@@ -3,7 +3,7 @@
 -- Every check raises an exception on failure; reaching the last line means all passed.
 
 create temp table _ids as select gen_random_uuid() as ada, gen_random_uuid() as kemi;
-grant select on _ids to authenticated, anon;
+grant select on _ids to authenticated, anon, service_role;
 
 insert into auth.users (id, email, raw_user_meta_data)
   select ada, 'ada@example.com', '{"name":"Ada Okafor"}' from _ids;
@@ -177,6 +177,34 @@ do $$ begin
   begin perform 1 from public.sales; raise exception 'FAILED: anon could read sales';
   exception when insufficient_privilege then raise notice 'ok - anonymous visitors cannot read sales'; end;
 end $$;
+reset role;
+
+-- Assistant limits: only the server (service role) can use them, and they hold.
+insert into auth.users (id, email) values (gen_random_uuid(), 'quota@example.com');
+create temp table _quota_user as select id from auth.users where email = 'quota@example.com';
+grant select on _quota_user to service_role;
+select pg_temp.as_user((select kemi from _ids));
+do $$ begin
+  begin perform public.assistant_take_quota(auth.uid(), 5, 100); raise exception 'FAILED: a signed-in user called assistant_take_quota';
+  exception when insufficient_privilege then raise notice 'ok - signed-in users cannot touch the assistant quota'; end;
+  begin perform 1 from public.assistant_usage; raise exception 'FAILED: a user read assistant_usage';
+  exception when insufficient_privilege then raise notice 'ok - signed-in users cannot read assistant usage'; end;
+end $$;
+reset role;
+set role service_role;
+select pg_temp.assert(public.assistant_take_quota((select id from _quota_user), 2, 100) = 'ok', 'first message is allowed');
+select pg_temp.assert(public.assistant_take_quota((select id from _quota_user), 2, 100) = 'ok', 'second message is allowed');
+select pg_temp.assert(public.assistant_take_quota((select id from _quota_user), 2, 100) = 'user_limit', 'third message is refused at the personal limit');
+select pg_temp.assert(public.assistant_take_quota((select id from _quota_user), 2, 100) = 'user_limit', 'refused messages do not count up');
+select pg_temp.assert((select messages from public.assistant_usage_global) = 2, 'refused messages give the shared slot back');
+select pg_temp.assert(public.assistant_take_quota((select kemi from _ids), 5, 2) = 'global_limit', 'the shared daily limit stops everyone');
+select pg_temp.assert((select count(*) from public.assistant_usage where user_id = (select kemi from _ids)) = 0, 'a global refusal does not count against the person');
+select public.assistant_record_usage((select id from _quota_user), 1000, 200, 800);
+select public.assistant_record_usage((select id from _quota_user), 500, 100, -5);
+select pg_temp.assert((select input_tokens from public.assistant_usage where user_id = (select id from _quota_user)) = 1500 and (select cache_read_tokens from public.assistant_usage where user_id = (select id from _quota_user)) = 800, 'token usage adds up and ignores negatives');
+update public.assistant_usage set day = day - 1;
+update public.assistant_usage_global set day = day - 1;
+select pg_temp.assert(public.assistant_take_quota((select id from _quota_user), 2, 100) = 'ok', 'a new day starts a fresh allowance');
 reset role;
 
 -- Deleting an account deletes its books.
