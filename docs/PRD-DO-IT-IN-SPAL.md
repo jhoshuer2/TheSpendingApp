@@ -1,6 +1,6 @@
 # SPAL: Do it in SPAL (PRD, draft v0.1)
 
-Status: draft for creative-director review. Extends `VISION.md`. **Built so far:** the records engine (section 7, step 1; see `RECORDS.md`). Everything else is still to build.
+Status: draft for creative-director review. Extends `VISION.md`. **Built so far:** the records engine (section 7, step 1; see `RECORDS.md`) and the assistant v1 (step 3; see `ASSISTANT.md`). Everything else is still to build.
 
 ## 1. The principle
 
@@ -89,7 +89,7 @@ The learning layer in progress today (hiding steps, variety, recap, welcome back
 ## 7. Build order (proposed)
 1. **Records engine (the in-app notebook): BUILT.** Products, record a sale (paid or owed), record an expense, what you kept today / this week / this month, and insights from the numbers. "Write down every sale" and "Work out what you really keep" are now real tools whose steps tick themselves. See `RECORDS.md`.
 2. **Finish the learning layer** on top of steps and records, so insights use real numbers.
-3. **Assistant, v1 (text):** talk to it to record and to ask about the numbers; business brain screen; action log with undo; server-side model call with limits.
+3. **Assistant, v1 (text): BUILT** (English default, Nigerian Pidgin understood). Talk to it to record and to ask about the numbers; undo on every saved card; server-side model call with limits. Not yet: a full "business brain" screen (settings show what it knows), a separate action log. See `ASSISTANT.md`.
 4. **Draft tools:** bios, messages, plans, price lists, using the business brain.
 5. **Guide and verify framework:** a proper "do this elsewhere" flow with prepared packs, deep links and proof checks, starting with business name registration (after research).
 6. **Voice entry** ("sold three plates...") for people who would rather speak than type. Accuracy with Nigerian accents needs testing.
@@ -102,6 +102,6 @@ Share of steps completed *inside* SPAL (target: most); time from sign-up to firs
 - **Law and process (research needed):** CAC business-name registration (who may file, requirements, cost, any third-party route), tax registration, what we may and may not say, and data-protection obligations. Needs a Nigerian lawyer or accountant, not guesses.
 - **Platform limits:** current Instagram and WhatsApp business API rules, approval time and cost.
 - **Model cost:** price per active person per month at expected use; free versus paid limits. Links to the monetisation question.
-- **Language:** English first? Nigerian Pidgin, Yoruba, Igbo, Hausa later?
+- **Language:** decided for v1: English is the default reply language, Pidgin is understood and selectable. Yoruba, Igbo, Hausa later; Pidgin quality still needs the eval in `ASSISTANT.md`.
 - **Offline:** recording must work with a weak connection; the assistant needs a connection.
 - **Trust:** how much autonomy people want, and how we earn it.

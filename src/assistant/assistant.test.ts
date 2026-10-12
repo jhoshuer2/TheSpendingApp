@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { validateRequest, type Block, type ChatMessage } from "../../supabase/functions/_shared/assistant-protocol.ts";
 import { EMPTY_RECORDS, type RecordsState } from "../records/state";
 import type { Product, Sale } from "../records/types";
+import { toChatError } from "../backend/supabase";
+import { sanitizeStored } from "./state";
 import { ChatError, DEFAULT_SETTINGS, emptyChat, freshChat, needsFresh, runTurn, type Chat, type IO, type ModelReply, type Settings } from "./engine";
 import { buildMarkPaidProposal, buildRecordsProposal, describeProposal, runReadTool } from "./tools";
 
@@ -265,5 +267,88 @@ describe("fresh chats", () => {
     expect(f.items[0]).toMatchObject({ status: "dismissed", stale: true });
     expect(f.items.at(-1)).toMatchObject({ kind: "note" });
     expect(needsFresh(emptyChat(day), new Date(2026, 9, 13, 9))).toBe(false);
+  });
+});
+
+// ---- stored chats and error mapping ----
+
+describe("sanitizeStored", () => {
+  const today = "2026-10-12";
+  const good = {
+    settings: { replyLanguage: "pcm", autonomy: "auto" },
+    consented: true,
+    chat: {
+      day: today,
+      api: [
+        { role: "user", content: [{ type: "text", text: "hi" }] },
+        { role: "assistant", content: [{ type: "thinking", thinking: "t", signature: "s" }, { type: "tool_use", id: "t1", name: "propose_records", input: { expenses: [] } }] },
+      ],
+      pending: [{ toolUseId: "t1", itemId: "card1" }],
+      items: [
+        { kind: "user", id: "u1", text: "hi" },
+        { kind: "proposal", id: "card1", status: "pending", proposal: { sales: [], expenses: [{ amount: 50000, category: "transport", at: "2026-10-12T10:00:00.000Z" }] } },
+      ],
+    },
+  };
+  it("keeps a good chat exactly, including an open card", () => {
+    const s = sanitizeStored(JSON.parse(JSON.stringify(good)), today);
+    expect(s.settings).toEqual({ replyLanguage: "pcm", autonomy: "auto" });
+    expect(s.consented).toBe(true);
+    expect(s.chat.api).toHaveLength(2);
+    expect(s.chat.pending).toEqual([{ toolUseId: "t1", itemId: "card1" }]);
+    expect(s.chat.items[1]).toMatchObject({ kind: "proposal", status: "pending" });
+  });
+  it("falls back to safe defaults for junk", () => {
+    for (const junk of [null, "x", 5, [], { chat: 5, settings: "x" }]) {
+      const s = sanitizeStored(junk, today);
+      expect(s.chat.items).toEqual([]);
+      expect(s.settings).toEqual({ replyLanguage: "en", autonomy: "ask" });
+      expect(s.consented).toBe(false);
+    }
+  });
+  it("drops a history the server would refuse, and expires its open cards instead of leaving them half-working", () => {
+    const bad = JSON.parse(JSON.stringify(good));
+    bad.chat.api[1].content[1].name = "delete_everything";
+    const s = sanitizeStored(bad, today);
+    expect(s.chat.api).toEqual([]);
+    expect(s.chat.pending).toEqual([]);
+    expect(s.chat.items[1]).toMatchObject({ status: "dismissed", stale: true });
+  });
+  it("drops the history when a tool call has no answer waiting for it", () => {
+    const bad = JSON.parse(JSON.stringify(good));
+    bad.chat.pending = [];
+    expect(sanitizeStored(bad, today).chat.api).toEqual([]);
+  });
+  it("discards cards and messages with impossible amounts or shapes", () => {
+    const bad = JSON.parse(JSON.stringify(good));
+    bad.chat.items.push({ kind: "proposal", id: "c2", status: "saved", proposal: { sales: [{ amount: -5, paid: true, at: "2026-10-12T10:00:00.000Z" }], expenses: [] } });
+    bad.chat.items.push({ kind: "assistant", id: "a1", text: 42 });
+    bad.chat.items.push({ kind: "weird", id: "w" });
+    const s = sanitizeStored(bad, today);
+    expect(s.chat.items.map((i) => i.id)).toEqual(["u1", "card1"]);
+  });
+});
+
+describe("toChatError", () => {
+  const http = (status: number, body: unknown) => ({ name: "FunctionsHttpError", context: { status, json: async () => body } });
+  it("maps statuses to kinds a person can understand", async () => {
+    expect((await toChatError(http(401, {}))).kind).toBe("signin");
+    expect((await toChatError(http(413, {}))).kind).toBe("too_long");
+    expect((await toChatError(http(429, { scope: "global" }))).scope).toBe("global");
+    expect((await toChatError(http(429, { scope: "user" }))).kind).toBe("quota");
+    expect((await toChatError(http(503, { error: "busy" }))).kind).toBe("busy");
+    expect((await toChatError(http(503, { error: "disabled" }))).kind).toBe("unavailable");
+    expect((await toChatError(http(404, {}))).kind).toBe("unavailable");
+    expect((await toChatError(http(500, {}))).kind).toBe("unavailable");
+    expect((await toChatError(http(502, {}))).kind).toBe("failed");
+  });
+  it("treats network trouble as offline, and survives bodies that aren't JSON", async () => {
+    expect((await toChatError({ name: "FunctionsFetchError" })).kind).toBe("offline");
+    expect((await toChatError({ name: "FunctionsHttpError", context: { status: 429, json: async () => { throw new Error("not json"); } } })).kind).toBe("quota");
+    expect((await toChatError(undefined)).kind).toBe("failed");
+  });
+  it("never carries server text", async () => {
+    const e = await toChatError(http(502, { message: "sk-secret in here" }));
+    expect(e.message).not.toContain("sk-secret");
   });
 });

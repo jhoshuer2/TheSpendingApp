@@ -170,7 +170,6 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         if (!item || item.kind !== "proposal" || item.status !== "pending") return;
         const saved = apply(item.proposal);
         patchItem(id, (i) => (i.kind === "proposal" ? { ...i, status: "saved", saved } : i));
-        show("Saved", () => api.undo(id));
       },
       dismiss: (id) => patchItem(id, (i) => (i.kind === "proposal" && i.status === "pending" ? { ...i, status: "dismissed" } : i)),
       undo: (id) => {

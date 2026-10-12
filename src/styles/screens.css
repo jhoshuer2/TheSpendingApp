@@ -59,6 +59,6 @@
 .composer__send { flex: none; display: grid; place-items: center; width: var(--control-h); height: var(--control-h); border: 0; border-radius: var(--radius-full); background: var(--iris-600); color: #fff; cursor: pointer; }
 .composer__send:disabled { opacity: 0.4; cursor: default; }
 @media (max-width: 359px) { .composer { padding-left: var(--space-page-x-sm); padding-right: var(--space-page-x-sm); } }
-.assist-btn { display: inline-grid; place-items: center; width: var(--hit-min); height: var(--hit-min); border-radius: var(--radius-full); background: var(--iris-50); color: var(--iris-600); }
+.assist-btn { flex: none; display: inline-grid; place-items: center; width: var(--hit-min); height: var(--hit-min); border-radius: var(--radius-full); background: var(--iris-50); color: var(--iris-600); }
 .page-head--row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
 .page-head--row > div { min-width: 0; }
