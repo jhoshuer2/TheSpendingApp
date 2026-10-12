@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "../lib/auth";
 import { ToastProvider } from "../lib/toast";
 import { ProfileProvider } from "../profile/store";
+import { AssistantProvider } from "../assistant/store";
 import { RecordsProvider } from "../records/store";
 import { AutoSteps } from "./AutoSteps";
 import { MoneyHome } from "../screens/money/MoneyHome";
@@ -10,6 +11,7 @@ import { Products } from "../screens/money/Products";
 import { RecordDetail } from "../screens/money/RecordDetail";
 import { RecordExpense } from "../screens/money/RecordExpense";
 import { RecordSale } from "../screens/money/RecordSale";
+import { Assistant, AssistantSettings } from "../screens/Assistant";
 import { Auth, ForgotPassword, ResetPassword } from "../screens/Auth";
 import { Journey } from "../screens/Journey";
 import { Library } from "../screens/Library";
@@ -30,6 +32,7 @@ export function App() {
         <BrowserRouter>
           <div className="app">
             <ToastProvider>
+            <AssistantProvider>
             <Routes>
               <Route path="/" element={<Splash />} />
               <Route path="/welcome" element={<Welcome />} />
@@ -74,6 +77,8 @@ export function App() {
               <Route path="/money/products" element={<Gate><Products /></Gate>} />
               <Route path="/money/product/:id" element={<Gate><ProductForm /></Gate>} />
               <Route path="/money/record/:kind/:id" element={<Gate><RecordDetail /></Gate>} />
+              <Route path="/assistant" element={<Gate><Assistant /></Gate>} />
+              <Route path="/assistant/settings" element={<Gate><AssistantSettings /></Gate>} />
               <Route path="/app" element={<Shell />}>
                 <Route index element={<Navigate to="today" replace />} />
                 <Route path="today" element={<Today />} />
@@ -84,6 +89,7 @@ export function App() {
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </AssistantProvider>
             </ToastProvider>
           </div>
         </BrowserRouter>
