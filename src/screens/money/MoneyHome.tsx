@@ -57,9 +57,14 @@ export function MoneyHome() {
 
   return (
     <>
-      <div className="page-head">
+      <div className="page-head page-head--row">
+        <div>
         <h1 className="title title--page">Money</h1>
         <p>{empty ? "Your sales and spending, in one place." : sync === "offline" ? "Saved on this phone. It'll sync when you're back online." : "What came in, what went out, and what you kept."}</p>
+        </div>
+        <Link to="/assistant" className="assist-btn" aria-label="Talk to SPAL Assistant">
+          <Icon name="sparkles" size={20} />
+        </Link>
       </div>
 
       <div className="actions" style={{ marginTop: "var(--space-6)" }}>

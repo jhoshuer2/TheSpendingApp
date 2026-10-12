@@ -45,9 +45,14 @@ export function Today() {
 
   return (
     <>
-      <div className="page-head">
+      <div className="page-head page-head--row">
+        <div>
         <h1 className="title title--page">Hi, {firstName(session?.name)}</h1>
         <p>{todayLabel()}</p>
+        </div>
+        <Link to="/assistant" className="assist-btn" aria-label="Talk to SPAL Assistant">
+          <Icon name="sparkles" size={20} />
+        </Link>
       </div>
 
       {note === "welcome" && welcome && (

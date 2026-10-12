@@ -2,7 +2,8 @@ import type { AuthError, SupabaseClient, User } from "@supabase/supabase-js";
 import { MODULES } from "../profile/modules";
 import { sanitizeActivity, sanitizeAnswers, sanitizeProgress } from "../profile/state";
 import { cleanExpense, cleanProduct, cleanSale } from "../records/state";
-import { PermanentError, type AuthApi, type AuthResult, type Backend, type RecordsBatch, type RemoteProfile, type RemoteRecords, type RemoteStore, type Session } from "./types";
+import { ChatError } from "../assistant/errors";
+import { PermanentError, type AuthApi, type AuthResult, type Backend, type RecordsBatch, type RemoteProfile, type RemoteAssistant, type RemoteRecords, type RemoteStore, type Session } from "./types";
 
 const knownModules = new Set(MODULES.map((m) => m.id));
 
@@ -193,8 +194,50 @@ export function createRecords(client: SupabaseClient, userId: string): RemoteRec
   };
 }
 
+/** Turn whatever the function call threw into a ChatError. Never exposes server text. */
+export async function toChatError(error: unknown): Promise<ChatError> {
+  const e = (error && typeof error === "object" ? error : {}) as { name?: string; context?: unknown };
+  const res = e.context as { status?: number; json?: () => Promise<unknown> } | undefined;
+  if (res && typeof res.status === "number") {
+    let body: { error?: unknown; scope?: unknown } = {};
+    try {
+      body = (await res.json?.()) as typeof body ?? {};
+    } catch {
+      /* not JSON: the status alone decides */
+    }
+    switch (res.status) {
+      case 401: return new ChatError("signin");
+      case 413: return new ChatError("too_long");
+      case 429: return new ChatError("quota", "quota", body?.scope === "global" ? "global" : "user");
+      case 503: return new ChatError(body?.error === "disabled" ? "unavailable" : "busy");
+      case 404: case 500: return new ChatError("unavailable");
+      default: return new ChatError("failed");
+    }
+  }
+  if (e.name === "FunctionsFetchError" || e.name === "TypeError") return new ChatError("offline");
+  return new ChatError("failed");
+}
+
+export function createAssistant(client: SupabaseClient): RemoteAssistant {
+  return {
+    async send(messages) {
+      let result;
+      try {
+        result = await client.functions.invoke("assistant", { body: { messages } });
+      } catch (e) {
+        throw await toChatError(e);
+      }
+      if (result.error) throw await toChatError(result.error);
+      const d = result.data as { content?: unknown; stop_reason?: unknown } | null;
+      if (!d || !Array.isArray(d.content) || !d.content.every((b) => b && typeof b === "object" && typeof (b as { type?: unknown }).type === "string")) throw new ChatError("failed");
+      return { content: d.content as { type: string }[], stopReason: typeof d.stop_reason === "string" ? d.stop_reason : null };
+    },
+  };
+}
+
 export const createSupabaseBackend = (client: SupabaseClient, redirectBase: string): Backend => ({
   auth: createAuth(client, redirectBase),
   storeFor: (userId) => createStore(client, userId),
   recordsFor: (userId) => createRecords(client, userId),
+  assistant: () => createAssistant(client),
 });

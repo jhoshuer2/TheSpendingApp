@@ -55,6 +55,8 @@ interface RecordsApi {
   addSale: (s: NewSale) => Sale;
   addExpense: (e: NewExpense) => Expense;
   markPaid: (id: string) => void;
+  /** Undo markPaid. */
+  markUnpaid: (id: string) => void;
   /** Soft delete. Undo with restoreRecord. */
   removeRecord: (kind: RecordKind, id: string) => void;
   restoreRecord: (kind: RecordKind, id: string) => void;
@@ -287,6 +289,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         return e;
       },
       markPaid: (id) => setSale(id, (x) => (x.paid ? x : { ...x, paid: true, paidAt: new Date().toISOString() })),
+      markUnpaid: (id) => setSale(id, (x) => (x.paid ? { ...without(x, "paidAt"), paid: false } : x)),
       removeRecord: (kind, id) => {
         const stamp = new Date().toISOString();
         if (kind === "sale") setSale(id, (x) => ({ ...x, deletedAt: stamp }));

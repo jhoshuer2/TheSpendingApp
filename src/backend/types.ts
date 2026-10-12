@@ -58,10 +58,17 @@ export interface RemoteRecords {
   push(batch: RecordsBatch): Promise<void>;
 }
 
+/** The assistant on the server. Throws a ChatError when it can't answer. */
+export interface RemoteAssistant {
+  send(messages: unknown[]): Promise<{ content: { type: string; [k: string]: unknown }[]; stopReason: string | null }>;
+}
+
 export interface Backend {
   auth: AuthApi;
   /** Server storage for a person, or null in local demo mode. */
   storeFor(userId: string): RemoteStore | null;
   /** The person's books on the server, or null in local demo mode. */
   recordsFor(userId: string): RemoteRecords | null;
+  /** The assistant, or null in local demo mode (it needs an account). */
+  assistant(): RemoteAssistant | null;
 }

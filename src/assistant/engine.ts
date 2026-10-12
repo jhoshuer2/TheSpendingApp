@@ -10,13 +10,8 @@ export interface Settings {
 }
 export const DEFAULT_SETTINGS: Settings = { replyLanguage: "en", autonomy: "ask" };
 
-/** Why a call to the assistant failed, in terms the screen can explain. */
-export type ChatErrorKind = "offline" | "signin" | "quota" | "busy" | "too_long" | "failed" | "unavailable";
-export class ChatError extends Error {
-  constructor(public kind: ChatErrorKind, message = kind, public scope?: "user" | "global") {
-    super(message);
-  }
-}
+export { ChatError, type ChatErrorKind } from "./errors";
+import { ChatError } from "./errors";
 
 export interface ModelReply {
   content: Block[];
@@ -59,6 +54,8 @@ export interface IO {
   apply(p: Proposal): Saved;
   now(): Date;
   id(): string;
+  /** Called whenever the chat changes mid-turn, so the screen can show progress. */
+  update?(chat: Chat): void;
 }
 
 export const MAX_CALLS = 4;
@@ -118,6 +115,7 @@ export async function runTurn(
   let chat: Chat = { ...start, failed: undefined };
   let text = input.text;
   if (text !== null && !input.retry) chat = { ...chat, items: [...chat.items, { kind: "user", id: io.id(), text }] };
+  io.update?.(chat);
 
   for (let call = 0; call < MAX_CALLS; call++) {
     const resolved = resolvePending(chat);
@@ -155,6 +153,7 @@ export async function runTurn(
       for (const u of uses) pending.push({ toolUseId: u.id, content: "Your reply was cut off before this was complete. Do it again, more briefly.", isError: true });
       continue;
     }
+    io.update?.(chat);
     if (!uses.length) break;
 
     let waiting = false;
@@ -179,6 +178,7 @@ export async function runTurn(
         waiting = true;
       }
     }
+    io.update?.(chat);
     // When the person has a card to answer we stop and let them; their answer rides along with their next message.
     if (waiting) break;
   }
