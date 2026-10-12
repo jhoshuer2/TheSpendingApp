@@ -207,6 +207,50 @@ update public.assistant_usage_global set day = day - 1;
 select pg_temp.assert(public.assistant_take_quota((select id from _quota_user), 2, 100) = 'ok', 'a new day starts a fresh allowance');
 reset role;
 
+-- 9. Customers: private, bounded, idempotent.
+create temp table _cust as select gen_random_uuid() as owner_a, gen_random_uuid() as owner_b, gen_random_uuid() as cid;
+grant select on _cust to authenticated, anon, service_role;
+insert into auth.users (id, email) select owner_a, 'cust-a@example.com' from _cust;
+insert into auth.users (id, email) select owner_b, 'cust-b@example.com' from _cust;
+select pg_temp.as_user((select owner_a from _cust));
+insert into public.customers (user_id, id, name, phone, note) values (auth.uid(), (select cid from _cust), 'Chidi Okeke', '0803 123 4567', 'Pays on Fridays');
+insert into public.customers (user_id, id, name, phone) values (auth.uid(), (select cid from _cust), 'Chidi Okeke', '+234 803 123 4567')
+  on conflict (user_id, id) do update set phone = excluded.phone;
+select pg_temp.assert((select count(*) from public.customers) = 1 and (select phone from public.customers) = '+234 803 123 4567', 'a customer can be saved twice without duplicating (retries are safe)');
+do $$ begin
+  begin insert into public.customers (user_id, id, name) values (auth.uid(), gen_random_uuid(), '');
+    raise exception 'FAILED: accepted a customer with no name';
+  exception when check_violation then raise notice 'ok - rejects a customer with no name'; end;
+  begin insert into public.customers (user_id, id, name, phone) values (auth.uid(), gen_random_uuid(), 'X', 'call me maybe');
+    raise exception 'FAILED: accepted letters in a phone number';
+  exception when check_violation then raise notice 'ok - rejects letters in a phone number'; end;
+  begin insert into public.customers (user_id, id, name, phone) values (auth.uid(), gen_random_uuid(), 'X', repeat('1', 21));
+    raise exception 'FAILED: accepted a 21-digit phone number';
+  exception when check_violation then raise notice 'ok - rejects an over-long phone number'; end;
+  begin insert into public.customers (user_id, id, name, note) values (auth.uid(), gen_random_uuid(), 'X', repeat('n', 201));
+    raise exception 'FAILED: accepted a 201-character note';
+  exception when check_violation then raise notice 'ok - rejects an over-long note'; end;
+  begin insert into public.customers (user_id, id, name) values ((select owner_b from _cust), gen_random_uuid(), 'Forged');
+    raise exception 'FAILED: added a customer to someone else''s book';
+  exception when insufficient_privilege then raise notice 'ok - cannot add a customer to someone else''s book'; end;
+end $$;
+reset role;
+select pg_temp.as_user((select owner_b from _cust));
+select pg_temp.assert((select count(*) from public.customers) = 0, 'customers are invisible to other users');
+update public.customers set name = 'hacked' where true;
+delete from public.customers where true;
+reset role;
+select pg_temp.assert((select name from public.customers where id = (select cid from _cust)) = 'Chidi Okeke', 'other users'' update and delete attempts on customers changed nothing');
+set role anon;
+do $$ begin
+  begin perform 1 from public.customers; raise exception 'FAILED: anon could read customers';
+  exception when insufficient_privilege then raise notice 'ok - anonymous visitors cannot read customers'; end;
+end $$;
+reset role;
+select pg_temp.assert((select updated_at from public.customers where id = (select cid from _cust)) <= now(), 'the server sets updated_at on customers');
+delete from auth.users where id = (select owner_a from _cust);
+select pg_temp.assert((select count(*) from public.customers) = 0, 'deleting an account deletes its customers');
+
 -- Deleting an account deletes its books.
 delete from auth.users where email = 'bola@example.com';
 select pg_temp.assert((select count(*) from public.sales) = 0 and (select count(*) from public.products) = 0 and (select count(*) from public.expenses) = 0, 'deleting an account deletes its records');

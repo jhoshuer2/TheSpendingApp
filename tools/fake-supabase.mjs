@@ -9,7 +9,7 @@ const PORT = Number(process.argv[2] ?? process.env.PORT ?? 54321);
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
 
 let users, sessions, rows, outbox, offline, confirmMode, log, rejectAmount, assistantMode, assistantLimit, assistantUsed, assistantLog;
-const reset = () => { users = new Map(); sessions = new Map(); rows = { profiles: new Map(), step_progress: new Map(), products: new Map(), sales: new Map(), expenses: new Map() }; outbox = []; offline = false; confirmMode = false; log = []; rejectAmount = null; assistantMode = "normal"; assistantLimit = 1000; assistantUsed = new Map(); assistantLog = []; };
+const reset = () => { users = new Map(); sessions = new Map(); rows = { profiles: new Map(), step_progress: new Map(), customers: new Map(), products: new Map(), sales: new Map(), expenses: new Map() }; outbox = []; offline = false; confirmMode = false; log = []; rejectAmount = null; assistantMode = "normal"; assistantLimit = 1000; assistantUsed = new Map(); assistantLog = []; };
 reset();
 
 const jwt = (u) => `${b64({ alg: "HS256", typ: "JWT" })}.${b64({ sub: u.id, email: u.email, role: "authenticated", aud: "authenticated", exp: Math.floor(Date.now() / 1000) + 3600 })}.fake`;
@@ -29,6 +29,7 @@ const readBody = (req) => new Promise((ok) => { let d = ""; req.on("data", (c) =
 const TABLES = {
   profiles: { key: (r) => r.id, owner: "id", defaults: { name: "", answers: {}, completed: false, learning: true, active_days: [], last_seen: null } },
   step_progress: { key: (r) => `${r.user_id}:${r.module_id}`, owner: "user_id", defaults: { steps: [], done_at: null, opened_at: null, snoozed_until: null, dismissed: false } },
+  customers: { key: (r) => `${r.user_id}:${r.id}`, owner: "user_id", defaults: { phone: null, note: null, archived: false } },
   products: { key: (r) => `${r.user_id}:${r.id}`, owner: "user_id", defaults: { cost: null, archived: false } },
   sales: { key: (r) => `${r.user_id}:${r.id}`, owner: "user_id", defaults: { items: [], note: null, customer: null, paid: true, paid_at: null, deleted_at: null } },
   expenses: { key: (r) => `${r.user_id}:${r.id}`, owner: "user_id", defaults: { note: null, deleted_at: null } },
@@ -217,7 +218,7 @@ createServer(async (req, res) => {
     if (a === "assistant") { assistantMode = q.get("mode") ?? "normal"; if (q.get("limit")) assistantLimit = Number(q.get("limit")); return send(res, 200, { assistantMode, assistantLimit }); }
     if (a === "assistant-log") return send(res, 200, assistantLog);
     if (a === "outbox") return send(res, 200, outbox);
-    if (a === "state") return send(res, 200, { users: [...users.values()].map(({ password, ...u }) => u), profiles: [...rows.profiles.values()], step_progress: [...rows.step_progress.values()], products: [...rows.products.values()], sales: [...rows.sales.values()], expenses: [...rows.expenses.values()], log });
+    if (a === "state") return send(res, 200, { users: [...users.values()].map(({ password, ...u }) => u), profiles: [...rows.profiles.values()], step_progress: [...rows.step_progress.values()], customers: [...rows.customers.values()], products: [...rows.products.values()], sales: [...rows.sales.values()], expenses: [...rows.expenses.values()], log });
     if (a === "reset") { reset(); return send(res, 200, {}); }
     return send(res, 404, {});
   }

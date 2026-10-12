@@ -1,7 +1,7 @@
 import type { AuthError, SupabaseClient, User } from "@supabase/supabase-js";
 import { MODULES } from "../profile/modules";
 import { sanitizeActivity, sanitizeAnswers, sanitizeProgress } from "../profile/state";
-import { cleanExpense, cleanProduct, cleanSale } from "../records/state";
+import { cleanCustomer, cleanExpense, cleanProduct, cleanSale } from "../records/state";
 import { ChatError } from "../assistant/errors";
 import { PermanentError, type AuthApi, type AuthResult, type Backend, type RecordsBatch, type RemoteProfile, type RemoteAssistant, type RemoteRecords, type RemoteStore, type Session } from "./types";
 
@@ -154,7 +154,7 @@ export function isPermanentRefusal(e: { code?: string; status?: number } | null 
 }
 
 export function createRecords(client: SupabaseClient, userId: string): RemoteRecords {
-  async function pullTable(table: "products" | "sales" | "expenses", since: string | undefined) {
+  async function pullTable(table: "customers" | "products" | "sales" | "expenses", since: string | undefined) {
     const rows: Record<string, unknown>[] = [];
     for (let from = 0; ; from += PAGE) {
       let q = client.from(table).select("*").eq("user_id", userId);
@@ -177,9 +177,10 @@ export function createRecords(client: SupabaseClient, userId: string): RemoteRec
   return {
     async pull(since) {
       const from = since ? new Date(Date.parse(since) - OVERLAP_MS).toISOString() : undefined;
-      const [p, s, e] = await Promise.all([pullTable("products", from), pullTable("sales", from), pullTable("expenses", from)]);
-      const stamps = [...p, ...s, ...e].map((r) => r.updated_at).filter((x): x is string => typeof x === "string");
+      const [c, p, s, e] = await Promise.all([pullTable("customers", from), pullTable("products", from), pullTable("sales", from), pullTable("expenses", from)]);
+      const stamps = [...c, ...p, ...s, ...e].map((r) => r.updated_at).filter((x): x is string => typeof x === "string");
       return {
+        customers: c.map(cleanCustomer).filter((x) => x !== null),
         products: p.map(cleanProduct).filter((x) => x !== null),
         sales: s.map(cleanSale).filter((x) => x !== null),
         expenses: e.map(cleanExpense).filter((x) => x !== null),
@@ -187,6 +188,7 @@ export function createRecords(client: SupabaseClient, userId: string): RemoteRec
       };
     },
     async push(batch: RecordsBatch) {
+      await upsert("customers", batch.customers.map((r) => ({ user_id: userId, id: r.id, name: r.name, phone: r.phone ?? null, note: r.note ?? null, archived: r.archived === true })));
       await upsert("products", batch.products.map((r) => ({ user_id: userId, id: r.id, name: r.name, price: r.price, cost: r.cost ?? null, archived: r.archived === true })));
       await upsert("sales", batch.sales.map((r) => ({ user_id: userId, id: r.id, at: r.at, amount: r.amount, items: r.items, note: r.note ?? null, customer: r.customer ?? null, paid: r.paid, paid_at: r.paidAt ?? null, deleted_at: r.deletedAt ?? null })));
       await upsert("expenses", batch.expenses.map((r) => ({ user_id: userId, id: r.id, at: r.at, amount: r.amount, category: r.category, note: r.note ?? null, deleted_at: r.deletedAt ?? null })));

@@ -16,6 +16,8 @@ export interface Answers {
   sales?: Sales;
   have?: Have[];
   pain?: Pain;
+  /** Not a question: the name shown on receipts and reminders. Set from the message screen. */
+  businessName?: string;
 }
 
 export type Band = "starting" | "growing" | "scaling";

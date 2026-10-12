@@ -1,10 +1,11 @@
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../design-system/Button";
 import { Icon } from "../../design-system/Icon";
 import { Money } from "../../design-system/Money";
 import { categoryName, saleTitle } from "../../records/calc";
 import { useBack } from "../../lib/useBack";
 import { useToast } from "../../lib/toast";
+import { buildCustomers, normName } from "../../records/customers";
 import { naira } from "../../records/money";
 import { useRecords } from "../../records/store";
 import type { RecordKind } from "../../records/types";
@@ -16,12 +17,14 @@ export function RecordDetail() {
   const { kind, id = "" } = useParams<{ kind: RecordKind; id: string }>();
   const back = useBack("/app/money");
   const { show } = useToast();
+  const navigate = useNavigate();
   const { state, markPaid, removeRecord, restoreRecord } = useRecords();
 
   const sale = kind === "sale" ? state.sales[id] : undefined;
   const expense = kind === "expense" ? state.expenses[id] : undefined;
   const rec = sale ?? expense;
   if (!rec || rec.deletedAt) return <Navigate to="/app/money" replace />;
+  const owingKey = sale && !sale.paid && sale.customer ? buildCustomers(state).find((c) => normName(c.name) === normName(sale.customer))?.key : undefined;
 
   const del = () => {
     removeRecord(kind as RecordKind, id);
@@ -93,6 +96,19 @@ export function RecordDetail() {
               ))}
             </div>
           </>
+        )}
+
+        {sale && (
+          <div className="stack" style={{ marginTop: "var(--space-6)", alignItems: "flex-start" }}>
+            <Button variant="secondary" size="md" iconRight={<Icon name="receipt" size={18} />} onClick={() => navigate(`/money/message/receipt/${sale.id}`)}>
+              Send a receipt
+            </Button>
+            {!sale.paid && owingKey && (
+              <Button variant="secondary" size="md" iconRight={<Icon name="message-circle" size={18} />} onClick={() => navigate(`/money/message/reminder/${owingKey}`)}>
+                Remind {sale.customer}
+              </Button>
+            )}
+          </div>
         )}
 
         <div style={{ marginTop: "var(--space-section-gap)" }}>

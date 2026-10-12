@@ -239,7 +239,7 @@ describe("refused records", () => {
   });
   it("don't double up a row that is already queued, and do nothing when nothing was refused", () => {
     const a = sale({ id: "11111111-aaaa" });
-    const local: RecordsState = { ...state([a]), dirty: { products: [], sales: [a.id], expenses: [] }, rejected: [`sale:${a.id}`] };
+    const local: RecordsState = { ...state([a]), dirty: { customers: [], products: [], sales: [a.id], expenses: [] }, rejected: [`sale:${a.id}`] };
     expect(requeueRejected(local).dirty.sales).toEqual([a.id]);
     expect(requeueRejected(state([a]))).toEqual(state([a]));
   });
@@ -249,32 +249,32 @@ describe("merging what the server sends", () => {
   it("takes the server's version of anything we haven't changed", () => {
     const mine = sale({ id: "11111111-a", amount: 100_000 });
     const local: RecordsState = { ...state([mine]), cursor: "2026-10-01T00:00:00.000Z" };
-    const merged = mergePulled(local, { products: [], sales: [{ ...mine, paid: false }], expenses: [], cursor: "2026-10-05T00:00:00.000Z" });
+    const merged = mergePulled(local, { customers: [], products: [], sales: [{ ...mine, paid: false }], expenses: [], cursor: "2026-10-05T00:00:00.000Z" });
     expect(merged.sales[mine.id].paid).toBe(false);
     expect(merged.cursor).toBe("2026-10-05T00:00:00.000Z");
   });
   it("keeps our unsent changes over the server's copy, and stays dirty so they get pushed", () => {
     const mine = sale({ id: "11111111-a", paid: true, paidAt: t(0) });
-    const local: RecordsState = { ...state([mine]), dirty: { products: [], sales: [mine.id], expenses: [] } };
-    const merged = mergePulled(local, { products: [], sales: [{ ...mine, paid: false, paidAt: undefined }], expenses: [] });
+    const local: RecordsState = { ...state([mine]), dirty: { customers: [], products: [], sales: [mine.id], expenses: [] } };
+    const merged = mergePulled(local, { customers: [], products: [], sales: [{ ...mine, paid: false, paidAt: undefined }], expenses: [] });
     expect(merged.sales[mine.id].paid).toBe(true);
     expect(isRecordsDirty(merged)).toBe(true);
   });
   it("keeps the list of refused rows when new data arrives", () => {
     const local: RecordsState = { ...EMPTY_RECORDS, rejected: ["sale:11111111-aaaa"] };
-    expect(mergePulled(local, { products: [], sales: [], expenses: [] }).rejected).toEqual(["sale:11111111-aaaa"]);
+    expect(mergePulled(local, { customers: [], products: [], sales: [], expenses: [] }).rejected).toEqual(["sale:11111111-aaaa"]);
   });
   it("adds records made on another device, and learns about deletions", () => {
     const a = sale({ id: "11111111-a" });
     const b = sale({ id: "22222222-b" });
     const local = state([a]);
-    const merged = mergePulled(local, { products: [], sales: [{ ...a, deletedAt: t(0) }, b], expenses: [] });
+    const merged = mergePulled(local, { customers: [], products: [], sales: [{ ...a, deletedAt: t(0) }, b], expenses: [] });
     expect(merged.sales[a.id].deletedAt).toBeDefined();
     expect(merged.sales[b.id]).toBeDefined();
   });
   it("never moves the cursor backwards", () => {
     const local: RecordsState = { ...EMPTY_RECORDS, cursor: "2026-10-09T00:00:00.000Z" };
-    expect(mergePulled(local, { products: [], sales: [], expenses: [], cursor: "2026-10-01T00:00:00.000Z" }).cursor).toBe("2026-10-09T00:00:00.000Z");
-    expect(mergePulled(local, { products: [], sales: [], expenses: [] }).cursor).toBe("2026-10-09T00:00:00.000Z");
+    expect(mergePulled(local, { customers: [], products: [], sales: [], expenses: [], cursor: "2026-10-01T00:00:00.000Z" }).cursor).toBe("2026-10-09T00:00:00.000Z");
+    expect(mergePulled(local, { customers: [], products: [], sales: [], expenses: [] }).cursor).toBe("2026-10-09T00:00:00.000Z");
   });
 });

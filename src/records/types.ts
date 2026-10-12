@@ -20,6 +20,17 @@ export interface Product {
   archived?: boolean;
 }
 
+/** Someone you sell to. Sales keep the name as text; this holds the extra details. */
+export interface Customer {
+  id: string;
+  name: string;
+  /** As the person typed it. Turned into a WhatsApp number only when a message is opened. */
+  phone?: string;
+  note?: string;
+  /** Removed from the list. Their sales stay, and the name still shows up from those sales. */
+  archived?: boolean;
+}
+
 export interface SaleItem {
   productId?: string;
   /** Copied at the time of sale, so renaming a product later doesn't rewrite history. */
