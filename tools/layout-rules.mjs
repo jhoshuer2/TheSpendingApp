@@ -24,6 +24,9 @@ export function pageIssues() {
   }
   for (const el of document.querySelectorAll(".btn--primary")) {
     const r = el.getBoundingClientRect();
+    // A button on an older message that has simply scrolled out of the top of the chat is history, not a pushed-down action.
+    const scroller = el.closest(".chat__list") && el.closest(".screen__body");
+    if (scroller && r.top < scroller.getBoundingClientRect().top) continue;
     const a = document.querySelector(".app").getBoundingClientRect();
     // In a footer it must be fully on screen. Inside scrolling content it must at least start on screen.
     const inBody = Boolean(el.closest(".screen__body"));
