@@ -1,6 +1,6 @@
 # SPAL: Do it in SPAL (PRD, draft v0.1)
 
-Status: draft for creative-director review. Extends `VISION.md`. **Built so far:** the records engine (section 7, step 1; see `RECORDS.md`) and the assistant v1 (step 3; see `ASSISTANT.md`). Everything else is still to build.
+Status: draft for creative-director review. Extends `VISION.md`. **Built so far:** the records engine (section 7, step 1; see `RECORDS.md`) the assistant v1 (step 3; see `ASSISTANT.md`) and customers with reminder and receipt drafts (the first "Draft" tool; see `CUSTOMERS.md`). Everything else is still to build.
 
 ## 1. The principle
 
@@ -66,7 +66,7 @@ Feasibility: **Now** = we can build it with what we have. **Build** = needs real
 | Need | Do it in SPAL | Kind | Feasibility |
 |---|---|---|---|
 | Know your numbers | **Record sales and expenses; see profit this week and month** | Do | Build. **First thing to build** |
-| Customers | Customer list; "ask ten customers" sends a shareable message and collects the answers in SPAL | Do + Draft | Build |
+| Customers | Customer list with phone and notes, payment reminders and receipts as ready messages (**built**, `CUSTOMERS.md`); "ask ten customers" sends a shareable message and collects the answers in SPAL (not yet) | Do + Draft | Build |
 | Offers | Offer builder; message ready to share; count the orders in SPAL to see if it worked | Do + Draft | Build |
 | Stock | Product list with stock counts and low-stock alerts | Do | Build |
 | Online store | Simple catalogue page with a shareable link and WhatsApp order button | Do | Build |

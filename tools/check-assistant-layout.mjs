@@ -64,6 +64,11 @@ for (const [w, h] of VIEWPORTS) {
   await shot("card-saved");
   await say("Chidi owes me ₦2,000");
   await p.locator(".acard--pending").waitFor();
+  await p.locator(".acard--pending").getByRole("button", { name: "Save" }).click();
+  await say("remind Chidi");
+  await p.getByTestId("draft").waitFor();
+  await p.getByText(/ready on your screen/).waitFor();
+  await shot("draft");
   await say("how much did I make this week? Please explain in a lot of detail so the answer is long enough to wrap onto several lines on a small phone");
   await p.getByText(/This week you kept/).waitFor();
   await shot("conversation");
@@ -85,4 +90,4 @@ if (failures.length) {
   console.error(`\n${failures.length} layout issue(s):\n` + [...new Set(failures)].map((f) => " - " + f).join("\n"));
   process.exit(1);
 }
-console.log(`Assistant layout check passed: 11 screens x ${VIEWPORTS.length} viewports. Screenshots in tools/out/`);
+console.log(`Assistant layout check passed: 12 screens x ${VIEWPORTS.length} viewports. Screenshots in tools/out/`);

@@ -8,7 +8,7 @@ Without Supabase settings the app runs in **demo mode**: nothing is verified or 
 
 **1. Create a project.** supabase.com > New project. Choose the region closest to your users and a strong database password (store it somewhere safe; the app never needs it).
 
-**2. Create the tables.** Dashboard > SQL Editor > New query. Paste `supabase/migrations/20261011000000_init.sql` and run it, then do the same for each later file in that folder, **in date order** (`20261012000000_learning.sql` adds the learning columns; `20261013000000_records.sql` adds products, sales and expenses; `20261014000000_assistant.sql` adds the assistant's daily limits). Then open Table Editor and check both `profiles` and `step_progress` show **RLS enabled**.
+**2. Create the tables.** Dashboard > SQL Editor > New query. Paste `supabase/migrations/20261011000000_init.sql` and run it, then do the same for each later file in that folder, **in date order** (`20261012000000_learning.sql` adds the learning columns; `20261013000000_records.sql` adds products, sales and expenses; `20261014000000_assistant.sql` adds the assistant's daily limits; `20261015000000_customers.sql` adds customers). Then open Table Editor and check both `profiles` and `step_progress` show **RLS enabled**.
 
 **3. Configure sign-in.** Dashboard > Authentication:
 - **Sign In / Providers > Email:** enabled. Set **minimum password length to 8** (the app asks for 8).

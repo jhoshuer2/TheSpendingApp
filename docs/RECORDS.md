@@ -36,4 +36,5 @@ Run `supabase/migrations/20261013000000_records.sql` in the Supabase SQL editor 
 - **No limit on how many rows an account can add** yet. Needs rate limiting at the edge before wide release.
 - **Dates**: the database refuses records dated more than a day in the future or more than ten years back.
 - **One currency (naira), one business per account.**
-- **Not yet**: customers list, stock counts, receipts and invoices, export, voice entry, and the assistant that records for you ("sold three plates for 4,500"). Those are next in `PRD-DO-IT-IN-SPAL.md`.
+- **Built since:** the assistant that records for you (`ASSISTANT.md`) and customers with payment reminders and receipts (`CUSTOMERS.md`).
+- **Not yet**: stock counts, invoices, export and voice entry. Those are next in `PRD-DO-IT-IN-SPAL.md`.
