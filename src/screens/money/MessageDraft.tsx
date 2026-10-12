@@ -118,6 +118,7 @@ export function MessageDraft({ kind }: { kind: "reminder" | "receipt" }) {
           <Button
             variant="secondary"
             size="md"
+            style={canShare ? undefined : { gridColumn: "1 / -1" }}
             iconRight={<Icon name="copy" size={18} />}
             onClick={async () => show((await copyText(text)) ? "Message copied." : "Couldn't copy. Select the text and copy it.")}
           >
@@ -132,9 +133,7 @@ export function MessageDraft({ kind }: { kind: "reminder" | "receipt" }) {
             >
               Share
             </Button>
-          ) : (
-            <span />
-          )}
+          ) : null}
         </div>
       </footer>
     </div>

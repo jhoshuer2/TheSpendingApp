@@ -64,7 +64,7 @@ describe("receiptMessage", () => {
     const owing = receiptMessage({ sale: { ...s, paid: false }, lang: "pcm" });
     expect(owing).toContain("Still to pay: ₦4,500");
     expect(owing).toContain("we dey appreciate you");
-    expect(owing.startsWith("Receipt\n")).toBe(true);
+    expect(owing.startsWith("Receipt · ")).toBe(true); // no business name, so no heading line above the date
   });
   it("handles a sale with only a note", () => {
     expect(receiptMessage({ sale: sale("a", { note: "Cake order", amount: 1200000 }), lang: "en" })).toContain("Cake order — ₦12,000");

@@ -80,7 +80,7 @@ export function receiptMessage(i: ReceiptInput): string {
     ? s.items.slice(0, 20).map((it) => `${it.qty > 1 ? `${it.qty} × ` : ""}${it.name} — ${naira(it.qty * it.unitPrice)}`)
     : [`${s.note || "Sale"} — ${naira(s.amount)}`];
   const out = [
-    i.from || "Receipt",
+    ...(i.from ? [i.from] : []),
     `Receipt · ${day(s.at, true)}`,
     ...(s.customer ? [`For: ${s.customer}`] : []),
     "",

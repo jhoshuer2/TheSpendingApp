@@ -46,6 +46,7 @@ export function Customers() {
   const query = normName(q);
   const shown = query ? all.filter((c) => normName(c.name).includes(query) || (c.phone ?? "").replace(/\D/g, "").includes(query.replace(/\D/g, "") || "no match")) : all;
   const { owing, everyone } = sortCustomers(shown);
+  const rest = everyone.filter((c) => c.owed <= 0); // each person appears once: those who owe are listed above
   const totalOwed = all.reduce((n, c) => n + c.owed, 0);
 
   return (
@@ -86,11 +87,11 @@ export function Customers() {
                 </div>
               </>
             )}
-            {everyone.length > 0 && (
+            {rest.length > 0 && (
               <>
-                <h2 className="section-title">Everyone</h2>
+                <h2 className="section-title">{owing.length > 0 ? "Everyone else" : "Everyone"}</h2>
                 <div className="list">
-                  {everyone.map((c) => (
+                  {rest.map((c) => (
                     <Row key={c.key} c={c} now={now} />
                   ))}
                 </div>

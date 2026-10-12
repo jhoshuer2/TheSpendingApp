@@ -85,7 +85,8 @@ await step("a credit sale: the same person, typed differently, is still one cust
   assert.match(owing, /Chidi Okeke[\s\S]*₦25,000/);
   assert.match(owing, /Mrs Bello[\s\S]*₦8,000/);
   assert.ok(owing.indexOf("Chidi") < owing.indexOf("Bello"), "biggest debt first");
-  assert.equal(await p.getByRole("link", { name: /Chidi/ }).count() >= 2, true, "listed under 'Owe you' and 'Everyone'");
+  assert.equal(await p.getByRole("link", { name: /Chidi/ }).count(), 1, "each person is listed once: owing people only under 'Owe you'");
+  assert.equal(await p.getByRole("heading", { name: "Everyone else" }).count(), 0, "nobody else yet");
   assert.equal(Object.keys((await books()).customers ?? {}).length, 0, "no stored customer rows are needed");
 });
 
