@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "../design-system/Button";
 import { Field } from "../design-system/Field";
 import { Icon } from "../design-system/Icon";
@@ -15,7 +15,17 @@ export function Business() {
   const start = factsOf(stored.answers);
   const [v, setV] = useState<Record<FactKey, string>>({ businessName: start.businessName ?? "", about: start.about ?? "", place: start.place ?? "", hours: start.hours ?? "", instagram: start.instagram ?? "" });
   const [error, setError] = useState<string>();
+  // This screen opens from the copy saved on this phone; a newer copy can arrive from the server a moment later
+  // (for example, details you added on another device). Until you start typing, show the newest.
+  const typed = useRef(false);
+  const key = JSON.stringify(factsOf(stored.answers));
+  useEffect(() => {
+    if (typed.current) return;
+    const f = JSON.parse(key) as ReturnType<typeof factsOf>;
+    setV({ businessName: f.businessName ?? "", about: f.about ?? "", place: f.place ?? "", hours: f.hours ?? "", instagram: f.instagram ?? "" });
+  }, [key]);
   const set = (k: FactKey) => (e: { target: { value: string } }) => {
+    typed.current = true;
     setV((x) => ({ ...x, [k]: e.target.value }));
     setError(undefined);
   };

@@ -1,6 +1,7 @@
 import { buildContext, READ_TOOLS, type Block, type ChatMessage } from "../../supabase/functions/_shared/assistant-protocol.ts";
 import type { RecordsState } from "../records/state";
-import { AUTO_LIMIT_KOBO, buildDraft, buildMarkPaidProposal, buildRecordsProposal, describeProposal, proposalTotal, runReadTool, type Draft, type MessageContext, type Proposal } from "./tools";
+import type { BusinessFacts, FactKey } from "../messages/facts";
+import { AUTO_LIMIT_KOBO, buildDraft, buildFactsProposal, buildMarkPaidProposal, buildRecordsProposal, buildTextDraft, describeProposal, proposalTotal, runReadTool, type Draft, type MessageContext, type Proposal } from "./tools";
 
 export type ReplyLanguage = "en" | "pcm";
 export type Autonomy = "ask" | "auto";
@@ -22,6 +23,8 @@ export interface Saved {
   sales: string[];
   expenses: string[];
   paid: string[];
+  /** What each saved fact was before (null = it wasn't set), so Undo can put it back. */
+  facts?: Partial<Record<FactKey, string | null>>;
 }
 export type ProposalStatus = "pending" | "saved" | "dismissed" | "undone";
 
@@ -55,6 +58,8 @@ export interface IO {
   apply(p: Proposal): Saved;
   /** How messages to customers should be written (business name, language, tone). */
   messageContext(): MessageContext;
+  /** What the person has told SPAL about their business. */
+  facts(): BusinessFacts;
   now(): Date;
   id(): string;
   /** Called whenever the chat changes mid-turn, so the screen can show progress. */
@@ -162,7 +167,7 @@ export async function runTurn(
     let waiting = false;
     for (const u of uses) {
       if ((READ_TOOLS as readonly string[]).includes(u.name)) {
-        pending.push({ toolUseId: u.id, content: runReadTool(u.name, u.input, io.records(), io.now()) });
+        pending.push({ toolUseId: u.id, content: runReadTool(u.name, u.input, io.records(), io.now(), io.facts()) });
         continue;
       }
       if (u.name === "draft_message") {
@@ -176,7 +181,17 @@ export async function runTurn(
         pending.push({ toolUseId: u.id, content: `A ${d.draft.kind} draft for ${d.draft.title.replace(/^\w+ for /, "")} is on the person's screen. Nothing was sent: they read it, change it if they like, and send it themselves.` });
         continue;
       }
-      const built = u.name === "propose_records" ? buildRecordsProposal(u.input, io.records(), io.now()) : u.name === "propose_mark_paid" ? buildMarkPaidProposal(u.input, io.records()) : null;
+      if (u.name === "draft_text") {
+        const d = buildTextDraft(u.input, io.records());
+        if (!d.ok) {
+          pending.push({ toolUseId: u.id, content: d.error, isError: true });
+          continue;
+        }
+        items.push({ kind: "draft", id: io.id(), draft: d.draft });
+        pending.push({ toolUseId: u.id, content: `A text draft ("${d.draft.title}") is on the person's screen. Nothing was posted or sent: they read it and copy it themselves. Offer to change it if they want.` });
+        continue;
+      }
+      const built = u.name === "propose_records" ? buildRecordsProposal(u.input, io.records(), io.now()) : u.name === "propose_mark_paid" ? buildMarkPaidProposal(u.input, io.records()) : u.name === "propose_business_facts" ? buildFactsProposal(u.input) : null;
       if (!built || !built.ok) {
         pending.push({ toolUseId: u.id, content: built ? built.error : `Unknown tool ${u.name.slice(0, 40)}.`, isError: true });
         continue;

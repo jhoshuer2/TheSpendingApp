@@ -1,6 +1,7 @@
 import { validateRequest } from "../../supabase/functions/_shared/assistant-protocol.ts";
 import { DEFAULT_SETTINGS, emptyChat, type Chat, type Item, type Pending, type ProposalStatus, type Saved, type Settings } from "./engine";
 import { cleanExpense, cleanSale } from "../records/state";
+import { FACT_KEYS, type BusinessFacts } from "../messages/facts";
 import type { Draft, Proposal } from "./tools";
 
 export interface Stored {
@@ -37,7 +38,13 @@ function cleanProposal(raw: unknown): Proposal | null {
     if (!customer || !saleIds.length || typeof m.total !== "number" || !Number.isFinite(m.total) || m.total < 0) return null;
     out.markPaid = { customer, saleIds, total: m.total };
   }
-  return out.sales.length + out.expenses.length > 0 || out.markPaid ? out : null;
+  const f = (o.facts && typeof o.facts === "object" ? o.facts : null) as Record<string, unknown> | null;
+  if (f) {
+    const facts: BusinessFacts = {};
+    for (const k of FACT_KEYS) if (typeof f[k] === "string" && (f[k] as string).trim()) facts[k] = (f[k] as string).trim().slice(0, 200);
+    if (Object.keys(facts).length) out.facts = facts;
+  }
+  return out.sales.length + out.expenses.length > 0 || out.markPaid || out.facts ? out : null;
 }
 
 function cleanItem(raw: unknown): Item | null {
@@ -50,12 +57,12 @@ function cleanItem(raw: unknown): Item | null {
   }
   if (o.kind === "draft") {
     const d = (o.draft && typeof o.draft === "object" ? o.draft : {}) as Record<string, unknown>;
-    const kind = d.kind === "reminder" || d.kind === "receipt" ? d.kind : null;
-    const customerKey = typeof d.customerKey === "string" && /^[\w-]{1,200}$/.test(d.customerKey) ? d.customerKey : null;
-    const title = str(d.title, 120), text = str(d.text, 1200);
-    if (!kind || !customerKey || !title || !text) return null;
+    const kind = d.kind === "reminder" || d.kind === "receipt" || d.kind === "text" ? d.kind : null;
+    const customerKey = typeof d.customerKey === "string" && /^[\w-]{1,200}$/.test(d.customerKey) ? d.customerKey : undefined;
+    const title = str(d.title, 120), text = str(d.text, 1500);
+    if (!kind || (kind !== "text" && !customerKey) || !title || !text) return null;
     const saleId = typeof d.saleId === "string" && /^[0-9a-zA-Z-]{8,64}$/.test(d.saleId) ? d.saleId : undefined;
-    const draft: Draft = { kind, customerKey, title, text, ...(saleId ? { saleId } : {}) };
+    const draft: Draft = { kind, title, text, ...(customerKey ? { customerKey } : {}), ...(saleId ? { saleId } : {}) };
     return { kind: "draft", id, draft };
   }
   if (o.kind === "proposal") {
@@ -63,7 +70,9 @@ function cleanItem(raw: unknown): Item | null {
     const status = STATUSES.find((s) => s === o.status);
     if (!proposal || !status) return null;
     const sv = (o.saved && typeof o.saved === "object" ? o.saved : null) as Record<string, unknown> | null;
-    const saved: Saved | undefined = sv ? { sales: ids(sv.sales), expenses: ids(sv.expenses), paid: ids(sv.paid) } : undefined;
+    const savedFacts: Saved["facts"] = {};
+    if (sv?.facts && typeof sv.facts === "object") for (const k of FACT_KEYS) { const v = (sv.facts as Record<string, unknown>)[k]; if (v === null) savedFacts[k] = null; else if (typeof v === "string") savedFacts[k] = v.slice(0, 200); }
+    const saved: Saved | undefined = sv ? { sales: ids(sv.sales), expenses: ids(sv.expenses), paid: ids(sv.paid), ...(Object.keys(savedFacts).length ? { facts: savedFacts } : {}) } : undefined;
     return { kind: "proposal", id, proposal, status, ...(o.auto === true ? { auto: true } : {}), ...(o.stale === true ? { stale: true } : {}), ...(saved ? { saved } : {}) };
   }
   return null;

@@ -61,7 +61,9 @@ if (args.includes("--self-test")) {
     if (c.saleTotal !== undefined) sales.push({ amount: c.saleTotal, ...(c.customer ? { customer: c.customer } : {}), ...(c.unpaid ? { paid: false, customer: c.unpaid } : {}), ...(c.when ? { when: c.when } : {}) });
     if (c.expenseTotal !== undefined) expenses.push({ amount: c.expenseTotal, category: c.categories?.[0] ?? "other", ...(c.when ? { when: c.when } : {}) });
     const content = [];
-    if (c.draft) content.push({ type: "text", text: "Here is the draft." }, { type: "tool_use", id: "t1", name: "draft_message", input: { kind: c.draft.kind, customer: c.draft.customer } });
+    if (c.facts) content.push({ type: "text", text: "Want me to remember that?" }, { type: "tool_use", id: "t1", name: "propose_business_facts", input: { place: c.facts.place } });
+    else if (c.draftText) content.push({ type: "text", text: "Here it is." }, { type: "tool_use", id: "t1", name: "draft_text", input: { kind: c.draftText.kind, title: "Draft", text: `Ada's Kitchen. ${c.draftText.mention}. Order on WhatsApp.` } });
+    else if (c.draft) content.push({ type: "text", text: "Here is the draft." }, { type: "tool_use", id: "t1", name: "draft_message", input: { kind: c.draft.kind, customer: c.draft.customer } });
     else if (c.markPaid) content.push({ type: "tool_use", id: "t1", name: "propose_mark_paid", input: { customer: c.markPaid } });
     else if (c.tool) content.push({ type: "tool_use", id: "t1", name: c.tool, input: {} });
     else if (sales.length || expenses.length) content.push({ type: "text", text: "Please check this and tap Save." }, { type: "tool_use", id: "t1", name: "propose_records", input: { sales, expenses } });

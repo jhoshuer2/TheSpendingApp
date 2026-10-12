@@ -5,7 +5,7 @@ import type { Product, Sale } from "../records/types";
 import { toChatError } from "../backend/supabase";
 import { sanitizeStored } from "./state";
 import { ChatError, DEFAULT_SETTINGS, emptyChat, freshChat, needsFresh, runTurn, type Chat, type IO, type ModelReply, type Settings } from "./engine";
-import { buildDraft, buildMarkPaidProposal, buildRecordsProposal, describeProposal, runReadTool } from "./tools";
+import { amountsIn, buildDraft, buildFactsProposal, buildMarkPaidProposal, buildRecordsProposal, buildTextDraft, describeProposal, runReadTool } from "./tools";
 
 const at = (d: number) => new Date(2026, 9, d, 10).toISOString();
 const NOW = new Date(2026, 9, 12, 15, 0); // Monday 12 Oct 2026, 3pm
@@ -134,6 +134,7 @@ function harness(script: (ModelReply | ChatError)[], records = books()) {
     records: () => records,
     apply: (p) => (applied.push(p), { sales: ["s1"], expenses: [], paid: [] }),
     messageContext: () => ({ from: "Ada's Kitchen", lang: "en", tone: "friendly" }),
+    facts: () => ({ businessName: "Ada's Kitchen", about: "Home-cooked jollof and zobo", place: "Yaba, Lagos" }),
     now: () => NOW,
     id: () => `id-${++n}`,
   };
@@ -431,5 +432,106 @@ describe("drafting in a conversation", () => {
     const stored = { settings: { replyLanguage: "en", autonomy: "ask" }, consented: true, chat: { day: "2026-10-12", api: [], pending: [], items: [{ kind: "draft", id: "d1", draft: { kind: "reminder", customerKey: "cust-chidi-1", title: "Reminder for Chidi", text: "Hello Chidi" } }, { kind: "draft", id: "d2", draft: { kind: "reminder", customerKey: "bad key!", title: "x", text: "y" } }] } };
     const s = sanitizeStored(JSON.parse(JSON.stringify(stored)), "2026-10-12");
     expect(s.chat.items.map((i) => i.id)).toEqual(["d1"]);
+  });
+});
+
+
+// ---- business facts and writing ----
+describe("propose_business_facts", () => {
+  it("cleans what the person said, and describes it plainly", () => {
+    const r = buildFactsProposal({ place: "  Yaba,   Lagos ", hours: "Mon to Sat,\n10am to 6pm", instagram: "@ada.kitchen", business_name: "Ada's Kitchen" });
+    expect(r.ok && r.proposal.facts).toEqual({ businessName: "Ada's Kitchen", place: "Yaba, Lagos", hours: "Mon to Sat, 10am to 6pm", instagram: "ada.kitchen" });
+    expect(r.ok && describeProposal(r.proposal)).toEqual(["Business name: Ada's Kitchen", "Where you are: Yaba, Lagos", "Opening hours: Mon to Sat, 10am to 6pm", "Instagram: @ada.kitchen"]);
+  });
+  it("refuses nothing-to-save, bad Instagram names, and caps the length", () => {
+    expect(buildFactsProposal({}).ok).toBe(false);
+    expect(buildFactsProposal({ place: "   " }).ok).toBe(false);
+    expect(buildFactsProposal({ instagram: "not a handle!" }).ok).toBe(false);
+    expect(buildFactsProposal("nonsense").ok).toBe(false);
+    const long = buildFactsProposal({ about: "x".repeat(500) });
+    expect(long.ok && long.proposal.facts?.about?.length).toBe(200);
+  });
+});
+
+describe("get_business", () => {
+  it("returns what is known and says what is missing", () => {
+    const d = JSON.parse(runReadTool("get_business", {}, books(), NOW, { businessName: "Ada's Kitchen", place: "Yaba" }));
+    expect(d.business).toEqual({ business_name: "Ada's Kitchen", place: "Yaba" });
+    expect(d.missing).toEqual(["about", "hours", "instagram"]);
+    expect(d.products).toBe(2);
+    expect(JSON.parse(runReadTool("get_business", {}, EMPTY_RECORDS, NOW)).missing).toHaveLength(5);
+  });
+});
+
+describe("draft_text", () => {
+  it("shows writing that uses only the person's real prices", () => {
+    const ok = buildTextDraft({ kind: "captions", title: "Post captions", text: "Jollof rice (plate) is ₦1,500 today. Zobo is N500.\nOrder on WhatsApp." }, books());
+    expect(ok.ok && ok.draft).toMatchObject({ kind: "text", title: "Post captions" });
+  });
+  it("blocks any price that isn't one of theirs", () => {
+    for (const text of ["Jollof for just ₦999!", "Only 1,200 naira per plate", "Best price: N20000", "Plates from ₦1,500 or ₦2,000"]) {
+      const r = buildTextDraft({ kind: "captions", title: "x", text }, books());
+      expect(r.ok).toBe(false);
+      expect(!r.ok && r.error).toMatch(/not (one of the person's product prices|one of)|are not one of/);
+    }
+    expect(buildTextDraft({ kind: "other", title: "x", text: "Any price" }, EMPTY_RECORDS).ok).toBe(true);
+    expect(buildTextDraft({ kind: "other", title: "x", text: "Only ₦500" }, EMPTY_RECORDS).ok).toBe(false); // no products, so no real prices to quote
+  });
+  it("holds an Instagram bio to 150 characters, and refuses empty or enormous text", () => {
+    const bio = (text: string) => buildTextDraft({ kind: "instagram_bio", title: "Bio", text }, books());
+    expect(bio("Home-cooked jollof and zobo in Yaba. Order on WhatsApp.").ok).toBe(true);
+    expect(bio("x".repeat(151)).ok).toBe(false);
+    expect(bio("   ").ok).toBe(false);
+    expect(buildTextDraft({ kind: "captions", title: "x", text: "y".repeat(1600) }, books()).ok).toBe(false);
+  });
+  it("tidies control characters and falls back to a sensible title and kind", () => {
+    const r = buildTextDraft({ kind: "mystery", text: "Hello\u0007 there\r\nfriends" }, books());
+    expect(r.ok && r.draft.text).toBe("Hello there\nfriends");
+    expect(r.ok && r.draft.title).toBe("Draft");
+  });
+  it("finds amounts however they are written", () => {
+    expect(amountsIn("₦2,500 and N 300, 1,200 naira, NGN? 5 NGN, Nancy N/A")).toEqual([2500, 300, 1200, 5]);
+    expect(amountsIn("Open 10am to 6pm, call 0803 123 4567")).toEqual([]);
+  });
+});
+
+describe("facts and writing in a conversation", () => {
+  it("proposes facts as a card, and saving tells the model what happened", async () => {
+    const h = harness([reply([say("Want me to remember that?"), use("t1", "propose_business_facts", { place: "Yaba", hours: "10am to 6pm" })]), reply([say("Done.")])]);
+    let r = await runTurn(start(), { text: "I'm in Yaba, open 10 to 6" }, DEFAULT_SETTINGS, WHO, h.io);
+    const card = r.chat.items.find((i) => i.kind === "proposal");
+    expect(card && card.kind === "proposal" && card.proposal.facts).toEqual({ place: "Yaba", hours: "10am to 6pm" });
+    expect(card && card.kind === "proposal" && card.status).toBe("pending");
+    expect(h.applied).toHaveLength(0);
+    r.chat = { ...r.chat, items: r.chat.items.map((i) => (i.kind === "proposal" ? { ...i, status: "saved" as const, saved: { sales: [], expenses: [], paid: [], facts: { place: null } } } : i)) };
+    r = await runTurn(r.chat, { text: "thanks" }, DEFAULT_SETTINGS, WHO, h.io);
+    expect(String(((h.calls[1][2].content as Block[])[0]).content)).toMatch(/^Saved\. Where you are: Yaba; Opening hours: 10am to 6pm\./);
+  });
+  it("lets the assistant read the facts, then show a bio; and refuses an invented price", async () => {
+    const h = harness([
+      reply([use("t1", "get_business", {})]),
+      reply([use("t2", "draft_text", { kind: "instagram_bio", title: "Instagram bio", text: "Jollof from just ₦999. Yaba." })]),
+      reply([use("t3", "draft_text", { kind: "instagram_bio", title: "Instagram bio", text: "Home-cooked jollof and zobo. Yaba, Lagos. Order on WhatsApp." })]),
+      reply([say("Here it is. Copy it when you're happy.")]),
+    ]);
+    const r = await runTurn(start(), { text: "write my instagram bio" }, DEFAULT_SETTINGS, WHO, h.io);
+    expect(r.error).toBeUndefined();
+    expect(JSON.parse(String((h.calls[1][2].content as Block[])[0].content)).business.place).toBe("Yaba, Lagos");
+    expect(h.calls[2][4].content[0]).toMatchObject({ is_error: true });
+    const drafts = r.chat.items.filter((i) => i.kind === "draft");
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0].kind === "draft" && drafts[0].draft.text).toMatch(/^Home-cooked jollof/);
+    expect(String((h.calls[3][6].content as Block[])[0].content)).toMatch(/Nothing was posted or sent/);
+  });
+  it("saved text drafts and fact cards survive a reload", () => {
+    const stored = { settings: { replyLanguage: "en", autonomy: "ask" }, consented: true, chat: { day: "2026-10-12", api: [], pending: [], items: [
+      { kind: "draft", id: "d1", draft: { kind: "text", title: "Instagram bio", text: "Home-cooked jollof." } },
+      { kind: "proposal", id: "p1", status: "saved", proposal: { sales: [], expenses: [], facts: { place: "Yaba", bogus: "x" } }, saved: { sales: [], expenses: [], paid: [], facts: { place: null, hours: "9 to 5" } } },
+    ] } };
+    const s = sanitizeStored(JSON.parse(JSON.stringify(stored)), "2026-10-12");
+    expect(s.chat.items.map((i) => i.id)).toEqual(["d1", "p1"]);
+    const p = s.chat.items[1];
+    expect(p.kind === "proposal" && p.proposal.facts).toEqual({ place: "Yaba" });
+    expect(p.kind === "proposal" && p.saved?.facts).toEqual({ place: null, hours: "9 to 5" });
   });
 });

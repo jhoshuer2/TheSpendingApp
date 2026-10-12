@@ -251,6 +251,20 @@ select pg_temp.assert((select updated_at from public.customers where id = (selec
 delete from auth.users where id = (select owner_a from _cust);
 select pg_temp.assert((select count(*) from public.customers) = 0, 'deleting an account deletes its customers');
 
+-- 10. Business facts live in the profile's answers: they fit, and the size limit still holds.
+insert into auth.users (id, email) values (gen_random_uuid(), 'facts@example.com');
+create temp table _facts_user as select id from auth.users where email = 'facts@example.com';
+grant select on _facts_user to authenticated;
+select pg_temp.as_user((select id from _facts_user));
+update public.profiles set answers = jsonb_build_object('stage', 'y1to3', 'businessName', repeat('b', 60), 'about', repeat('a', 200), 'place', repeat('p', 100), 'hours', repeat('h', 100), 'instagram', repeat('i', 30)) where id = (select id from _facts_user);
+select pg_temp.assert((select answers->>'instagram' from public.profiles where id = (select id from _facts_user)) = repeat('i', 30), 'business facts fit in the profile answers');
+do $$ begin
+  begin update public.profiles set answers = jsonb_build_object('about', repeat('x', 5000)) where id = (select id from _facts_user);
+    raise exception 'FAILED: accepted 5000 characters of answers';
+  exception when check_violation then raise notice 'ok - the size limit on answers still holds'; end;
+end $$;
+reset role;
+
 -- Deleting an account deletes its books.
 delete from auth.users where email = 'bola@example.com';
 select pg_temp.assert((select count(*) from public.sales) = 0 and (select count(*) from public.products) = 0 and (select count(*) from public.expenses) = 0, 'deleting an account deletes its records');

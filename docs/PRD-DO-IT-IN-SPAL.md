@@ -1,6 +1,6 @@
 # SPAL: Do it in SPAL (PRD, draft v0.1)
 
-Status: draft for creative-director review. Extends `VISION.md`. **Built so far:** the records engine (section 7, step 1; see `RECORDS.md`) the assistant v1 (step 3; see `ASSISTANT.md`) and customers with reminder and receipt drafts (the first "Draft" tool; see `CUSTOMERS.md`). Everything else is still to build.
+Status: draft for creative-director review. Extends `VISION.md`. **Built so far:** the records engine (section 7, step 1; see `RECORDS.md`) the assistant v1 (step 3; see `ASSISTANT.md`) customers with reminder and receipt drafts (`CUSTOMERS.md`), and the first writing tools: price list, WhatsApp greeting and away messages, Instagram bio and captions (`WRITE.md`). Everything else is still to build.
 
 ## 1. The principle
 
@@ -90,7 +90,7 @@ The learning layer in progress today (hiding steps, variety, recap, welcome back
 1. **Records engine (the in-app notebook): BUILT.** Products, record a sale (paid or owed), record an expense, what you kept today / this week / this month, and insights from the numbers. "Write down every sale" and "Work out what you really keep" are now real tools whose steps tick themselves. See `RECORDS.md`.
 2. **Finish the learning layer** on top of steps and records, so insights use real numbers.
 3. **Assistant, v1 (text): BUILT** (English default, Nigerian Pidgin understood). Talk to it to record and to ask about the numbers; undo on every saved card; server-side model call with limits. Not yet: a full "business brain" screen (settings show what it knows), a separate action log. See `ASSISTANT.md`.
-4. **Draft tools:** bios, messages, plans, price lists, using the business brain.
+4. **Draft tools: PARTLY BUILT.** Price list, WhatsApp greeting and away message, Instagram bio, captions and WhatsApp description, all written from a small "business brain" (name, what you sell, where, hours, Instagram) that you can edit and the assistant can add to with your OK. See `WRITE.md`. Still to do: one-page plan, offers, job posts, logo brief.
 5. **Guide and verify framework:** a proper "do this elsewhere" flow with prepared packs, deep links and proof checks, starting with business name registration (after research).
 6. **Voice entry** ("sold three plates...") for people who would rather speak than type. Accuracy with Nigerian accents needs testing.
 7. **Connections** one at a time: WhatsApp, Instagram posting, payments, bank data.

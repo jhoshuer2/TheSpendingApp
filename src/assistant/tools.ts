@@ -1,6 +1,7 @@
 import { EXPENSE_CATEGORIES } from "../../supabase/functions/_shared/assistant-protocol.ts";
 import { categoryName, liveSales, owed, periodRanges, summarize, ledger, localDay, saleTitle } from "../records/calc";
 import { buildCustomers, normName, type CustomerEntry } from "../records/customers";
+import { FACT_KEYS, FACT_LABEL, type BusinessFacts } from "../messages/facts";
 import { receiptMessage, reminderMessage, type MsgLang, type Tone } from "../messages/templates";
 import { MAX_NAIRA, toKobo } from "../records/money";
 import type { RecordsState } from "../records/state";
@@ -25,6 +26,8 @@ export interface Proposal {
   sales: ProposedSale[];
   expenses: ProposedExpense[];
   markPaid?: { customer: string; saleIds: string[]; total: number };
+  /** Facts about the business to remember (saved to the profile). */
+  facts?: BusinessFacts;
 }
 export type Built = { ok: true; proposal: Proposal } | { ok: false; error: string };
 
@@ -164,6 +167,7 @@ export function describeProposal(p: Proposal): string[] {
   }
   for (const e of p.expenses) lines.push(`${e.note || categoryName(e.category)}: ${money(e.amount)} spent`);
   if (p.markPaid) lines.push(`${p.markPaid.customer} paid ${money(p.markPaid.total)}`);
+  if (p.facts) for (const k of FACT_KEYS) if (p.facts[k]) lines.push(`${FACT_LABEL[k]}: ${k === "instagram" ? "@" : ""}${p.facts[k]}`);
   return lines;
 }
 
@@ -174,7 +178,7 @@ const cap = (s: string) => (s.length > CAP ? `${s.slice(0, CAP)}…(cut short)` 
 const dayName = (iso: string) => localDay(iso);
 
 /** Run a read-only tool against the person's books. Returns the text sent back to the model. */
-export function runReadTool(name: string, input: unknown, state: RecordsState, now: Date): string {
+export function runReadTool(name: string, input: unknown, state: RecordsState, now: Date, facts: BusinessFacts = {}): string {
   const o = obj(input);
   switch (name) {
     case "get_summary": {
@@ -214,6 +218,14 @@ export function runReadTool(name: string, input: unknown, state: RecordsState, n
       const ps = Object.values(state.products).filter((p) => !p.archived).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 60);
       return cap(JSON.stringify({ products: ps.map((p) => ({ name: p.name, price: naira(p.price), ...(p.cost !== undefined ? { cost: naira(p.cost) } : {}) })), ...(ps.length ? {} : { note: "The person has not added any products yet." }) }));
     }
+    case "get_business": {
+      const given = FACT_KEYS.filter((k) => facts[k]);
+      return JSON.stringify({
+        business: Object.fromEntries(given.map((k) => [k === "businessName" ? "business_name" : k, facts[k]])),
+        missing: FACT_KEYS.filter((k) => !facts[k]).map((k) => (k === "businessName" ? "business_name" : k)),
+        products: Object.values(state.products).filter((p) => !p.archived).length,
+      });
+    }
     case "list_customers": {
       const limit = typeof o.limit === "number" && o.limit >= 1 ? Math.min(Math.floor(o.limit), 15) : 8;
       const list = buildCustomers(state).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
@@ -233,8 +245,9 @@ export function runReadTool(name: string, input: unknown, state: RecordsState, n
 
 /** A message the assistant prepared. The text is a snapshot; the phone number is looked up when it is shown, never stored here. */
 export interface Draft {
-  kind: "reminder" | "receipt";
-  customerKey: string;
+  /** reminder and receipt are for a customer; text is writing for the business (a bio, captions). */
+  kind: "reminder" | "receipt" | "text";
+  customerKey?: string;
   saleId?: string;
   title: string;
   text: string;
@@ -275,4 +288,59 @@ export function buildDraft(input: unknown, state: RecordsState, ctx: MessageCont
   const latest = c.sales[0];
   if (!latest) return { ok: false, error: `${c.name} has no sales yet, so there is no receipt to make.` };
   return { ok: true, draft: { kind, customerKey: c.key, saleId: latest.id, title: `Receipt for ${c.name}`, text: receiptMessage({ sale: latest, from: ctx.from, lang: ctx.lang }) } };
+}
+
+// ---- Facts about the business, and writing for it ----
+
+const oneLine = (v: unknown, max: number): string | undefined => {
+  const t = typeof v === "string" ? v.replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim() : "";
+  return t ? t.slice(0, max) : undefined;
+};
+
+/** Facts the person just told the assistant, ready to save. Nothing is saved until they tap Save. */
+export function buildFactsProposal(input: unknown): Built {
+  const o = obj(input);
+  const facts: BusinessFacts = {};
+  const name = oneLine(o.business_name, 60), about = oneLine(o.about, 200), place = oneLine(o.place, 100), hours = oneLine(o.hours, 100);
+  if (name) facts.businessName = name;
+  if (about) facts.about = about;
+  if (place) facts.place = place;
+  if (hours) facts.hours = hours;
+  const ig = oneLine(o.instagram, 40)?.replace(/^@+/, "");
+  if (ig !== undefined) {
+    if (!/^[A-Za-z0-9._]{1,30}$/.test(ig)) return { ok: false, error: "That Instagram name isn't valid (letters, numbers, dots and underscores only). Ask the person for it." };
+    facts.instagram = ig;
+  }
+  if (Object.keys(facts).length === 0) return { ok: false, error: "No facts to save. Ask the person what they want you to remember." };
+  return { ok: true, proposal: { sales: [], expenses: [], facts } };
+}
+
+export const TEXT_KINDS = ["instagram_bio", "captions", "whatsapp_about", "other"] as const;
+const TEXT_TITLE: Record<(typeof TEXT_KINDS)[number], string> = { instagram_bio: "Instagram bio", captions: "Post captions", whatsapp_about: "WhatsApp business description", other: "Draft" };
+export const MAX_DRAFT_TEXT = 1500;
+
+/** Every naira amount mentioned in a piece of writing (₦2,500, N2500, 2,500 naira), in naira. */
+export function amountsIn(text: string): number[] {
+  const out: number[] = [];
+  const re = /₦\s?(\d[\d,]*(?:\.\d{1,2})?)|(?<![A-Za-z])N\s?(\d[\d,]*(?:\.\d{1,2})?)(?![A-Za-z])|(\d[\d,]*(?:\.\d{1,2})?)\s?(?:naira|NGN)\b/gi;
+  for (let m = re.exec(text); m; m = re.exec(text)) {
+    const n = Number((m[1] ?? m[2] ?? m[3]).replace(/,/g, ""));
+    if (Number.isFinite(n)) out.push(n);
+  }
+  return out;
+}
+
+/** Writing for the business, shown to the person. It may only mention prices that really are theirs. */
+export function buildTextDraft(input: unknown, state: RecordsState): BuiltDraft {
+  const o = obj(input);
+  const kind = (TEXT_KINDS as readonly string[]).includes(o.kind as string) ? (o.kind as (typeof TEXT_KINDS)[number]) : "other";
+  const body = typeof o.text === "string" ? o.text.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").replace(/\r\n?/g, "\n").trim() : "";
+  if (!body) return { ok: false, error: "The text is empty. Write it out in full." };
+  if (body.length > MAX_DRAFT_TEXT) return { ok: false, error: `That is too long (${body.length} characters). Keep it under ${MAX_DRAFT_TEXT}.` };
+  if (kind === "instagram_bio" && body.replace(/\s*\n\s*/g, " ").length > 150) return { ok: false, error: `An Instagram bio can be at most 150 characters; this is ${body.length}. Shorten it.` };
+  const real = new Set(Object.values(state.products).filter((p) => !p.archived).map((p) => Math.round(p.price) / 100));
+  const bad = [...new Set(amountsIn(body).filter((n) => !real.has(n)))];
+  if (bad.length) return { ok: false, error: `The text mentions ${bad.slice(0, 3).map((n) => `₦${n.toLocaleString("en-NG")}`).join(", ")}, which ${bad.length === 1 ? "is not" : "are not"} one of the person's product prices. Use only their real prices (list_products), or leave prices out.` };
+  const title = oneLine(o.title, 80) ?? TEXT_TITLE[kind];
+  return { ok: true, draft: { kind: "text", title, text: body } };
 }

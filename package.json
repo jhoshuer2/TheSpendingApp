@@ -17,7 +17,8 @@
     "test:db": "bash tools/test-db.sh",
     "check:learning": "node tools/check-learning.mjs",
     "check:money": "node tools/check-money.mjs",
-    "check:customers": "node tools/check-customers.mjs"
+    "check:customers": "node tools/check-customers.mjs",
+    "check:write": "node tools/check-write.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",
