@@ -51,6 +51,14 @@ export function Products() {
           </div>
         )}
 
+        {products.length > 0 && (
+          <div style={{ marginTop: "var(--space-5)" }}>
+            <Button variant="secondary" size="md" iconRight={<Icon name="share" size={18} />} onClick={() => navigate("/write/prices")}>
+              Share your price list
+            </Button>
+          </div>
+        )}
+
         {removed.length > 0 && (
           <>
             <h2 className="section-title">Removed</h2>

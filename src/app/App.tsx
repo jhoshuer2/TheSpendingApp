@@ -16,6 +16,7 @@ import { RecordDetail } from "../screens/money/RecordDetail";
 import { RecordExpense } from "../screens/money/RecordExpense";
 import { RecordSale } from "../screens/money/RecordSale";
 import { Assistant, AssistantSettings } from "../screens/Assistant";
+import { Business } from "../screens/Business";
 import { Auth, ForgotPassword, ResetPassword } from "../screens/Auth";
 import { Journey } from "../screens/Journey";
 import { Library } from "../screens/Library";
@@ -26,6 +27,8 @@ import { Gate, NotFound, Shell } from "../screens/Shell";
 import { Splash } from "../screens/Splash";
 import { Today } from "../screens/Today";
 import { Welcome } from "../screens/Welcome";
+import { Write } from "../screens/Write";
+import { WriteDraft } from "../screens/WriteDraft";
 
 export function App() {
   return (
@@ -86,6 +89,9 @@ export function App() {
               <Route path="/money/products" element={<Gate><Products /></Gate>} />
               <Route path="/money/product/:id" element={<Gate><ProductForm /></Gate>} />
               <Route path="/money/record/:kind/:id" element={<Gate><RecordDetail /></Gate>} />
+              <Route path="/business" element={<Gate><Business /></Gate>} />
+              <Route path="/write" element={<Gate><Write /></Gate>} />
+              <Route path="/write/:kind" element={<Gate><WriteDraft /></Gate>} />
               <Route path="/assistant" element={<Gate><Assistant /></Gate>} />
               <Route path="/assistant/settings" element={<Gate><AssistantSettings /></Gate>} />
               <Route path="/app" element={<Shell />}>

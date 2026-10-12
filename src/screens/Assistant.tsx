@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
 import { Segmented } from "../design-system/Segmented";
@@ -130,7 +130,9 @@ export function Assistant() {
   const a = useAssistant();
   const { session } = useAuth();
   const back = useBack("/app/today");
-  const [text, setText] = useState("");
+  // A link can prefill what to say (for example "Write my Instagram bio"). It is never sent until the person taps Send.
+  const [params] = useSearchParams();
+  const [text, setText] = useState(() => (params.get("say") ?? "").slice(0, MAX_INPUT_CHARS));
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const items = a.chat.items;

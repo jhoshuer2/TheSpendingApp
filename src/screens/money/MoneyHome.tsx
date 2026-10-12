@@ -165,6 +165,18 @@ export function MoneyHome() {
 
       <h2 className="section-title">Your customers and products</h2>
       <div className="list">
+        <Link to="/write" className="row">
+          <span className="tile">
+            <Icon name="pencil" size={20} />
+          </span>
+          <span className="row__main">
+            <span className="row__title">Write for me</span>
+            <span className="row__sub">Price list, WhatsApp greeting, Instagram bio</span>
+          </span>
+          <span className="row__end">
+            <Icon name="chevron-right" size={18} />
+          </span>
+        </Link>
         <Link to="/money/customers" className="row">
           <span className="tile">
             <Icon name="users" size={20} />
