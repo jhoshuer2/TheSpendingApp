@@ -24,6 +24,8 @@ interface AssistantApi {
   dismiss: (itemId: string) => void;
   undo: (itemId: string) => void;
   clear: () => void;
+  /** Remove this person's chat from this phone. Called only when they choose to log out. */
+  prepareSignOut: () => void;
 }
 
 const Ctx = createContext<AssistantApi | null>(null);
@@ -69,13 +71,12 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
   // Load this person's chat when they sign in; forget it when they sign out.
   useEffect(() => {
     seq.current++;
-    const prev = idRef.current;
     idRef.current = userId;
     busyRef.current = false;
     setBusy(false);
     setError(null);
     if (!userId) {
-      if (prev) clearStored(prev);
+      // Not signed in right now. Don't delete anything here: sign-in can blink to "signed out" for a moment on reload.
       chatRef.current = emptyChat(dayKey(new Date()));
       settingsRef.current = { replyLanguage: "en", autonomy: "ask" };
       consentRef.current = false;
@@ -180,6 +181,9 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         for (const eid of item.saved.expenses) r.removeRecord("expense", eid);
         for (const pid of item.saved.paid) r.markUnpaid(pid);
         patchItem(id, (i) => (i.kind === "proposal" ? { ...i, status: "undone" } : i));
+      },
+      prepareSignOut: () => {
+        if (idRef.current) clearStored(idRef.current);
       },
       clear: () => {
         seq.current++;
