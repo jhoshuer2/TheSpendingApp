@@ -8,7 +8,7 @@ Without Supabase settings the app runs in **demo mode**: nothing is verified or 
 
 **1. Create a project.** supabase.com > New project. Choose the region closest to your users and a strong database password (store it somewhere safe; the app never needs it).
 
-**2. Create the tables.** Dashboard > SQL Editor > New query. Paste the whole of `supabase/migrations/20261011000000_init.sql` and run it. Then open Table Editor and check both `profiles` and `step_progress` show **RLS enabled**.
+**2. Create the tables.** Dashboard > SQL Editor > New query. Paste `supabase/migrations/20261011000000_init.sql` and run it, then do the same for each later file in that folder, **in date order** (`20261012000000_learning.sql` adds the learning columns). Then open Table Editor and check both `profiles` and `step_progress` show **RLS enabled**.
 
 **3. Configure sign-in.** Dashboard > Authentication:
 - **Sign In / Providers > Email:** enabled. Set **minimum password length to 8** (the app asks for 8).
@@ -24,6 +24,9 @@ Without Supabase settings the app runs in **demo mode**: nothing is verified or 
 **5. Try it.** Sign up on the live site. In Supabase, Table Editor > `profiles` should show your row, and `step_progress` fills in as you tick steps. Log in on a second device or browser and your business should be there.
 
 > The **anon key is meant to be public**; it ships in the browser. The security comes from row-level security in the database. **Never put the `service_role` key in this app or in Vercel's `VITE_` variables.**
+
+## Updating the database later
+New migrations are always safe to run **before** deploying the code that uses them (they only add columns with defaults, so the live app keeps working). **Run the migration first, then merge.** Doing it the other way round means the new app asks for columns that don't exist yet and people see "We couldn't load your data". Run each file once.
 
 ## How saving works
 - The screen always reads a local copy, so it's instant and works offline.
@@ -46,3 +49,5 @@ Without Supabase settings the app runs in **demo mode**: nothing is verified or 
 | `npm run check:backend` | The real Supabase client in a real browser: sign-up, second device, offline saving and retry, errors, password reset, email confirmation | a built browser; uses a **fake Supabase** (`tools/fake-supabase.mjs`) |
 
 The fake server imitates Supabase's API, so it proves the app behaves correctly against that API, **not** that your Supabase project is set up correctly. Step 5 above is the real end-to-end check.
+
+Also: `npm run check:learning` covers the hide / undo / learning-switch behaviour in demo mode; see `docs/LEARNING.md`.

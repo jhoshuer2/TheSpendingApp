@@ -35,6 +35,29 @@ const SEED_READY = JSON.stringify({
   answers: ANSWERS, completed: true,
   progress: { "setup-name": { steps: [0, 1, 2, 3], doneAt: nowIso }, "customers-ask": { steps: [0, 1] } },
 });
+const ago = (days, hour = 10) => { const d = new Date(); d.setDate(d.getDate() - days); d.setHours(hour, 0, 0, 0); return d.toISOString(); };
+const dayKey = (days) => { const d = new Date(); d.setDate(d.getDate() - days); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+// Three finished steps in other areas, active this week, and a hidden step: shows the gap card, week strip and milestones.
+const SEED_RICH = JSON.stringify({
+  answers: ANSWERS, completed: true,
+  progress: {
+    "records-sales": { steps: [0, 1, 2, 3], doneAt: ago(5), openedAt: ago(7) },
+    "direction-goal": { steps: [0, 1, 2, 3], doneAt: ago(3), openedAt: ago(4) },
+    "brand-look": { steps: [0, 1, 2], doneAt: ago(2), openedAt: ago(3) },
+    "online-store": { steps: [0], openedAt: ago(1) },
+    "customers-offer": { steps: [], dismissed: true },
+    "customers-referral": { steps: [], snoozedUntil: ago(-4) },
+  },
+  activity: { days: [dayKey(5), dayKey(3), dayKey(2), dayKey(1), dayKey(0)], learning: true, lastSeen: ago(0, 8) },
+});
+// Back after six days away, partway through a step.
+const SEED_RETURNING = JSON.stringify({
+  answers: ANSWERS, completed: true,
+  progress: { "customers-ask": { steps: [0, 1], openedAt: ago(9) } },
+  activity: { days: [dayKey(9), dayKey(8)], learning: true, lastSeen: ago(6) },
+});
+// Learning switched off.
+const SEED_NO_LEARNING = JSON.stringify({ answers: ANSWERS, completed: true, progress: { "setup-name": { steps: [0, 1, 2, 3], doneAt: ago(2) } }, activity: { days: [], learning: false } });
 // Answers given, onboarding not finished yet.
 const SEED_PARTIAL = JSON.stringify({ answers: ANSWERS, completed: false, progress: {} });
 
@@ -67,7 +90,16 @@ const SCREENS = [
   { name: "today", path: "/app/today", authed: true, seed: SEED_READY },
   { name: "module-progress", path: "/module/customers-ask", authed: true, seed: SEED_READY },
   { name: "module-finished", path: "/module/setup-name", authed: true, seed: SEED_READY },
+  { name: "today-rich", path: "/app/today", authed: true, seed: SEED_RICH },
+  { name: "today-welcome-back", path: "/app/today", authed: true, seed: SEED_RETURNING },
+  { name: "today-toast", path: "/app/today", authed: true, seed: SEED_RICH, act: async (p) => p.getByRole("button", { name: "Not now" }).click() },
+  { name: "today-no-learning", path: "/app/today", authed: true, seed: SEED_NO_LEARNING },
+  { name: "journey-rich", path: "/app/journey", authed: true, seed: SEED_RICH },
+  { name: "journey-no-learning", path: "/app/journey", authed: true, seed: SEED_NO_LEARNING },
+  { name: "profile-rich", path: "/app/profile", authed: true, seed: SEED_RICH },
+  { name: "profile-forget", path: "/app/profile", authed: true, seed: SEED_RICH, act: async (p) => p.getByRole("button", { name: "Forget what SPAL has noticed" }).click() },
   { name: "library", path: "/app/library", authed: true, seed: SEED_READY },
+  { name: "library-rich", path: "/app/library", authed: true, seed: SEED_RICH },
   { name: "journey", path: "/app/journey", authed: true, seed: SEED_READY },
   { name: "journey-empty", path: "/app/journey", authed: true, seed: JSON.stringify({ answers: ANSWERS, completed: true, progress: {} }) },
   { name: "profile", path: "/app/profile", authed: true, seed: SEED_READY },
@@ -115,7 +147,10 @@ for (const [w, h] of VIEWPORTS) {
       for (const el of document.querySelectorAll(".btn--primary")) {
         const r = el.getBoundingClientRect();
         const a = document.querySelector(".app").getBoundingClientRect();
-        if (r.bottom > innerHeight + 0.5 || r.top < 0 || r.left < a.left - 0.5 || r.right > a.right + 0.5) issues.push("primary action outside viewport");
+        // In a footer it must be fully on screen. Inside scrolling content it must at least start on screen.
+        const inBody = Boolean(el.closest(".screen__body"));
+        const lowest = inBody ? r.top + 24 : r.bottom;
+        if (lowest > innerHeight + 0.5 || r.top < 0 || r.left < a.left - 0.5 || r.right > a.right + 0.5) issues.push("primary action outside viewport");
       }
       // content vs floating nav
       const nav = document.querySelector(".nav__bar");

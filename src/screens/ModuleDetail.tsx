@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
@@ -10,8 +11,13 @@ import { useProfile } from "../profile/store";
 export function ModuleDetail() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
-  const { stored, toggleStep, finishModule } = useProfile();
+  const { stored, toggleStep, finishModule, openModule } = useProfile();
   const m = moduleById(id);
+  // Remember when this step was first opened (it helps SPAL learn your pace). Does nothing when learning is off.
+  useEffect(() => {
+    if (m) openModule(m.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [m?.id]);
   if (!m) return <Navigate to="/app/today" replace />;
 
   const progress = stored.progress[m.id] ?? { steps: [] };

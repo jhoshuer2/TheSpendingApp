@@ -1,6 +1,6 @@
 import type { AuthError, SupabaseClient, User } from "@supabase/supabase-js";
 import { MODULES } from "../profile/modules";
-import { sanitizeAnswers, sanitizeProgress } from "../profile/state";
+import { sanitizeActivity, sanitizeAnswers, sanitizeProgress } from "../profile/state";
 import type { AuthApi, AuthResult, Backend, RemoteProfile, RemoteStore, Session } from "./types";
 
 const knownModules = new Set(MODULES.map((m) => m.id));
@@ -87,24 +87,44 @@ export function createStore(client: SupabaseClient, userId: string): RemoteStore
   return {
     async load() {
       const [profile, progress] = await Promise.all([
-        client.from("profiles").select("answers, completed").eq("id", userId).maybeSingle(),
-        client.from("step_progress").select("module_id, steps, done_at").eq("user_id", userId),
+        client.from("profiles").select("answers, completed, learning, active_days, last_seen").eq("id", userId).maybeSingle(),
+        client.from("step_progress").select("module_id, steps, done_at, opened_at, snoozed_until, dismissed").eq("user_id", userId),
       ]);
       if (profile.error) throw profile.error;
       if (progress.error) throw progress.error;
       if (!profile.data) return null;
       const byModule: RemoteProfile["progress"] = {};
-      for (const r of progress.data ?? []) if (knownModules.has(r.module_id)) byModule[r.module_id] = sanitizeProgress(r.steps, r.done_at);
-      return { answers: sanitizeAnswers(profile.data.answers), completed: profile.data.completed === true, progress: byModule };
+      for (const r of progress.data ?? []) {
+        if (knownModules.has(r.module_id)) {
+          byModule[r.module_id] = sanitizeProgress({ steps: r.steps, doneAt: r.done_at, openedAt: r.opened_at, snoozedUntil: r.snoozed_until, dismissed: r.dismissed });
+        }
+      }
+      return {
+        answers: sanitizeAnswers(profile.data.answers),
+        completed: profile.data.completed === true,
+        activity: sanitizeActivity({ days: profile.data.active_days, lastSeen: profile.data.last_seen, learning: profile.data.learning }),
+        progress: byModule,
+      };
     },
-    async saveAnswers(answers, completed) {
-      const { error } = await client.from("profiles").upsert({ id: userId, answers, completed });
+    async saveProfile({ answers, completed, activity }) {
+      const { error } = await client
+        .from("profiles")
+        .upsert({ id: userId, answers, completed, learning: activity.learning, active_days: activity.days, last_seen: activity.lastSeen ?? null });
       if (error) throw error;
     },
     async saveProgress(moduleId, p) {
-      const { error } = await client
-        .from("step_progress")
-        .upsert({ user_id: userId, module_id: moduleId, steps: p.steps, done_at: p.doneAt ?? null }, { onConflict: "user_id,module_id" });
+      const { error } = await client.from("step_progress").upsert(
+        {
+          user_id: userId,
+          module_id: moduleId,
+          steps: p.steps,
+          done_at: p.doneAt ?? null,
+          opened_at: p.openedAt ?? null,
+          snoozed_until: p.snoozedUntil ?? null,
+          dismissed: p.dismissed === true,
+        },
+        { onConflict: "user_id,module_id" },
+      );
       if (error) throw error;
     },
   };

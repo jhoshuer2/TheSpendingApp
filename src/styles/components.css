@@ -191,3 +191,45 @@
 
 .form-error { padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--red-50); color: var(--red-700); font-size: var(--text-body-sm); line-height: var(--lh-body-sm); font-weight: 500; }
 .note { margin-top: var(--space-4); font-size: var(--text-body-sm); line-height: var(--lh-body-sm); color: var(--text-secondary); }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: absolute; left: var(--space-page-x); right: var(--space-page-x); z-index: 20;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 52px + 12px + 12px + var(--space-3));
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); min-height: var(--hit-min);
+  border-radius: var(--radius-md); background: var(--ink-900); color: var(--text-inverse); box-shadow: var(--shadow-2);
+  font-size: var(--text-body-sm); line-height: var(--lh-body-sm);
+}
+.toast__action { min-width: var(--hit-min); min-height: var(--hit-min); padding: 0 var(--space-3); border: 0; border-radius: var(--radius-full); background: transparent; color: #fff; font-family: var(--font-display); font-size: var(--text-body-sm); font-weight: 500; text-decoration: underline; cursor: pointer; }
+
+/* ---------- Switch row ---------- */
+.switch { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: 100%; min-height: var(--row-h); padding: var(--space-3) var(--space-4); border: 0; border-radius: var(--radius-md); background: var(--surface-card); box-shadow: var(--shadow-1), var(--highlight-top); text-align: left; cursor: pointer; color: inherit; }
+.switch__track { flex: none; width: 48px; height: 28px; padding: 2px; border-radius: var(--radius-full); background: var(--ink-300); transition: background var(--dur-2) var(--ease-out); }
+.switch__track i { display: block; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(20,26,23,0.25); transition: transform var(--dur-2) var(--ease-out); }
+.switch[aria-checked="true"] .switch__track { background: var(--accent); }
+.switch[aria-checked="true"] .switch__track i { transform: translateX(20px); }
+
+/* ---------- Week strip ---------- */
+.week { display: flex; justify-content: space-between; gap: var(--space-2); }
+.week__day { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.week__day i { width: 100%; max-width: 32px; height: 10px; border-radius: var(--radius-full); background: var(--ink-150); }
+.week__day i.on { background: var(--accent); }
+.week__day span { font-size: var(--text-caption); color: var(--text-secondary); }
+
+/* ---------- Area progress rows, milestones, small bits ---------- */
+.area { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); }
+.area__top { display: flex; justify-content: space-between; gap: var(--space-3); align-items: baseline; }
+.area .bar { flex: none; width: 100%; }
+.milestones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.milestone { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-md); background: var(--surface-card); box-shadow: var(--shadow-1), var(--highlight-top); min-width: 0; }
+.milestone--locked { background: transparent; box-shadow: inset 0 0 0 1px var(--line-strong); }
+.milestone .tile { background: var(--ink-900); color: #fff; }
+.milestone--locked .tile { background: var(--surface-sunken); color: var(--text-secondary); }
+.milestone b { font-size: var(--text-body); font-weight: 500; line-height: var(--lh-body); }
+.milestone span { font-size: var(--text-body-sm); line-height: var(--lh-body-sm); color: var(--text-secondary); }
+.hero__actions { display: flex; gap: var(--space-2); justify-content: center; margin-top: calc(var(--space-2) * -1); }
+.link-btn--quiet { color: var(--text-secondary); font-weight: 400; }
+.callout .btn, .callout .link-btn { margin-top: var(--space-2); }
+.callout-body { display: flex; flex-direction: column; align-items: flex-start; }
+.inline-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }

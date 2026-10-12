@@ -1,10 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { backend } from "../backend";
+import { computeInsights, welcomeBack, type Insights, type WelcomeBack } from "../learning/insights";
+import { dayKey, DAY_MS } from "../learning/time";
 import type { RemoteStore } from "../backend/types";
 import { useAuth } from "../lib/auth";
 import { recommend } from "./recommend";
 import { buildProfile } from "./scoring";
-import { clearCache, EMPTY, isDirty, mergeState, readCache, writeCache, type Progress, type StoredProfile } from "./state";
+import { clearCache, EMPTY, isDirty, MAX_DAYS, mergeState, readCache, writeCache, type Progress, type StoredProfile } from "./state";
 import type { Answers, Profile } from "./types";
 
 export type { Progress, StoredProfile };
@@ -21,10 +23,24 @@ interface ProfileApi {
   profile: Profile;
   done: ReadonlySet<string>;
   recs: ReturnType<typeof recommend>;
+  insights: Insights;
+  /** Set after a few days away, once per visit. */
+  welcome: WelcomeBack | null;
   saveAnswers: (a: Answers) => void;
   completeOnboarding: () => void;
+  /** Called when a step is opened: remembers when, and counts the day as active. */
+  openModule: (moduleId: string) => void;
   toggleStep: (moduleId: string, index: number) => void;
   finishModule: (moduleId: string) => void;
+  /** "Not now": hide for a week. */
+  snooze: (moduleId: string) => void;
+  /** "Not for me": hide for good. */
+  dismiss: (moduleId: string) => void;
+  /** Bring a hidden or snoozed step back. */
+  restore: (moduleId: string) => void;
+  setLearning: (on: boolean) => void;
+  /** Forget what SPAL has noticed (active days, when steps were opened). Finished steps and hidden steps are kept. */
+  resetLearning: () => void;
   retry: () => void;
   /** Push anything unsent, then drop this person's cached data. Call before signing out. */
   prepareSignOut: () => Promise<void>;
@@ -35,6 +51,8 @@ const Ctx = createContext<ProfileApi | null>(null);
 const FLUSH_DELAY_MS = 600;
 const RETRY_MS = 20_000;
 const REFRESH_AFTER_MS = 30_000;
+const SEEN_EVERY_MS = 30 * 60_000;
+const SNOOZE_DAYS = 7;
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -75,14 +93,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       try {
         for (;;) {
           const d = ref.current.dirty;
-          if (!d || (!d.answers && d.modules.length === 0)) break;
+          if (!d || (!d.profile && d.modules.length === 0)) break;
           setSync("saving");
-          if (d.answers) {
-            const sent = { answers: ref.current.answers, completed: ref.current.completed };
-            await store.saveAnswers(sent.answers, sent.completed);
+          if (d.profile) {
+            const sent = { answers: ref.current.answers, completed: ref.current.completed, activity: ref.current.activity };
+            await store.saveProfile(sent);
             const cur = ref.current;
             // Only mark clean if nothing changed while we were sending.
-            if (same({ answers: cur.answers, completed: cur.completed }, sent) && cur.dirty) commit({ ...cur, dirty: { ...cur.dirty, answers: false } });
+            if (same({ answers: cur.answers, completed: cur.completed, activity: cur.activity }, sent) && cur.dirty) commit({ ...cur, dirty: { ...cur.dirty, profile: false } });
           } else {
             const id = d.modules[0];
             const sent = ref.current.progress[id] ?? { steps: [] };
@@ -111,7 +129,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const server = await store.load();
       if (seq !== loadSeq.current) return; // someone else signed in meanwhile
       lastLoad.current = Date.now();
-      const serverState: StoredProfile = server ? { answers: server.answers, completed: server.completed, progress: server.progress } : EMPTY;
+      const serverState: StoredProfile = server ? { answers: server.answers, completed: server.completed, progress: server.progress, activity: server.activity } : EMPTY;
       const local = ref.current;
       const merged = isDirty(local) ? mergeState(serverState, local) : serverState;
       commit(merged);
@@ -170,17 +188,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [flush, reconcile]);
 
   const mutate = useCallback(
-    (fn: (s: StoredProfile) => StoredProfile, mark: { answers?: boolean; module?: string }) => {
+    (fn: (s: StoredProfile) => StoredProfile, mark: { profile?: boolean; module?: string | string[] } = {}) => {
       const cur = ref.current;
       let next = fn(cur);
       if (next === cur) return;
       if (remoteRef.current) {
-        const d = cur.dirty ?? { answers: false, modules: [] };
+        const d = cur.dirty ?? { profile: false, modules: [] };
+        const touched = mark.module === undefined ? [] : Array.isArray(mark.module) ? mark.module : [mark.module];
         next = {
           ...next,
           dirty: {
-            answers: d.answers || Boolean(mark.answers),
-            modules: mark.module && !d.modules.includes(mark.module) ? [...d.modules, mark.module] : d.modules,
+            // Activity lives on the profile row, so changing it dirties the profile too.
+            profile: d.profile || Boolean(mark.profile) || next.activity !== cur.activity,
+            modules: [...d.modules, ...touched.filter((m) => !d.modules.includes(m))],
           },
         };
       }
@@ -193,30 +213,89 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [commit, flush],
   );
 
+  const [returnedFrom, setReturnedFrom] = useState<string | undefined>();
+  const seenFor = useRef<string | null>(null);
+
+  // Once per visit, when the person's data is ready: note where they were, then note that they're here now.
+  useEffect(() => {
+    if (status !== "ready" || !userId || seenFor.current === userId) return;
+    seenFor.current = userId;
+    const act = ref.current.activity;
+    setReturnedFrom(act.lastSeen);
+    if (act.learning && (!act.lastSeen || Date.now() - Date.parse(act.lastSeen) > SEEN_EVERY_MS)) {
+      mutate((s) => ({ ...s, activity: { ...s.activity, lastSeen: new Date().toISOString() } }));
+    }
+  }, [status, userId, mutate]);
+  useEffect(() => {
+    if (!userId) seenFor.current = null;
+  }, [userId]);
+
   const api = useMemo<ProfileApi>(() => {
     const profile = buildProfile(stored.answers);
     const done = new Set(Object.entries(stored.progress).filter(([, p]) => p.doneAt).map(([id]) => id));
+    const now = new Date();
+    const learning = stored.activity.learning;
+
+    /** Count today as an active day (only when learning is on). Returns the same object if nothing changes. */
+    const withToday = (s: StoredProfile): StoredProfile => {
+      if (!s.activity.learning) return s;
+      const key = dayKey(new Date());
+      if (s.activity.days.includes(key)) return s;
+      return { ...s, activity: { ...s.activity, days: [...s.activity.days, key].sort().slice(-MAX_DAYS) } };
+    };
+    const edit = (s: StoredProfile, id: string, fn: (p: Progress) => Progress): StoredProfile => ({ ...s, progress: { ...s.progress, [id]: fn(s.progress[id] ?? { steps: [] }) } });
+    const strip = (p: Progress, ...keys: (keyof Progress)[]): Progress => {
+      const copy = { ...p };
+      for (const k of keys) delete copy[k];
+      return copy;
+    };
+
     return {
       status,
       sync,
       stored,
       profile,
       done,
-      recs: recommend(profile, stored.answers, done),
-      saveAnswers: (answers) => mutate((s) => (same(s.answers, answers) ? s : { ...s, answers }), { answers: true }),
-      completeOnboarding: () => mutate((s) => (s.completed ? s : { ...s, completed: true }), { answers: true }),
+      recs: recommend(profile, stored.answers, done, { progress: stored.progress, now, learning }),
+      insights: computeInsights(stored, profile, now),
+      welcome: welcomeBack(returnedFrom, stored, now),
+      saveAnswers: (answers) => mutate((s) => (same(s.answers, answers) ? s : { ...s, answers }), { profile: true }),
+      completeOnboarding: () => mutate((s) => (s.completed ? s : { ...s, completed: true }), { profile: true }),
+      openModule: (id) =>
+        mutate(
+          (s) => {
+            const cur = s.progress[id];
+            const stamp = s.activity.learning && !cur?.openedAt && !cur?.doneAt ? new Date().toISOString() : undefined;
+            const base = stamp ? edit(s, id, (p) => ({ ...p, openedAt: stamp })) : s;
+            return withToday(base);
+          },
+          { module: id },
+        ),
       toggleStep: (id, i) =>
         mutate(
           (s) => {
             const cur = s.progress[id] ?? { steps: [] };
             if (cur.doneAt) return s;
             const steps = cur.steps.includes(i) ? cur.steps.filter((x) => x !== i) : [...cur.steps, i].sort((a, b) => a - b);
-            return { ...s, progress: { ...s.progress, [id]: { ...cur, steps } } };
+            return withToday(edit(s, id, (p) => ({ ...p, steps })));
           },
           { module: id },
         ),
-      finishModule: (id) =>
-        mutate((s) => ({ ...s, progress: { ...s.progress, [id]: { ...(s.progress[id] ?? { steps: [] }), doneAt: new Date().toISOString() } } }), { module: id }),
+      finishModule: (id) => mutate((s) => withToday(edit(s, id, (p) => ({ ...p, doneAt: new Date().toISOString() }))), { module: id }),
+      snooze: (id) => mutate((s) => edit(s, id, (p) => ({ ...p, snoozedUntil: new Date(Date.now() + SNOOZE_DAYS * DAY_MS).toISOString() })), { module: id }),
+      dismiss: (id) => mutate((s) => edit(s, id, (p) => ({ ...strip(p, "snoozedUntil"), dismissed: true })), { module: id }),
+      restore: (id) => mutate((s) => edit(s, id, (p) => strip(p, "snoozedUntil", "dismissed")), { module: id }),
+      setLearning: (on) => mutate((s) => (s.activity.learning === on ? s : { ...s, activity: { ...s.activity, learning: on } }), { profile: true }),
+      resetLearning: () =>
+        mutate(
+          (s) => {
+            const withOpened = Object.entries(s.progress).filter(([, p]) => p.openedAt).map(([id]) => id);
+            let next: StoredProfile = { ...s, activity: { days: [], learning: s.activity.learning } };
+            for (const id of withOpened) next = edit(next, id, (p) => strip(p, "openedAt"));
+            return next;
+          },
+          { profile: true, module: Object.entries(stored.progress).filter(([, p]) => p.openedAt).map(([id]) => id) },
+        ),
       retry: () => {
         setStatus("loading");
         void reconcile();
@@ -228,7 +307,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         if (remoteRef.current && idRef.current && !isDirty(ref.current)) clearCache(idRef.current);
       },
     };
-  }, [stored, status, sync, mutate, reconcile, flush]);
+  }, [stored, status, sync, mutate, reconcile, flush, returnedFrom]);
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }
