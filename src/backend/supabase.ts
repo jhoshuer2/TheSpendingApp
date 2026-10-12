@@ -1,7 +1,8 @@
 import type { AuthError, SupabaseClient, User } from "@supabase/supabase-js";
 import { MODULES } from "../profile/modules";
 import { sanitizeActivity, sanitizeAnswers, sanitizeProgress } from "../profile/state";
-import type { AuthApi, AuthResult, Backend, RemoteProfile, RemoteStore, Session } from "./types";
+import { cleanExpense, cleanProduct, cleanSale } from "../records/state";
+import { PermanentError, type AuthApi, type AuthResult, type Backend, type RecordsBatch, type RemoteProfile, type RemoteRecords, type RemoteStore, type Session } from "./types";
 
 const knownModules = new Set(MODULES.map((m) => m.id));
 
@@ -130,7 +131,70 @@ export function createStore(client: SupabaseClient, userId: string): RemoteStore
   };
 }
 
+/** PostgREST returns at most 1000 rows a request, so books are read a page at a time. */
+const PAGE = 1000;
+const PUSH_CHUNK = 200;
+/** Re-ask for a little before the last cursor, in case a row committed late. Repeats are harmless (matched by id). */
+const OVERLAP_MS = 5 * 60_000;
+
+/**
+ * Did the server say "no, and it will always say no" about this row (a rule it breaks), as opposed to a connection
+ * problem, a server hiccup, or a setup problem (like a migration not run yet) that fixes itself? Network errors
+ * carry no database code at all. Missing tables and columns are deliberately NOT permanent: if the migration
+ * runs later, the records must still go through.
+ */
+export function isPermanentRefusal(e: { code?: string; status?: number } | null | undefined): boolean {
+  const code = e?.code ?? "";
+  if (/^22[0-9A-Z]{3}$/.test(code)) return true; // data exception: bad value, number out of range, bad format
+  if (/^23[0-9A-Z]{3}$/.test(code)) return true; // a constraint this row breaks
+  if (code === "42501") return true; // row-level security said no
+  if (/^PGRST1\d{2}$/.test(code)) return true; // PostgREST rejected the request itself
+  return false;
+}
+
+export function createRecords(client: SupabaseClient, userId: string): RemoteRecords {
+  async function pullTable(table: "products" | "sales" | "expenses", since: string | undefined) {
+    const rows: Record<string, unknown>[] = [];
+    for (let from = 0; ; from += PAGE) {
+      let q = client.from(table).select("*").eq("user_id", userId);
+      if (since) q = q.gte("updated_at", since);
+      const { data, error } = await q.order("updated_at", { ascending: true }).order("id", { ascending: true }).range(from, from + PAGE - 1);
+      if (error) throw error;
+      rows.push(...((data ?? []) as Record<string, unknown>[]));
+      if (!data || data.length < PAGE) break;
+    }
+    return rows;
+  }
+
+  async function upsert(table: string, rows: Record<string, unknown>[]) {
+    for (let i = 0; i < rows.length; i += PUSH_CHUNK) {
+      const { error } = await client.from(table).upsert(rows.slice(i, i + PUSH_CHUNK), { onConflict: "user_id,id" });
+      if (error) throw isPermanentRefusal(error) ? new PermanentError(error.message) : error;
+    }
+  }
+
+  return {
+    async pull(since) {
+      const from = since ? new Date(Date.parse(since) - OVERLAP_MS).toISOString() : undefined;
+      const [p, s, e] = await Promise.all([pullTable("products", from), pullTable("sales", from), pullTable("expenses", from)]);
+      const stamps = [...p, ...s, ...e].map((r) => r.updated_at).filter((x): x is string => typeof x === "string");
+      return {
+        products: p.map(cleanProduct).filter((x) => x !== null),
+        sales: s.map(cleanSale).filter((x) => x !== null),
+        expenses: e.map(cleanExpense).filter((x) => x !== null),
+        cursor: stamps.sort().at(-1),
+      };
+    },
+    async push(batch: RecordsBatch) {
+      await upsert("products", batch.products.map((r) => ({ user_id: userId, id: r.id, name: r.name, price: r.price, cost: r.cost ?? null, archived: r.archived === true })));
+      await upsert("sales", batch.sales.map((r) => ({ user_id: userId, id: r.id, at: r.at, amount: r.amount, items: r.items, note: r.note ?? null, customer: r.customer ?? null, paid: r.paid, paid_at: r.paidAt ?? null, deleted_at: r.deletedAt ?? null })));
+      await upsert("expenses", batch.expenses.map((r) => ({ user_id: userId, id: r.id, at: r.at, amount: r.amount, category: r.category, note: r.note ?? null, deleted_at: r.deletedAt ?? null })));
+    },
+  };
+}
+
 export const createSupabaseBackend = (client: SupabaseClient, redirectBase: string): Backend => ({
   auth: createAuth(client, redirectBase),
   storeFor: (userId) => createStore(client, userId),
+  recordsFor: (userId) => createRecords(client, userId),
 });

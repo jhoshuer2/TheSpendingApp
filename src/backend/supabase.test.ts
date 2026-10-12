@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
-import { createAuth, createStore, friendlyAuthError } from "./supabase";
+import { createAuth, createStore, friendlyAuthError, isPermanentRefusal } from "./supabase";
 
 describe("friendlyAuthError", () => {
   const cases: [Parameters<typeof friendlyAuthError>[0], string][] = [
@@ -68,5 +68,29 @@ describe("remote store", () => {
     const boom = { message: "network down" };
     const client = { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: boom }), then: (r: (v: unknown) => void) => r({ data: [], error: null }) }) }) }) } as unknown as SupabaseClient;
     await expect(createStore(client, "u1").load()).rejects.toBeDefined();
+  });
+});
+
+describe("isPermanentRefusal", () => {
+  it("treats rule-breaking, bad values and permission refusals as permanent", () => {
+    expect(isPermanentRefusal({ code: "23514" })).toBe(true); // check constraint (for example a date too far ahead)
+    expect(isPermanentRefusal({ code: "23505" })).toBe(true);
+    expect(isPermanentRefusal({ code: "22P02" })).toBe(true); // invalid input syntax (real codes contain letters)
+    expect(isPermanentRefusal({ code: "22003" })).toBe(true); // number out of range
+    expect(isPermanentRefusal({ code: "42501" })).toBe(true); // row-level security said no
+    expect(isPermanentRefusal({ code: "PGRST102" })).toBe(true); // malformed request
+  });
+  it("treats a lost connection or a server hiccup as worth retrying", () => {
+    expect(isPermanentRefusal(null)).toBe(false);
+    expect(isPermanentRefusal({})).toBe(false); // network errors carry no database code
+    expect(isPermanentRefusal({ status: 503 })).toBe(false);
+    expect(isPermanentRefusal({ code: "PGRST301" })).toBe(false); // expired sign-in: refresh and retry
+    expect(isPermanentRefusal({ code: "57014" })).toBe(false); // statement timeout
+    expect(isPermanentRefusal({ code: "08006" })).toBe(false); // connection failure
+    // Setup problems fix themselves once the migration is run, so records must stay queued, not be thrown away.
+    expect(isPermanentRefusal({ code: "42P01" })).toBe(false); // table does not exist
+    expect(isPermanentRefusal({ code: "42703" })).toBe(false); // column does not exist
+    expect(isPermanentRefusal({ code: "PGRST205" })).toBe(false); // table not in the API schema yet
+    expect(isPermanentRefusal({ code: "PGRST204" })).toBe(false); // column not in the API schema yet
   });
 });

@@ -28,6 +28,7 @@ const VIEWPORTS = [
 ];
 const SESSION = JSON.stringify({ name: "Ada Okafor", email: "ada@example.com" });
 const PROFILE_KEY = "spal.profile.v1:ada@example.com";
+const BOOKS_KEY = "spal.records.v1:ada@example.com";
 const ANSWERS = { stage: "y1to3", goal: "customers", type: "food", team: "solo", sales: "k100to500", have: ["registered", "bank"], pain: "customers" };
 const nowIso = new Date().toISOString();
 // An onboarded person with one finished step and one in progress.
@@ -58,10 +59,39 @@ const SEED_RETURNING = JSON.stringify({
 });
 // Learning switched off.
 const SEED_NO_LEARNING = JSON.stringify({ answers: ANSWERS, completed: true, progress: { "setup-name": { steps: [0, 1, 2, 3], doneAt: ago(2) } }, activity: { days: [], learning: false } });
+// A busy shop: products, two weeks of sales (some by product, one owed), and spending in several categories.
+const uuid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const SEED_BOOKS = (() => {
+  const products = {}, sales = {}, expenses = {};
+  [["Jollof rice (plate)", 250000, 140000], ["Fried rice (plate)", 270000, 150000], ["Zobo (bottle)", 60000, 30000], ["Chicken piece", 150000, 110000]].forEach(([name, price, cost], i) => {
+    products[uuid(i + 1)] = { id: uuid(i + 1), name, price, cost };
+  });
+  let n = 100;
+  for (let d = 0; d < 14; d++) {
+    for (let k = 0; k < 3; k++) {
+      const id = uuid(n++);
+      const p = products[uuid(1 + ((d + k) % 4))];
+      const qty = 1 + ((d + k) % 3);
+      sales[id] = { id, at: ago(d, 9 + k * 3), amount: p.price * qty, items: [{ productId: p.id, name: p.name, qty, unitPrice: p.price }], paid: true, paidAt: ago(d, 9 + k * 3) };
+    }
+  }
+  const owedId = uuid(n++);
+  sales[owedId] = { id: owedId, at: ago(2), amount: 1850000, items: [], note: "Catering for naming ceremony", customer: "Mrs Adebayo", paid: false };
+  const quick = uuid(n++);
+  sales[quick] = { id: quick, at: ago(0, 8), amount: 450000, items: [], note: "Cake order", paid: true, paidAt: ago(0, 8) };
+  [["stock", 1850000, "Rice, oil and tomatoes"], ["transport", 320000, "Market runs"], ["data", 150000, ""], ["staff", 900000, "Helper, this week"], ["stock", 1400000, "Chicken and spices"]].forEach(([category, amount, note], i) => {
+    const id = uuid(n++);
+    expenses[id] = { id, at: ago(i, 15), amount, category, ...(note ? { note } : {}) };
+  });
+  return JSON.stringify({ products, sales, expenses, dirty: { products: [], sales: [], expenses: [] } });
+})();
+const SEED_PRODUCTS_ONLY = JSON.stringify({ products: { [uuid(1)]: { id: uuid(1), name: "Jollof rice (plate)", price: 250000, cost: 140000 }, [uuid(2)]: { id: uuid(2), name: "Zobo (bottle)", price: 60000 } }, sales: {}, expenses: {}, dirty: { products: [], sales: [], expenses: [] } });
 // Answers given, onboarding not finished yet.
 const SEED_PARTIAL = JSON.stringify({ answers: ANSWERS, completed: false, progress: {} });
 
 const pick = (name) => async (p) => p.getByRole("radio", { name }).click();
+const key = (k) => async (p) => { for (const x of k) await p.getByRole("button", { name: x, exact: true }).click(); };
+const SALE = ["4", "Three zeros"];
 const cont = async (p) => p.getByRole("button", { name: /Continue|Finish/ }).click();
 const walk = (steps) => async (p) => { for (const s of steps) { await s(p); await cont(p); } };
 
@@ -98,6 +128,27 @@ const SCREENS = [
   { name: "journey-no-learning", path: "/app/journey", authed: true, seed: SEED_NO_LEARNING },
   { name: "profile-rich", path: "/app/profile", authed: true, seed: SEED_RICH },
   { name: "profile-forget", path: "/app/profile", authed: true, seed: SEED_RICH, act: async (p) => p.getByRole("button", { name: "Forget what SPAL has noticed" }).click() },
+  { name: "money-empty", path: "/app/money", authed: true, seed: SEED_READY },
+  { name: "money", path: "/app/money", authed: true, seed: SEED_READY, books: SEED_BOOKS },
+  { name: "money-month", path: "/app/money", authed: true, seed: SEED_READY, books: SEED_BOOKS, act: async (p) => p.getByRole("radio", { name: "This month" }).click() },
+  { name: "sale", path: "/money/sale", authed: true, seed: SEED_READY },
+  { name: "sale-typed", path: "/money/sale", authed: true, seed: SEED_READY, act: key(SALE) },
+  { name: "sale-owes", path: "/money/sale", authed: true, seed: SEED_READY, act: async (p) => { await key(SALE)(p); await p.getByRole("radio", { name: "Owes me" }).click(); await p.getByRole("radio", { name: "Another day" }).click(); } },
+  { name: "sale-error", path: "/money/sale", authed: true, seed: SEED_READY, act: async (p) => { await key(["5"])(p); await p.getByRole("radio", { name: "Owes me" }).click(); await p.getByRole("button", { name: /^Record/ }).click(); } },
+  { name: "sale-products", path: "/money/sale", authed: true, seed: SEED_READY, books: SEED_BOOKS, act: async (p) => { await p.getByRole("radio", { name: "Pick products" }).click(); await p.getByRole("button", { name: "Add one Jollof rice (plate)" }).click(); await p.getByRole("button", { name: "Add one Jollof rice (plate)" }).click(); await p.getByRole("button", { name: "Add one Zobo (bottle)" }).click(); } },
+  { name: "sale-no-products", path: "/money/sale", authed: true, seed: SEED_READY, act: async (p) => p.getByRole("radio", { name: "Pick products" }).click() },
+  { name: "expense", path: "/money/expense", authed: true, seed: SEED_READY },
+  { name: "expense-picked", path: "/money/expense", authed: true, seed: SEED_READY, act: async (p) => { await key(["1", "Three zeros"])(p); await p.getByRole("radio", { name: "Transport" }).click(); } },
+  { name: "products-empty", path: "/money/products", authed: true, seed: SEED_READY },
+  { name: "products", path: "/money/products", authed: true, seed: SEED_READY, books: SEED_BOOKS },
+  { name: "product-new", path: "/money/product/new", authed: true, seed: SEED_READY },
+  { name: "product-edit", path: "/money/product/" + uuid(1), authed: true, seed: SEED_READY, books: SEED_BOOKS },
+  { name: "product-error", path: "/money/product/new", authed: true, seed: SEED_READY, act: async (p) => p.getByRole("button", { name: "Save product" }).click() },
+  { name: "record-sale", path: "/money/record/sale/" + uuid(100), authed: true, seed: SEED_READY, books: SEED_BOOKS },
+  { name: "record-owed", path: "/money/record/sale/" + uuid(142), authed: true, seed: SEED_READY, books: SEED_BOOKS },
+  { name: "record-expense", path: "/money/record/expense/" + uuid(144), authed: true, seed: SEED_READY, books: SEED_BOOKS },
+  { name: "module-tool", path: "/module/records-sales", authed: true, seed: SEED_READY, books: SEED_BOOKS },
+  { name: "module-tool-fresh", path: "/module/records-sales", authed: true, seed: SEED_READY },
   { name: "library", path: "/app/library", authed: true, seed: SEED_READY },
   { name: "library-rich", path: "/app/library", authed: true, seed: SEED_RICH },
   { name: "journey", path: "/app/journey", authed: true, seed: SEED_READY },
@@ -116,7 +167,11 @@ for (const [w, h] of VIEWPORTS) {
     // Keep timed screens (splash, "building") on screen: ignore their auto-navigation timers.
     if (s.hold) await page.addInitScript(() => { const st = window.setTimeout; window.setTimeout = (fn, ms, ...a) => (ms === 1200 || ms === 2000 ? 0 : st(fn, ms, ...a)); });
     if (s.authed) await page.addInitScript((v) => localStorage.setItem("spal.session", v), SESSION);
-    if (s.seed) await page.addInitScript(([k, v]) => localStorage.setItem(k, v), [PROFILE_KEY, s.seed]);
+    // Each screen starts from exactly the data it asks for. Screens share one browser context, so without
+    // this, books or progress seeded for one screen would leak into the next.
+    await page.addInitScript(([pk, pv, bk, bv]) => {
+      for (const [k, v] of [[pk, pv], [bk, bv]]) { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); }
+    }, [PROFILE_KEY, s.seed ?? null, BOOKS_KEY, s.books ?? null]);
     await page.goto(BASE + s.path, { waitUntil: "networkidle" });
     await page.evaluate(() => document.fonts.ready);
     if (s.act) await s.act(page);

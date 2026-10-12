@@ -75,6 +75,27 @@ describe("modules", () => {
       expect(m.minutes).toBeGreaterThan(0);
     }
   });
+  it("say how each one gets done, and give every in-app step a real tool and a valid route", () => {
+    for (const m of MODULES) {
+      expect(["do", "draft", "guide", "connect"]).toContain(m.kind);
+      if (m.kind === "do") expect(m.tool).toBeDefined();
+      if (m.tool) {
+        expect(m.kind).toBe("do");
+        expect(m.tool.to).toMatch(/^\/(money|app)\//);
+        expect(m.tool.label.length).toBeGreaterThan(0);
+      }
+    }
+  });
+  it("only auto-tick steps that exist, and only for in-app steps", () => {
+    for (const m of MODULES) {
+      if (!m.auto) continue;
+      expect(m.kind).toBe("do");
+      for (const i of Object.keys(m.auto).map(Number)) {
+        expect(i).toBeGreaterThanOrEqual(0);
+        expect(i).toBeLessThan(m.steps.length);
+      }
+    }
+  });
   it("cover every need for at least one band", () => {
     for (const n of NEEDS) expect(MODULES.some((m) => m.need === n)).toBe(true);
   });

@@ -1,3 +1,5 @@
+import type { AutoCheck } from "../records/calc";
+
 export type Stage = "idea" | "under1" | "y1to3" | "y3plus";
 export type Goal = "start" | "customers" | "earn" | "grow" | "organised";
 export type BizType = "food" | "fashion" | "shop" | "services" | "online" | "farm" | "other";
@@ -32,8 +34,16 @@ export interface Profile {
   needs: NeedScore[];
 }
 
+/** How a step gets done. See docs/PRD-DO-IT-IN-SPAL.md. Only "do" steps have an in-app tool today. */
+export type StepKind = "do" | "draft" | "guide" | "connect";
+
 export interface Module {
   id: string;
+  kind: StepKind;
+  /** The in-app tool that does the job. Required for "do" steps. */
+  tool?: { label: string; to: string };
+  /** Steps that tick themselves when the person does the thing, keyed by step index. */
+  auto?: Record<number, AutoCheck>;
   title: string;
   why: string;
   minutes: number;

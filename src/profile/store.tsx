@@ -30,6 +30,10 @@ interface ProfileApi {
   completeOnboarding: () => void;
   /** Called when a step is opened: remembers when, and counts the day as active. */
   openModule: (moduleId: string) => void;
+  /** Count today as an active day (used when the person records a sale or an expense). */
+  markActive: () => void;
+  /** Tick steps that completed themselves (for example "record a first sale"). Never un-ticks anything. */
+  applyAuto: (moduleId: string, indices: number[]) => void;
   toggleStep: (moduleId: string, index: number) => void;
   finishModule: (moduleId: string) => void;
   /** "Not now": hide for a week. */
@@ -268,6 +272,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             const stamp = s.activity.learning && !cur?.openedAt && !cur?.doneAt ? new Date().toISOString() : undefined;
             const base = stamp ? edit(s, id, (p) => ({ ...p, openedAt: stamp })) : s;
             return withToday(base);
+          },
+          { module: id },
+        ),
+      markActive: () => mutate((s) => withToday(s)),
+      applyAuto: (id, indices) =>
+        mutate(
+          (s) => {
+            const cur = s.progress[id] ?? { steps: [] };
+            if (cur.doneAt) return s;
+            const steps = [...new Set([...cur.steps, ...indices])].sort((a, b) => a - b);
+            return steps.length === cur.steps.length ? s : edit(s, id, (p) => ({ ...p, steps }));
           },
           { module: id },
         ),
