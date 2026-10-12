@@ -7,7 +7,10 @@ import { SpalSymbol } from "../design-system/SpalSymbol";
 import { Switch } from "../design-system/Switch";
 import { MAX_INPUT_CHARS, type ChatErrorKind, type Item } from "../assistant/engine";
 import { useAssistant } from "../assistant/store";
-import { describeProposal } from "../assistant/tools";
+import { describeProposal, type Draft } from "../assistant/tools";
+import { copyText } from "../messages/clipboard";
+import { buildCustomers, whatsappLink } from "../records/customers";
+import { useToast } from "../lib/toast";
 import { useBack } from "../lib/useBack";
 import { firstName } from "../lib/format";
 import { useAuth } from "../lib/auth";
@@ -62,6 +65,35 @@ function Card({ item }: { item: Extract<Item, { kind: "proposal" }> }) {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+/** A message the assistant prepared. It is only ever shown: you read it, change it if you like, and send it yourself. */
+function DraftCard({ draft }: { draft: Draft }) {
+  const { state } = useRecords();
+  const { show } = useToast();
+  const phone = buildCustomers(state).find((c) => c.key === draft.customerKey)?.phone;
+  const link = whatsappLink(phone, draft.text) ?? `https://wa.me/?text=${encodeURIComponent(draft.text)}`;
+  const edit = draft.kind === "reminder" ? `/money/message/reminder/${draft.customerKey}` : `/money/message/receipt/${draft.saleId}`;
+  return (
+    <div className="acard acard--draft" data-testid="draft">
+      <p className="acard__head">
+        <Icon name={draft.kind === "reminder" ? "message-circle" : "receipt"} size={16} />
+        {draft.title}
+      </p>
+      <p className="acard__message">{draft.text}</p>
+      <div className="acard__actions">
+        <a className="btn btn--primary btn--md" href={link} target="_blank" rel="noopener noreferrer">
+          Open WhatsApp
+        </a>
+        <Button size="md" variant="secondary" onClick={async () => show((await copyText(draft.text)) ? "Message copied." : "Couldn't copy. Select the text and copy it.")}>
+          Copy
+        </Button>
+      </div>
+      <Link to={edit} className="link-btn" style={{ marginTop: "var(--space-1)" }}>
+        Change the words or style
+      </Link>
     </div>
   );
 }
@@ -175,7 +207,7 @@ export function Assistant() {
           <ol className="chat__list" aria-live="polite">
             {items.map((it) => (
               <li key={it.id} className={`msg msg--${it.kind}`}>
-                {it.kind === "proposal" ? <Card item={it} /> : it.kind === "note" ? <p className="msg__note">{it.text}</p> : <p className="msg__text">{it.text}</p>}
+                {it.kind === "proposal" ? <Card item={it} /> : it.kind === "draft" ? <DraftCard draft={it.draft} /> : it.kind === "note" ? <p className="msg__note">{it.text}</p> : <p className="msg__text">{it.text}</p>}
               </li>
             ))}
             {a.busy && (

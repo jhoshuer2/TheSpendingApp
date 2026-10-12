@@ -8,6 +8,7 @@ import { Money } from "../../design-system/Money";
 import { Segmented } from "../../design-system/Segmented";
 import { useBack } from "../../lib/useBack";
 import { useToast } from "../../lib/toast";
+import { buildCustomers, normName } from "../../records/customers";
 import { digitsToKobo, naira, pressKey } from "../../records/money";
 import { useRecords } from "../../records/store";
 import type { SaleItem } from "../../records/types";
@@ -19,7 +20,7 @@ type Mode = "quick" | "products";
 export function RecordSale() {
   const back = useBack("/app/money");
   const { show } = useToast();
-  const { products, addSale, removeRecord } = useRecords();
+  const { products, addSale, removeRecord, state } = useRecords();
   const [mode, setMode] = useState<Mode>("quick");
   const [digits, setDigits] = useState("");
   const [qty, setQty] = useState<Record<string, number>>({});
@@ -35,6 +36,17 @@ export function RecordSale() {
   );
   const amount = mode === "quick" ? digitsToKobo(digits) : items.reduce((n, i) => n + i.qty * i.unitPrice, 0);
 
+  // People you've sold to before, most recent first, narrowed as you type. Tapping one fills in the name exactly as saved.
+  const suggestions = useMemo(() => {
+    const typed = normName(customer);
+    return buildCustomers(state)
+      .filter((c) => c.sales.length > 0 || c.saved)
+      .sort((a, b) => (b.lastAt ?? "").localeCompare(a.lastAt ?? ""))
+      .map((c) => c.name)
+      .filter((n) => normName(n) !== typed && (!typed || normName(n).includes(typed)))
+      .slice(0, 5);
+  }, [state, customer]);
+
   const bump = (id: string, by: number) => setQty((q) => ({ ...q, [id]: Math.max(0, Math.min(999, (q[id] ?? 0) + by)) }));
 
   const save = () => {
@@ -42,7 +54,7 @@ export function RecordSale() {
     if (paid === "owes" && !customer.trim()) return setError("Who owes you? Add their name so you remember.");
     const at = whenToIso(when);
     if (at === null) return setError("Choose a date that isn't in the future.");
-    const sale = addSale({ amount, items: mode === "products" ? items : [], note: mode === "quick" ? note : undefined, customer: paid === "owes" ? customer : undefined, paid: paid === "paid", at });
+    const sale = addSale({ amount, items: mode === "products" ? items : [], note: mode === "quick" ? note : undefined, customer: customer.trim() || undefined, paid: paid === "paid", at });
     show(`Recorded ${naira(sale.amount)}.`, () => removeRecord("sale", sale.id));
     back();
   };
@@ -105,7 +117,16 @@ export function RecordSale() {
             <span className="field__label">Did they pay?</span>
             <Segmented label="Payment" value={paid} options={[{ value: "paid", label: "Paid" }, { value: "owes", label: "Owes me" }]} onChange={(v) => { setPaid(v); setError(undefined); }} />
           </div>
-          {paid === "owes" && <Field label="Who owes you?" value={customer} onChange={(e) => { setCustomer(e.target.value); setError(undefined); }} maxLength={80} autoComplete="off" autoCapitalize="words" />}
+          <Field label={paid === "owes" ? "Who owes you?" : "Customer (optional)"} value={customer} onChange={(e) => { setCustomer(e.target.value); setError(undefined); }} maxLength={80} autoComplete="off" autoCapitalize="words" />
+          {suggestions.length > 0 && (
+            <div className="chips chips--pick" aria-label="People you've sold to before">
+              {suggestions.map((n) => (
+                <button key={n} type="button" className="chip-btn" onClick={() => { setCustomer(n); setError(undefined); }}>
+                  {n}
+                </button>
+              ))}
+            </div>
+          )}
           <WhenPicker when={when} onChange={setWhen} />
           {error && (
             <p className="form-error" role="alert">

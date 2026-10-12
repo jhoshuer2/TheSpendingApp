@@ -1,5 +1,5 @@
 import type { Activity, Progress } from "../profile/state";
-import type { Expense, Product, Sale } from "../records/types";
+import type { Customer, Expense, Product, Sale } from "../records/types";
 import type { Answers } from "../profile/types";
 
 export interface Session {
@@ -45,6 +45,7 @@ export interface RemoteStore {
 export class PermanentError extends Error {}
 
 export interface RecordsBatch {
+  customers: Customer[];
   products: Product[];
   sales: Sale[];
   expenses: Expense[];

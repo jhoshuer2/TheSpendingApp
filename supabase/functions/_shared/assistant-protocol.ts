@@ -24,9 +24,11 @@ export const LIMITS = {
 
 export const EXPENSE_CATEGORIES = ["stock", "transport", "rent", "staff", "data", "packaging", "utilities", "other"] as const;
 
-export const READ_TOOLS = ["get_summary", "list_owed", "list_recent", "best_sellers", "list_products"] as const;
+export const READ_TOOLS = ["get_summary", "list_owed", "list_recent", "best_sellers", "list_products", "list_customers"] as const;
 export const WRITE_TOOLS = ["propose_records", "propose_mark_paid"] as const;
-export const TOOL_NAMES: readonly string[] = [...READ_TOOLS, ...WRITE_TOOLS];
+/** Prepares a message for the person to send themselves. Nothing is saved or sent. */
+export const DRAFT_TOOLS = ["draft_message"] as const;
+export const TOOL_NAMES: readonly string[] = [...READ_TOOLS, ...WRITE_TOOLS, ...DRAFT_TOOLS];
 
 const whenSchema = {
   type: "string",
@@ -69,6 +71,12 @@ export const TOOLS = [
     name: "list_products",
     description: "The person's products with their prices (in naira) and, where known, what each costs them. Use to match what they say they sold, or to answer questions about prices.",
     input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "list_customers",
+    description:
+      "The people the person sells to: for each, how much they have bought in total, how many sales, what they still owe and when they last bought. Biggest buyers first. Phone numbers are not included. Use for 'who are my best customers', 'who hasn't bought lately', 'how much has Chidi bought'.",
+    input_schema: { type: "object", properties: { limit: { type: "integer", minimum: 1, maximum: 15, description: "How many to return. Default 8." } } },
   },
   {
     name: "propose_records",
@@ -129,6 +137,20 @@ export const TOOLS = [
       "Suggest marking what a customer owes as paid (for example 'Mrs Bello don pay'). NOTHING IS SAVED until the person taps Save. Call list_owed first if you are not sure who owes what.",
     input_schema: { type: "object", properties: { customer: { type: "string", description: "The customer's name as the person said it." } }, required: ["customer"] },
   },
+  {
+    name: "draft_message",
+    description:
+      "Prepare a message the person can send to a customer themselves (it opens in WhatsApp, or they copy it). NOTHING IS SENT. The app writes the message from the person's books, so never write it yourself and never state amounts it didn't give you. kind 'reminder' = politely ask a customer who owes money to pay (only for someone who owes). kind 'receipt' = a receipt for that customer's latest sale. Use for 'send Chidi a reminder', 'remind Mrs Bello', 'send her a receipt'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        kind: { type: "string", enum: ["reminder", "receipt"] },
+        customer: { type: "string", description: "The customer's name as the person said it." },
+        tone: { type: "string", enum: ["friendly", "short", "firm"], description: "For reminders only. Default friendly. Use firm only if the person asks for it." },
+      },
+      required: ["kind", "customer"],
+    },
+  },
 ] as const;
 
 /**
@@ -165,8 +187,16 @@ EXAMPLES (how to understand people; these are not scripts)
 - "Sold 5 bags of rice at 52k each" is one sale of 260000 (5 times 52000).
 - "Wetin I make this week?" and "how much did I make this week?" both mean: call get_summary with period week.
 - "Who dey owe me?" means: call list_owed.
+- "Send Chidi a reminder" and "abeg remind Mama Tosin about her money" mean: call draft_message with kind "reminder". "Send Chidi a receipt" means kind "receipt".
+- "Who be my best customers?" means: call list_customers.
 - "Mrs Bello don pay" means: call propose_mark_paid for "Mrs Bello".
 - "I sell 2 wig for 30k, then Chidi collect 2 bag rice for 25k, e never pay" is two sales in one call: the wigs (30000, paid) and the rice (25000, paid false, customer "Chidi"). Then say: "I've put the wigs down as paid and Chidi's rice as owing."
+
+MESSAGES TO CUSTOMERS
+- You cannot send messages to anyone. With draft_message you can prepare a payment reminder or a receipt on the person's screen. They read it, change it if they like, and send it themselves.
+- The app writes the message from their books (amounts, dates, items). Never write the message yourself or repeat its amounts from memory. After the tool succeeds, say in one short line that it is ready for them to check and send. Never say it was sent.
+- Only offer a reminder to someone who owes money. If they ask to remind someone who doesn't owe, say so kindly.
+- The message language and style are the person's choice in the app (they can change it on the draft). If they ask for Pidgin or a firmer tone, pass the tone, and tell them they can switch language on the draft screen.
 
 QUESTIONS ABOUT THE BUSINESS
 - Use a tool for every figure you state. Never work numbers out from memory or from earlier messages when a tool can give them again.

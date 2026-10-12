@@ -5,6 +5,10 @@ import { ProfileProvider } from "../profile/store";
 import { AssistantProvider } from "../assistant/store";
 import { RecordsProvider } from "../records/store";
 import { AutoSteps } from "./AutoSteps";
+import { CustomerDetail } from "../screens/money/CustomerDetail";
+import { CustomerForm } from "../screens/money/CustomerForm";
+import { Customers } from "../screens/money/Customers";
+import { MessageDraft } from "../screens/money/MessageDraft";
 import { MoneyHome } from "../screens/money/MoneyHome";
 import { ProductForm } from "../screens/money/ProductForm";
 import { Products } from "../screens/money/Products";
@@ -74,6 +78,11 @@ export function App() {
               />
               <Route path="/money/sale" element={<Gate><RecordSale /></Gate>} />
               <Route path="/money/expense" element={<Gate><RecordExpense /></Gate>} />
+              <Route path="/money/customers" element={<Gate><Customers /></Gate>} />
+              <Route path="/money/customer/:key" element={<Gate><CustomerDetail /></Gate>} />
+              <Route path="/money/customer/:key/edit" element={<Gate><CustomerForm /></Gate>} />
+              <Route path="/money/message/reminder/:key" element={<Gate><MessageDraft kind="reminder" /></Gate>} />
+              <Route path="/money/message/receipt/:id" element={<Gate><MessageDraft kind="receipt" /></Gate>} />
               <Route path="/money/products" element={<Gate><Products /></Gate>} />
               <Route path="/money/product/:id" element={<Gate><ProductForm /></Gate>} />
               <Route path="/money/record/:kind/:id" element={<Gate><RecordDetail /></Gate>} />

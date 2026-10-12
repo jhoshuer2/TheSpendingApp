@@ -8,7 +8,8 @@ import {
   clearRecordsCache, EMPTY_RECORDS, isRecordsDirty, mergePulled, readRecordsCache, requeueRejected, writeRecordsCache,
   type RecordsState,
 } from "./state";
-import type { Expense, ExpenseCategory, Product, RecordKind, Sale, SaleItem } from "./types";
+import { normName } from "./customers";
+import type { Customer, Expense, ExpenseCategory, Product, RecordKind, Sale, SaleItem } from "./types";
 
 export type RecordsStatus = "loading" | "ready" | "error";
 export type RecordsSync = "idle" | "saving" | "offline";
@@ -38,6 +39,12 @@ export interface NewExpense {
   note?: string;
   at?: string;
 }
+export interface CustomerInput {
+  id?: string;
+  name: string;
+  phone?: string;
+  note?: string;
+}
 export interface ProductInput {
   id?: string;
   name: string;
@@ -49,6 +56,7 @@ interface RecordsApi {
   status: RecordsStatus;
   sync: RecordsSync;
   state: RecordsState;
+  customers: Customer[];
   products: Product[];
   sales: Sale[];
   expenses: Expense[];
@@ -62,6 +70,10 @@ interface RecordsApi {
   restoreRecord: (kind: RecordKind, id: string) => void;
   saveProduct: (p: ProductInput) => Product;
   archiveProduct: (id: string, archived: boolean) => void;
+  /** Save a customer's details. Changing the name also updates their past sales so they stay together. */
+  saveCustomer: (c: CustomerInput) => Customer;
+  /** Remove from the list (their sales stay). */
+  archiveCustomer: (id: string) => void;
   /** How many records the server refused for good. They stay on this phone. */
   rejectedCount: number;
   retry: () => void;
@@ -109,10 +121,10 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     if (flushing.current) return flushing.current;
 
     /** Take a row off the queue: sent, or refused for good. Only if it is still exactly what we sent. */
-    const settle = (table: "products" | "sales" | "expenses", id: string, sentJson: string, outcome: "sent" | "rejected") => {
+    const settle = (table: "customers" | "products" | "sales" | "expenses", id: string, sentJson: string, outcome: "sent" | "rejected") => {
       const cur = ref.current;
       if (JSON.stringify(cur[table][id]) !== sentJson) return; // edited meanwhile: stays queued
-      const prefix = { products: "product", sales: "sale", expenses: "expense" }[table];
+      const prefix = { customers: "customer", products: "product", sales: "sale", expenses: "expense" }[table];
       commit({
         ...cur,
         dirty: { ...cur.dirty, [table]: cur.dirty[table].filter((x) => x !== id) },
@@ -130,20 +142,21 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
           if (!isRecordsDirty(cur)) break;
           setSync("saving");
           const sent = {
+            customers: cur.dirty.customers.map((id) => cur.customers[id]).filter(Boolean),
             products: cur.dirty.products.map((id) => cur.products[id]).filter(Boolean),
             sales: cur.dirty.sales.map((id) => cur.sales[id]).filter(Boolean),
             expenses: cur.dirty.expenses.map((id) => cur.expenses[id]).filter(Boolean),
           };
           try {
             await remote.push(sent);
-            for (const t of ["products", "sales", "expenses"] as const) for (const r of sent[t]) settle(t, r.id, JSON.stringify(r), "sent");
+            for (const t of ["customers", "products", "sales", "expenses"] as const) for (const r of sent[t]) settle(t, r.id, JSON.stringify(r), "sent");
           } catch (e) {
             if (!(e instanceof PermanentError)) throw e;
             // The server refused something in this batch for good. Find which rows, so one bad row can't hold up the rest.
-            for (const t of ["products", "sales", "expenses"] as const) {
+            for (const t of ["customers", "products", "sales", "expenses"] as const) {
               for (const r of sent[t]) {
                 try {
-                  await remote.push({ products: [], sales: [], expenses: [], [t]: [r] });
+                  await remote.push({ customers: [], products: [], sales: [], expenses: [], [t]: [r] });
                   settle(t, r.id, JSON.stringify(r), "sent");
                 } catch (e2) {
                   if (!(e2 instanceof PermanentError)) throw e2;
@@ -154,9 +167,9 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
           }
           // Rows edited while we were sending are still queued; clear any queue entries whose row no longer exists.
           const now = ref.current;
-          const stale = (t: "products" | "sales" | "expenses") => now.dirty[t].filter((id) => !now[t][id]);
-          if (stale("products").length + stale("sales").length + stale("expenses").length) {
-            commit({ ...now, dirty: { products: now.dirty.products.filter((id) => now.products[id]), sales: now.dirty.sales.filter((id) => now.sales[id]), expenses: now.dirty.expenses.filter((id) => now.expenses[id]) } });
+          const stale = (t: "customers" | "products" | "sales" | "expenses") => now.dirty[t].filter((id) => !now[t][id]);
+          if (stale("customers").length + stale("products").length + stale("sales").length + stale("expenses").length) {
+            commit({ ...now, dirty: { customers: now.dirty.customers.filter((id) => now.customers[id]), products: now.dirty.products.filter((id) => now.products[id]), sales: now.dirty.sales.filter((id) => now.sales[id]), expenses: now.dirty.expenses.filter((id) => now.expenses[id]) } });
           }
         }
         setSync("idle");
@@ -237,13 +250,13 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
 
   /** Apply a change, queue the touched rows for saving, and save soon. */
   const change = useCallback(
-    (fn: (s: RecordsState) => RecordsState, touched: { products?: string[]; sales?: string[]; expenses?: string[] }) => {
+    (fn: (s: RecordsState) => RecordsState, touched: { customers?: string[]; products?: string[]; sales?: string[]; expenses?: string[] }) => {
       const cur = ref.current;
       let next = fn(cur);
       if (next === cur) return;
       if (remoteRef.current) {
         const add = (have: string[], more: string[] = []) => [...have, ...more.filter((m) => !have.includes(m))];
-        next = { ...next, dirty: { products: add(cur.dirty.products, touched.products), sales: add(cur.dirty.sales, touched.sales), expenses: add(cur.dirty.expenses, touched.expenses) } };
+        next = { ...next, dirty: { customers: add(cur.dirty.customers, touched.customers), products: add(cur.dirty.products, touched.products), sales: add(cur.dirty.sales, touched.sales), expenses: add(cur.dirty.expenses, touched.expenses) } };
       }
       commit(next);
       if (remoteRef.current) {
@@ -266,6 +279,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
       status,
       sync,
       state,
+      customers: Object.values(state.customers).filter((c) => !c.archived).sort((a, b) => a.name.localeCompare(b.name)),
       products: liveProducts(state),
       sales: liveSales(state).sort((a, b) => b.at.localeCompare(a.at)),
       expenses: liveExpenses(state).sort((a, b) => b.at.localeCompare(a.at)),
@@ -308,6 +322,28 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
       },
       archiveProduct: (id, archived) =>
         change((s) => (s.products[id] ? { ...s, products: { ...s.products, [id]: archived ? { ...s.products[id], archived: true } : without(s.products[id], "archived") } } : s), { products: [id] }),
+      saveCustomer: (input) => {
+        const id = input.id ?? newId();
+        const prev = state.customers[id];
+        const name = input.name.trim().replace(/\s+/g, " ").slice(0, 80);
+        const phone = input.phone?.trim().slice(0, 20), note = input.note?.trim().slice(0, 200);
+        const c: Customer = { id, name, ...(phone ? { phone } : {}), ...(note ? { note } : {}) };
+        const renamed = prev && normName(prev.name) !== normName(name) ? normName(prev.name) : null;
+        change(
+          (s) => {
+            let sales = s.sales;
+            // A new name: carry it to their earlier sales, otherwise those sales would no longer belong to this customer.
+            if (renamed) {
+              sales = { ...s.sales };
+              for (const x of Object.values(s.sales)) if (normName(x.customer) === renamed) { sales[x.id] = { ...x, customer: name }; }
+            }
+            return { ...s, customers: { ...s.customers, [id]: c }, sales };
+          },
+          { customers: [id], sales: renamed ? Object.values(state.sales).filter((x) => normName(x.customer) === renamed).map((x) => x.id) : [] },
+        );
+        return c;
+      },
+      archiveCustomer: (id) => change((s) => (s.customers[id] ? { ...s, customers: { ...s.customers, [id]: { ...s.customers[id], archived: true } } } : s), { customers: [id] }),
       retry: () => {
         setStatus("loading");
         void reconcile();

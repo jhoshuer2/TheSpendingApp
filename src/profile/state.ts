@@ -57,6 +57,8 @@ export function sanitizeAnswers(raw: unknown): Answers {
       if (Array.isArray(v)) out[q.id] = [...new Set(v.filter((x): x is string => typeof x === "string" && allowed.has(x)))];
     } else if (typeof v === "string" && allowed.has(v)) out[q.id] = v;
   }
+  const bn = typeof src.businessName === "string" ? src.businessName.trim().replace(/\s+/g, " ").slice(0, 60) : "";
+  if (bn) out.businessName = bn;
   return out as Answers;
 }
 

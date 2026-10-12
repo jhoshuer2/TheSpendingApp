@@ -34,7 +34,7 @@ async function runCase(c, call) {
     text += r.content.filter((b) => b.type === "text").map((b) => b.text).join("\n");
     const uses = r.content.filter((b) => b.type === "tool_use");
     calls.push(...uses);
-    if (!uses.length || uses.some((u) => !READ_TOOLS.includes(u.name))) break;
+    if (!uses.length || uses.some((u) => !READ_TOOLS.includes(u.name))) break; // a proposal or a draft is left for the person, so the exchange ends here
     messages.push({ role: "user", content: uses.map((u) => ({ type: "tool_result", tool_use_id: u.id, content: JSON.stringify(FIXTURE[u.name] ?? {}) })) });
   }
   return { calls, text, usage, problems: judge(c, calls, text) };
@@ -61,7 +61,8 @@ if (args.includes("--self-test")) {
     if (c.saleTotal !== undefined) sales.push({ amount: c.saleTotal, ...(c.customer ? { customer: c.customer } : {}), ...(c.unpaid ? { paid: false, customer: c.unpaid } : {}), ...(c.when ? { when: c.when } : {}) });
     if (c.expenseTotal !== undefined) expenses.push({ amount: c.expenseTotal, category: c.categories?.[0] ?? "other", ...(c.when ? { when: c.when } : {}) });
     const content = [];
-    if (c.markPaid) content.push({ type: "tool_use", id: "t1", name: "propose_mark_paid", input: { customer: c.markPaid } });
+    if (c.draft) content.push({ type: "text", text: "Here is the draft." }, { type: "tool_use", id: "t1", name: "draft_message", input: { kind: c.draft.kind, customer: c.draft.customer } });
+    else if (c.markPaid) content.push({ type: "tool_use", id: "t1", name: "propose_mark_paid", input: { customer: c.markPaid } });
     else if (c.tool) content.push({ type: "tool_use", id: "t1", name: c.tool, input: {} });
     else if (sales.length || expenses.length) content.push({ type: "text", text: "Please check this and tap Save." }, { type: "tool_use", id: "t1", name: "propose_records", input: { sales, expenses } });
     else content.push({ type: "text", text: "Can you tell me more?" });

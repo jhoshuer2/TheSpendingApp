@@ -12,7 +12,8 @@ This is step 3 of `PRD-DO-IT-IN-SPAL.md`: the first version of the agent. It rec
 | "I spent 2k on keke" | An expense card (category Transport). |
 | "Chidi collect 2 bags for 25k, e never pay" | A sale marked *owed* by Chidi. |
 | "Chidi don pay" | A card that marks what Chidi owes as paid. If two customers match it asks which; it never guesses. |
-| "How much did I make this week?" / "Who dey owe me?" / "What sells best?" | Looks it up in your books and answers. |
+| "How much did I make this week?" / "Who dey owe me?" / "What sells best?" / "Who are my best customers?" | Looks it up in your books and answers. |
+| "Send Chidi a reminder" / "Send Mrs Bello a receipt" | Prepares a message from your books (see `CUSTOMERS.md`). You read it and send it yourself on WhatsApp. It never sends anything, and the assistant never sees the message text or phone numbers. |
 | "I sold something" | Asks how much. It does not invent an amount. |
 
 Every saved card has **Undo** (it soft-deletes, so other devices learn about it). Settings (the sliders icon):
@@ -76,7 +77,7 @@ Most people will send far fewer than 25 a day, so real averages will be much low
 ```
 ANTHROPIC_API_KEY=sk-ant-... node tools/eval-assistant.mjs
 ```
-Runs 37 realistic messages (19 English, 18 Pidgin) against Opus, Sonnet and Haiku with the real instructions and tools, and prints accuracy for each language, what it got wrong, and cost per message. It costs a few cents per model. Add cases to `tools/eval-assistant-lib.mjs` as you find real phrases, especially from your own customers. `node tools/eval-assistant.mjs --self-test` checks the scoring without a key.
+Runs 44 realistic messages (23 English, 21 Pidgin) against Opus, Sonnet and Haiku with the real instructions and tools, and prints accuracy for each language, what it got wrong, and cost per message. It costs a few cents per model. Add cases to `tools/eval-assistant-lib.mjs` as you find real phrases, especially from your own customers. `node tools/eval-assistant.mjs --self-test` checks the scoring without a key.
 
 The model-facing instructions explain Pidgin money and phrasing ("don pay", "dey owe me", "5k", "two thousand five hundred") and include examples, but **understanding Pidgin well is unproven until that eval is run**. Yoruba, Igbo and Hausa aren't in v1.
 

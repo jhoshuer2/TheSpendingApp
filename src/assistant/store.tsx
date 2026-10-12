@@ -3,6 +3,7 @@ import { backend } from "../backend";
 import { useAuth } from "../lib/auth";
 import { useToast } from "../lib/toast";
 import { useProfile } from "../profile/store";
+import { readMessagePrefs } from "../messages/prefs";
 import { newId, useRecords } from "../records/store";
 import { ChatError, emptyChat, freshChat, MAX_INPUT_CHARS, needsFresh, runTurn, type Chat, type IO, type Saved, type Settings } from "./engine";
 import { clearStored, readStored, writeStored } from "./state";
@@ -128,6 +129,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         },
         records: () => recordsRef.current.state,
         apply,
+        messageContext: () => ({ from: profileRef.current.answers.businessName, ...readMessagePrefs() }),
         now: () => new Date(),
         id: newId,
         update: (c) => {

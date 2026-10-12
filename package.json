@@ -16,7 +16,8 @@
     "check:assistant-layout": "CHECK=check-assistant-layout bash tools/check-backend.sh",
     "test:db": "bash tools/test-db.sh",
     "check:learning": "node tools/check-learning.mjs",
-    "check:money": "node tools/check-money.mjs"
+    "check:money": "node tools/check-money.mjs",
+    "check:customers": "node tools/check-customers.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",
