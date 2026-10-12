@@ -101,6 +101,7 @@ const SEED_CUSTOMERS = (() => {
   b.dirty.customers = [];
   return JSON.stringify(b);
 })();
+const NO_PHONE = Object.values(JSON.parse(SEED_CUSTOMERS).sales).find((s) => !s.paid && s.customer && !["Mrs Adebayo", "Chinedu Okonkwo-Eze"].includes(s.customer))?.customer;
 const CUST_SALE = Object.values(JSON.parse(SEED_CUSTOMERS).sales).find((s) => s.customer === "Mrs Adebayo" && s.paid)?.id;
 // The same person, with facts about their business filled in (some deliberately long, to test wrapping).
 const SEED_BIZ = (() => {
@@ -183,6 +184,7 @@ const SCREENS = [
   { name: "customer-error-phone", path: "/money/customer/new/edit", authed: true, seed: SEED_READY, act: async (p) => { await p.getByLabel("Name").fill("Tolu"); await p.getByLabel("Phone number (optional)").fill("0803"); await p.getByRole("button", { name: "Save customer" }).click(); } },
   { name: "message-reminder", path: "/money/message/reminder/" + uuid(300), authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },
   { name: "message-reminder-pidgin", path: "/money/message/reminder/" + uuid(300), authed: true, seed: SEED_READY, books: SEED_CUSTOMERS, act: async (p) => { await p.getByRole("radio", { name: "Pidgin" }).click(); await p.getByRole("radio", { name: "Firm" }).click(); } },
+  { name: "message-reminder-no-phone", path: "/money/message/reminder/" + keyFor(NO_PHONE), authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },
   { name: "message-receipt", path: "/money/message/receipt/" + CUST_SALE, authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },
   { name: "message-receipt-plain", path: "/money/message/receipt/" + uuid(100), authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },
   { name: "sale-customer-chips", path: "/money/sale", authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },

@@ -93,9 +93,12 @@ export function WriteDraft() {
               </p>
             )}
             {kind !== "prices" && known < 2 && (
-              <p className="note" style={{ marginTop: "var(--space-3)" }}>
-                This is plain because SPAL doesn't know much yet. <Link to="/business">Add your business details</Link> and it will write more.
-              </p>
+              <div className="stack" style={{ marginTop: "var(--space-3)", alignItems: "flex-start" }}>
+                <p className="note" style={{ margin: 0 }}>This is plain because SPAL doesn't know much yet. Add your business details and it will write more.</p>
+                <Link to="/business" className="btn btn--secondary btn--md">
+                  Add your business details
+                </Link>
+              </div>
             )}
           </>
         )}
