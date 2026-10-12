@@ -4,57 +4,14 @@ import { Button } from "../../design-system/Button";
 import { Field } from "../../design-system/Field";
 import { Icon } from "../../design-system/Icon";
 import { Segmented } from "../../design-system/Segmented";
-import { LANGS, receiptMessage, reminderMessage, TONES, type MsgLang, type Tone } from "../../messages/templates";
+import { LANGS, receiptMessage, reminderMessage, TONES } from "../../messages/templates";
+import { copyText } from "../../messages/clipboard";
+import { readMessagePrefs, writeMessagePrefs, type MessagePrefs } from "../../messages/prefs";
 import { useBack } from "../../lib/useBack";
 import { useToast } from "../../lib/toast";
 import { buildCustomers, normName, whatsappLink, whatsappNumber } from "../../records/customers";
 import { useProfile } from "../../profile/store";
 import { useRecords } from "../../records/store";
-
-const PREFS_KEY = "spal.msgprefs.v1";
-interface Prefs {
-  lang: MsgLang;
-  tone: Tone;
-}
-function readPrefs(): Prefs {
-  try {
-    const p = JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}") as Partial<Prefs>;
-    return { lang: p.lang === "pcm" ? "pcm" : "en", tone: p.tone === "short" || p.tone === "firm" ? p.tone : "friendly" };
-  } catch {
-    return { lang: "en", tone: "friendly" };
-  }
-}
-function writePrefs(p: Prefs) {
-  try {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(p));
-  } catch {
-    /* the choice just won't be remembered */
-  }
-}
-
-async function copyText(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    // Older browsers and some in-app browsers: select the text in a hidden box and copy that.
-    const box = document.createElement("textarea");
-    box.value = text;
-    box.setAttribute("readonly", "");
-    box.style.position = "fixed";
-    box.style.opacity = "0";
-    document.body.appendChild(box);
-    box.select();
-    let ok = false;
-    try {
-      ok = document.execCommand("copy");
-    } catch {
-      ok = false;
-    }
-    box.remove();
-    return ok;
-  }
-}
 
 /**
  * A message ready to send: a payment reminder to someone who owes you, or a receipt for a sale.
@@ -67,7 +24,7 @@ export function MessageDraft({ kind }: { kind: "reminder" | "receipt" }) {
   const { show } = useToast();
   const { state } = useRecords();
   const { stored, saveAnswers } = useProfile();
-  const [prefs, setPrefs] = useState(readPrefs);
+  const [prefs, setPrefs] = useState<MessagePrefs>(readMessagePrefs);
   const [custom, setCustom] = useState<string | null>(null);
   const business = stored.answers.businessName ?? "";
   const [nameField, setNameField] = useState(business);
@@ -88,10 +45,10 @@ export function MessageDraft({ kind }: { kind: "reminder" | "receipt" }) {
   const phone = entry?.phone;
   const hasNumber = whatsappNumber(phone) !== null;
   const link = whatsappLink(phone, text) ?? `https://wa.me/?text=${encodeURIComponent(text)}`;
-  const choose = (p: Partial<Prefs>) => {
+  const choose = (p: Partial<MessagePrefs>) => {
     const next = { ...prefs, ...p };
     setPrefs(next);
-    writePrefs(next);
+    writeMessagePrefs(next);
     setCustom(null);
   };
   const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";

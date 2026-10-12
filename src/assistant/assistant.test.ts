@@ -5,8 +5,9 @@ import type { Product, Sale } from "../records/types";
 import { toChatError } from "../backend/supabase";
 import { sanitizeStored } from "./state";
 import { ChatError, DEFAULT_SETTINGS, emptyChat, freshChat, needsFresh, runTurn, type Chat, type IO, type ModelReply, type Settings } from "./engine";
-import { buildMarkPaidProposal, buildRecordsProposal, describeProposal, runReadTool } from "./tools";
+import { buildDraft, buildMarkPaidProposal, buildRecordsProposal, describeProposal, runReadTool } from "./tools";
 
+const at = (d: number) => new Date(2026, 9, d, 10).toISOString();
 const NOW = new Date(2026, 9, 12, 15, 0); // Monday 12 Oct 2026, 3pm
 const rice: Product = { id: "p-rice-0001", name: "Jollof rice", price: 150000 };
 const zobo: Product = { id: "p-zobo-0001", name: "Zobo", price: 50000 };
@@ -132,6 +133,7 @@ function harness(script: (ModelReply | ChatError)[], records = books()) {
     },
     records: () => records,
     apply: (p) => (applied.push(p), { sales: ["s1"], expenses: [], paid: [] }),
+    messageContext: () => ({ from: "Ada's Kitchen", lang: "en", tone: "friendly" }),
     now: () => NOW,
     id: () => `id-${++n}`,
   };
@@ -354,5 +356,80 @@ describe("toChatError", () => {
   it("never carries server text", async () => {
     const e = await toChatError(http(502, { message: "sk-secret in here" }));
     expect(e.message).not.toContain("sk-secret");
+  });
+});
+
+
+// ---- customers and drafts ----
+const ctx = { from: "Ada's Kitchen", lang: "en" as const, tone: "friendly" as const };
+const withPhone = (): RecordsState => ({ ...books(), customers: { "cust-chidi-1": { id: "cust-chidi-1", name: "Chidi", phone: "0803 123 4567" } } });
+
+describe("draft_message", () => {
+  it("writes a reminder from the books: exact amounts, the customer's own wording of the debt, signed", () => {
+    const r = buildDraft({ kind: "reminder", customer: "mrs bello" }, books(), ctx);
+    expect(r.ok && r.draft.text).toMatch(/^Hello Mrs Bello, I hope you're well\. A quick reminder about the ₦2,000 for your order/);
+    expect(r.ok && r.draft.text).toMatch(/— Ada's Kitchen$/);
+    expect(r.ok && r.draft.title).toBe("Reminder for Mrs Bello");
+  });
+  it("uses the person's language and tone unless the assistant passes a tone", () => {
+    expect((buildDraft({ kind: "reminder", customer: "Chidi" }, books(), { ...ctx, lang: "pcm" }) as { draft: { text: string } }).draft.text).toMatch(/how you dey/);
+    expect((buildDraft({ kind: "reminder", customer: "Chidi", tone: "firm" }, books(), ctx) as { draft: { text: string } }).draft.text).toMatch(/still outstanding/);
+    expect((buildDraft({ kind: "reminder", customer: "Chidi", tone: "rude" }, books(), ctx) as { draft: { text: string } }).draft.text).toMatch(/hope you're well/);
+  });
+  it("won't remind someone who owes nothing, or guess between two people", () => {
+    const state = books({ sales: { ...books().sales, "sale-0009": { id: "sale-0009", at: at(8), amount: 100000, items: [], paid: true, customer: "Tolu" } } } as Partial<RecordsState>);
+    const none = buildDraft({ kind: "reminder", customer: "Tolu" }, state, ctx);
+    expect(!none.ok && none.error).toMatch(/doesn't owe anything/);
+    const amb = buildDraft({ kind: "reminder", customer: "Bello" }, books(), ctx);
+    expect(!amb.ok && amb.error).toMatch(/More than one/);
+    expect(buildDraft({ kind: "reminder", customer: "Nobody" }, books(), ctx).ok).toBe(false);
+    expect(buildDraft({ kind: "reminder" }, books(), ctx).ok).toBe(false);
+    expect(buildDraft({ kind: "sms", customer: "Chidi" }, books(), ctx).ok).toBe(false);
+  });
+  it("makes a receipt for the customer's latest sale", () => {
+    const state = books({ sales: { ...books().sales, "sale-0010": { id: "sale-0010", at: at(11), amount: 300000, items: [{ name: "Zobo", qty: 6, unitPrice: 50000 }], paid: true, customer: "Chidi" } } } as Partial<RecordsState>);
+    const r = buildDraft({ kind: "receipt", customer: "Chidi" }, state, ctx);
+    expect(r.ok && r.draft.saleId).toBe("sale-0010");
+    expect(r.ok && r.draft.text).toContain("6 × Zobo — ₦3,000");
+    expect(r.ok && r.draft.text).toContain("Paid ✔");
+  });
+});
+
+describe("list_customers", () => {
+  it("lists biggest buyers with what they owe, and never a phone number", () => {
+    const out = runReadTool("list_customers", {}, withPhone(), NOW);
+    expect(out).not.toMatch(/0803|phone/i);
+    const d = JSON.parse(out);
+    expect(d.total_customers).toBe(3);
+    expect(d.customers.map((c: { name: string }) => c.name)).toEqual(["Mrs Bello", "Chidi", "Mr Bello"]);
+    expect(d.customers.find((c: { name: string }) => c.name === "Chidi")).toMatchObject({ bought_total: 750, owes: 750, sales: 1 });
+    expect(JSON.parse(runReadTool("list_customers", {}, EMPTY_RECORDS, NOW)).note).toBeTruthy();
+  });
+});
+
+describe("drafting in a conversation", () => {
+  it("shows the draft, tells the model nothing was sent, and lets it add a line", async () => {
+    const h = harness([reply([say("Here you go."), use("t1", "draft_message", { kind: "reminder", customer: "Chidi" })]), reply([say("It's ready. Check it and send it from WhatsApp.")])]);
+    const r = await runTurn(start(), { text: "remind Chidi" }, DEFAULT_SETTINGS, WHO, h.io);
+    expect(r.error).toBeUndefined();
+    const draft = r.chat.items.find((i) => i.kind === "draft");
+    expect(draft && draft.kind === "draft" && draft.draft.text).toMatch(/₦750/);
+    expect(h.calls).toHaveLength(2);
+    const result = (h.calls[1][2].content as Block[])[0];
+    expect(result).toMatchObject({ type: "tool_result", tool_use_id: "t1" });
+    expect(String(result.content)).toMatch(/Nothing was sent/);
+    expect(String(result.content)).not.toMatch(/₦|0803/); // the model never gets the message text or amounts back
+    expect(r.chat.items.at(-1)).toMatchObject({ kind: "assistant" });
+  });
+  it("reports why a draft can't be made", async () => {
+    const h = harness([reply([use("t1", "draft_message", { kind: "reminder", customer: "Nobody" })]), reply([say("Who do you mean?")])]);
+    const r = await runTurn(start(), { text: "remind Nobody" }, DEFAULT_SETTINGS, WHO, h.io);
+    expect(h.calls[1][2].content[0]).toMatchObject({ is_error: true });
+    expect(r.chat.items.some((i) => i.kind === "draft")).toBe(false);
+  });
+  it("a saved draft survives a reload", () => {
+    const stored = { settings: { replyLanguage: "en", autonomy: "ask" }, consented: true, chat: { day: "2026-10-12", api: [], pending: [], items: [{ kind: "draft", id: "d1", draft: { kind: "reminder", customerKey: "cust-chidi-1", title: "Reminder for Chidi", text: "Hello Chidi" } }, { kind: "draft", id: "d2", draft: { kind: "reminder", customerKey: "bad key!", title: "x", text: "y" } }] } };
+    const s = sanitizeStored(JSON.parse(JSON.stringify(stored)), "2026-10-12");
+    expect(s.chat.items.map((i) => i.id)).toEqual(["d1"]);
   });
 });

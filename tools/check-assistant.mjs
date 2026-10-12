@@ -145,6 +145,36 @@ await step("a customer who isn't owing: the assistant is told why, not a broken 
   assert.equal(await p.getByTestId("proposal").count(), before);
 });
 
+await step("a reminder draft: the app writes it from the books, the model never sees the message, and nothing is sent", async () => {
+  const salesBefore = (await live("sales")).length;
+  const n = await p.getByTestId("draft").count();
+  await say("remind Chidi");
+  await p.getByTestId("draft").nth(n).waitFor();
+  const card = p.getByTestId("draft").nth(n);
+  const t = (await card.innerText()).replace(/\n+/g, " ");
+  assert.match(t, /Reminder for Chidi/);
+  assert.match(t, /Hello Chidi, I hope you're well\. A quick reminder about the ₦2,000/);
+  assert.match(await card.getByRole("link", { name: "Open WhatsApp" }).getAttribute("href"), /^https:\/\/wa\.me\/\?text=Hello%20Chidi/);
+  await reply(/ready on your screen/);
+  assert.equal((await live("sales")).length, salesBefore, "nothing in the books changed");
+  const log = JSON.stringify((await fake("assistant-log")).at(-1));
+  assert.match(log, /Nothing was sent/);
+  assert.doesNotMatch(log, /wa\.me|hope you're well/, "the message text never goes to the model");
+  await card.getByRole("link", { name: "Change the words or style" }).click();
+  await p.getByRole("heading", { name: "Payment reminder" }).waitFor();
+  await p.goto(APP + "/assistant");
+  await p.getByTestId("draft").first().waitFor();
+});
+
+await step("customers: a question about best customers, and a polite error for someone unknown", async () => {
+  await say("who are my best customers?");
+  await reply(/Your best customer is/);
+  const n = await p.getByTestId("draft").count();
+  await say("remind Tolu");
+  await reply(/No customer called "Tolu"/);
+  assert.equal(await p.getByTestId("draft").count(), n);
+});
+
 await step("Pidgin: settings change the reply language and the starters", async () => {
   await p.getByRole("link", { name: "Assistant settings" }).click();
   await p.getByRole("radio", { name: "Pidgin" }).click();

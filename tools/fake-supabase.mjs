@@ -139,6 +139,9 @@ function fakeModel(messages) {
   const fromText = () => {
     let m;
     if (/^who .*owe/i.test(text) || /owe me money/i.test(text)) return tu("list_owed", {});
+    if (/best customers?/i.test(text)) return tu("list_customers", {});
+    if ((m = /^send (.+?) a receipt/i.exec(text))) return tu("draft_message", { kind: "receipt", customer: m[1] });
+    if ((m = /^(?:remind (.+?)|send (.+?) a reminder)\b/i.exec(text))) return tu("draft_message", { kind: "reminder", customer: (m[1] ?? m[2]).replace(/ about.*$/i, "") });
     if ((m = /^(.+?)\s+(?:don pay|has paid|paid)\b/i.exec(text))) return tu("propose_mark_paid", { customer: m[1].replace(/^(mr|mrs)\.?\s+/i, (x) => x) });
     if ((m = /^(.+?)\s+(?:owes?|dey owe)\s+me\s+(.+)$/i.exec(text))) return tu("propose_records", { sales: [{ amount: num(m[2]), customer: m[1], paid: false, note: "Sale" }] });
     if (/how much/i.test(text)) return tu("get_summary", { period: "week" });
@@ -150,10 +153,12 @@ function fakeModel(messages) {
   if (results.length && !(results.every(isStatus) && text && fromText().stop_reason === "tool_use")) {
     const r = results[0];
     if (r.is_error) return say(pcm ? `Abeg, ${r.content}` : `Sorry, I need to check something: ${r.content}`);
+    if (/^A (reminder|receipt) draft/.test(r.content)) return say("It's ready on your screen. Check it and send it yourself.");
     if (/^Saved/.test(r.content)) return say(pcm ? "I don write am down." : "Done. I've written that down.");
     if (/did not answer|not right|undid/i.test(r.content)) return say("Okay, I haven't saved it. Tell me what to change.");
     try {
       const d = JSON.parse(r.content);
+      if (d.customers) return say(d.customers.length ? `Your best customer is ${d.customers[0].name}.` : "You have no customers yet.");
       if (d.current) return say(pcm ? `This week you don keep ₦${d.current.kept.toLocaleString("en-NG")}.` : `This week you kept ₦${d.current.kept.toLocaleString("en-NG")} from ₦${d.current.sold.toLocaleString("en-NG")} sold.`);
       if (d.sales) return say(d.count ? `${d.count} sales are not paid yet, ₦${d.total.toLocaleString("en-NG")} in all.` : "Nobody owes you anything.");
     } catch {}

@@ -37,6 +37,12 @@ describe("validateRequest", () => {
     });
     expect(v.ok).toBe(true);
   });
+  it("accepts the customer tools", () => {
+    for (const name of ["draft_message", "list_customers"]) {
+      const v = ok({ messages: [user("a"), { role: "assistant", content: [{ type: "tool_use", id: "t1", name, input: {} }] }, { role: "user", content: [{ type: "tool_result", tool_use_id: "t1", content: "ok" }] }] });
+      expect(v.ok).toBe(true);
+    }
+  });
   it("rejects tool use by the person, unknown tools and tool results by the assistant", () => {
     const use = (role: string, name = "propose_records") => ok({ messages: [user("a"), { role, content: [{ type: "tool_use", id: "x", name, input: {} }] }, user("b")] });
     expect(use("user").ok).toBe(false);

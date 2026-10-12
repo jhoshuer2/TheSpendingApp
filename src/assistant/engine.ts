@@ -1,6 +1,6 @@
 import { buildContext, READ_TOOLS, type Block, type ChatMessage } from "../../supabase/functions/_shared/assistant-protocol.ts";
 import type { RecordsState } from "../records/state";
-import { AUTO_LIMIT_KOBO, buildMarkPaidProposal, buildRecordsProposal, describeProposal, proposalTotal, runReadTool, type Proposal } from "./tools";
+import { AUTO_LIMIT_KOBO, buildDraft, buildMarkPaidProposal, buildRecordsProposal, describeProposal, proposalTotal, runReadTool, type Draft, type MessageContext, type Proposal } from "./tools";
 
 export type ReplyLanguage = "en" | "pcm";
 export type Autonomy = "ask" | "auto";
@@ -29,6 +29,7 @@ export type Item =
   | { kind: "user"; id: string; text: string }
   | { kind: "assistant"; id: string; text: string }
   | { kind: "proposal"; id: string; proposal: Proposal; status: ProposalStatus; auto?: boolean; stale?: boolean; saved?: Saved }
+  | { kind: "draft"; id: string; draft: Draft }
   | { kind: "note"; id: string; text: string };
 
 /** A tool result still owed to the model: either ready now, or waiting for the person to answer a card. */
@@ -52,6 +53,8 @@ export interface IO {
   records(): RecordsState;
   /** Save a proposal. Returns what was saved so it can be undone. */
   apply(p: Proposal): Saved;
+  /** How messages to customers should be written (business name, language, tone). */
+  messageContext(): MessageContext;
   now(): Date;
   id(): string;
   /** Called whenever the chat changes mid-turn, so the screen can show progress. */
@@ -160,6 +163,17 @@ export async function runTurn(
     for (const u of uses) {
       if ((READ_TOOLS as readonly string[]).includes(u.name)) {
         pending.push({ toolUseId: u.id, content: runReadTool(u.name, u.input, io.records(), io.now()) });
+        continue;
+      }
+      if (u.name === "draft_message") {
+        const d = buildDraft(u.input, io.records(), io.messageContext());
+        if (!d.ok) {
+          pending.push({ toolUseId: u.id, content: d.error, isError: true });
+          continue;
+        }
+        items.push({ kind: "draft", id: io.id(), draft: d.draft });
+        // Nothing is sent from here. The model is told so, and the person sends it themselves.
+        pending.push({ toolUseId: u.id, content: `A ${d.draft.kind} draft for ${d.draft.title.replace(/^\w+ for /, "")} is on the person's screen. Nothing was sent: they read it, change it if they like, and send it themselves.` });
         continue;
       }
       const built = u.name === "propose_records" ? buildRecordsProposal(u.input, io.records(), io.now()) : u.name === "propose_mark_paid" ? buildMarkPaidProposal(u.input, io.records()) : null;

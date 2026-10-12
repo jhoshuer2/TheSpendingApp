@@ -1,5 +1,7 @@
 import { EXPENSE_CATEGORIES } from "../../supabase/functions/_shared/assistant-protocol.ts";
 import { categoryName, liveSales, owed, periodRanges, summarize, ledger, localDay, saleTitle } from "../records/calc";
+import { buildCustomers, normName, type CustomerEntry } from "../records/customers";
+import { receiptMessage, reminderMessage, type MsgLang, type Tone } from "../messages/templates";
 import { MAX_NAIRA, toKobo } from "../records/money";
 import type { RecordsState } from "../records/state";
 import type { ExpenseCategory, Product, SaleItem } from "../records/types";
@@ -212,7 +214,65 @@ export function runReadTool(name: string, input: unknown, state: RecordsState, n
       const ps = Object.values(state.products).filter((p) => !p.archived).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 60);
       return cap(JSON.stringify({ products: ps.map((p) => ({ name: p.name, price: naira(p.price), ...(p.cost !== undefined ? { cost: naira(p.cost) } : {}) })), ...(ps.length ? {} : { note: "The person has not added any products yet." }) }));
     }
+    case "list_customers": {
+      const limit = typeof o.limit === "number" && o.limit >= 1 ? Math.min(Math.floor(o.limit), 15) : 8;
+      const list = buildCustomers(state).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+      return cap(JSON.stringify({
+        customers: list.slice(0, limit).map((c) => ({ name: c.name, bought_total: naira(c.total), sales: c.sales.length, owes: naira(c.owed), ...(c.lastAt ? { last_purchase: dayName(c.lastAt) } : {}) })),
+        total_customers: list.length,
+        ...(list.length ? {} : { note: "No customers yet. Names appear when a sale is recorded with a customer's name." }),
+      }));
+    }
     default:
       return JSON.stringify({ error: `Unknown tool ${name.slice(0, 40)}.` });
   }
+}
+
+
+// ---- Messages the person sends themselves ----
+
+/** A message the assistant prepared. The text is a snapshot; the phone number is looked up when it is shown, never stored here. */
+export interface Draft {
+  kind: "reminder" | "receipt";
+  customerKey: string;
+  saleId?: string;
+  title: string;
+  text: string;
+}
+export type BuiltDraft = { ok: true; draft: Draft } | { ok: false; error: string };
+
+export interface MessageContext {
+  from?: string;
+  lang: MsgLang;
+  tone: Tone;
+}
+
+function matchCustomer(name: string, list: CustomerEntry[]): { hit: CustomerEntry } | { error: string } {
+  const n = normName(name);
+  if (!n) return { error: "Which customer? Ask the person." };
+  const exact = list.filter((c) => normName(c.name) === n);
+  const hits = exact.length ? exact : list.filter((c) => n.length >= 2 && (normName(c.name).includes(n) || n.includes(normName(c.name))));
+  if (hits.length === 0) return { error: `No customer called "${name.slice(0, 40)}". Ask the person who they mean.` };
+  if (hits.length > 1) return { error: `More than one customer matches "${name.slice(0, 40)}": ${hits.slice(0, 5).map((c) => c.name).join(", ")}. Ask which one.` };
+  return { hit: hits[0] };
+}
+
+/** Prepare a reminder or receipt from the books. Amounts and dates come from the records, never from the model. */
+export function buildDraft(input: unknown, state: RecordsState, ctx: MessageContext): BuiltDraft {
+  const o = obj(input);
+  const kind = o.kind === "reminder" || o.kind === "receipt" ? o.kind : null;
+  if (!kind) return { ok: false, error: "The kind must be reminder or receipt." };
+  const name = text(o.customer, 80);
+  if (!name) return { ok: false, error: "Which customer? Ask the person." };
+  const m = matchCustomer(name, buildCustomers(state));
+  if ("error" in m) return { ok: false, error: m.error };
+  const c = m.hit;
+  const tone: Tone = o.tone === "short" || o.tone === "firm" ? o.tone : ctx.tone;
+  if (kind === "reminder") {
+    if (c.owed <= 0) return { ok: false, error: `${c.name} doesn't owe anything right now, so there is nothing to remind them about.` };
+    return { ok: true, draft: { kind, customerKey: c.key, title: `Reminder for ${c.name}`, text: reminderMessage({ customerName: c.name, sales: c.owedSales, from: ctx.from, tone, lang: ctx.lang }) } };
+  }
+  const latest = c.sales[0];
+  if (!latest) return { ok: false, error: `${c.name} has no sales yet, so there is no receipt to make.` };
+  return { ok: true, draft: { kind, customerKey: c.key, saleId: latest.id, title: `Receipt for ${c.name}`, text: receiptMessage({ sale: latest, from: ctx.from, lang: ctx.lang }) } };
 }

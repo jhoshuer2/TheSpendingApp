@@ -1,7 +1,7 @@
 import { validateRequest } from "../../supabase/functions/_shared/assistant-protocol.ts";
 import { DEFAULT_SETTINGS, emptyChat, type Chat, type Item, type Pending, type ProposalStatus, type Saved, type Settings } from "./engine";
 import { cleanExpense, cleanSale } from "../records/state";
-import type { Proposal } from "./tools";
+import type { Draft, Proposal } from "./tools";
 
 export interface Stored {
   chat: Chat;
@@ -47,6 +47,16 @@ function cleanItem(raw: unknown): Item | null {
   if (o.kind === "user" || o.kind === "assistant" || o.kind === "note") {
     const text = str(o.text, 8000);
     return text ? { kind: o.kind, id, text } : null;
+  }
+  if (o.kind === "draft") {
+    const d = (o.draft && typeof o.draft === "object" ? o.draft : {}) as Record<string, unknown>;
+    const kind = d.kind === "reminder" || d.kind === "receipt" ? d.kind : null;
+    const customerKey = typeof d.customerKey === "string" && /^[\w-]{1,200}$/.test(d.customerKey) ? d.customerKey : null;
+    const title = str(d.title, 120), text = str(d.text, 1200);
+    if (!kind || !customerKey || !title || !text) return null;
+    const saleId = typeof d.saleId === "string" && /^[0-9a-zA-Z-]{8,64}$/.test(d.saleId) ? d.saleId : undefined;
+    const draft: Draft = { kind, customerKey, title, text, ...(saleId ? { saleId } : {}) };
+    return { kind: "draft", id, draft };
   }
   if (o.kind === "proposal") {
     const proposal = cleanProposal(o.proposal);

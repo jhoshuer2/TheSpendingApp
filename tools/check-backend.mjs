@@ -237,6 +237,40 @@ await step("products sync to the server", async () => {
   assert.equal(prod.archived, false);
 });
 
+await step("customers (with a phone number) sync to the server and appear on another device; a rename follows the sales", async () => {
+  await A.p.goto(APP + "/money/sale");
+  await A.p.getByRole("button", { name: "Four" }).waitFor().catch(() => {});
+  for (const k of ["3", "Three zeros"]) await A.p.getByRole("button", { name: k, exact: true }).click();
+  await A.p.getByRole("radio", { name: "Owes me" }).click();
+  await A.p.getByLabel("Who owes you?").fill("Chidi Okeke");
+  await A.p.getByRole("button", { name: /^Record ₦/ }).click();
+  await A.p.waitForURL("**/app/money");
+  await A.p.goto(APP + "/money/customers");
+  await A.p.getByRole("link", { name: /Chidi Okeke/ }).first().click();
+  await A.p.getByRole("link", { name: "Add phone number" }).click();
+  await A.p.getByLabel("Phone number (optional)").fill("0803 123 4567");
+  await A.p.getByRole("button", { name: "Save customer" }).click();
+  const cust = await poll("customer saved", async () => (await state()).customers.find((r) => r.name === "Chidi Okeke"));
+  assert.equal(cust.phone, "0803 123 4567");
+  assert.equal(cust.archived, false);
+  await B.p.goto(APP + "/money/customers");
+  await B.p.reload();
+  await B.p.getByRole("link", { name: /Chidi Okeke/ }).first().click();
+  await B.p.getByRole("link", { name: "Call" }).waitFor();
+  assert.equal(await B.p.getByRole("link", { name: "Call" }).getAttribute("href"), "tel:+2348031234567");
+  // Rename on A: the customer row and their sale change on the server together.
+  await A.p.getByRole("link", { name: "Edit details" }).click();
+  await A.p.getByLabel("Name").fill("Chidi Okeke-Smith");
+  await A.p.getByRole("button", { name: "Save customer" }).click();
+  await poll("rename reached the server", async () => {
+    const st = await state();
+    return st.customers.some((r) => r.name === "Chidi Okeke-Smith") && st.sales.some((r) => r.customer === "Chidi Okeke-Smith") && !st.sales.some((r) => r.customer === "Chidi Okeke");
+  });
+  // Later steps expect to start from a screen with the tab bar.
+  await A.p.goto(APP + "/app/today");
+  await B.p.goto(APP + "/app/today");
+});
+
 await step("wrong password and duplicate sign-up show clear messages", async () => {
   const C = await device();
   await logIn(C.p, "ada@example.com", "wrong-password");
