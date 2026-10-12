@@ -18,6 +18,12 @@ export interface Answers {
   pain?: Pain;
   /** Not a question: the name shown on receipts and reminders. Set from the message screen. */
   businessName?: string;
+  /** What you sell and who for, in a line. Facts about the business that SPAL writes from. */
+  about?: string;
+  place?: string;
+  hours?: string;
+  /** Instagram name without the @. */
+  instagram?: string;
 }
 
 export type Band = "starting" | "growing" | "scaling";

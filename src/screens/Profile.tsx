@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
 import { Switch } from "../design-system/Switch";
@@ -120,6 +120,22 @@ export function Profile() {
           </div>
         </>
       )}
+
+      <h2 className="section-title">Your business</h2>
+      <div className="list">
+        <Link to="/business" className="row">
+          <span className="tile">
+            <Icon name="briefcase" size={20} />
+          </span>
+          <span className="row__main">
+            <span className="row__title">{stored.answers.businessName || "Business details"}</span>
+            <span className="row__sub">{stored.answers.about || "Name, what you sell, where you are, your hours"}</span>
+          </span>
+          <span className="row__end">
+            <Icon name="chevron-right" size={18} />
+          </span>
+        </Link>
+      </div>
 
       <div className="stack" style={{ marginTop: "var(--space-section-gap)", alignItems: "flex-start" }}>
         {confirmReset ? (

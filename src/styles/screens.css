@@ -69,3 +69,4 @@
 .btn:where(a) { text-decoration: none; }
 .msg--draft { justify-content: stretch; }
 .acard--draft .acard__message { margin: 0 0 var(--space-3); padding: var(--space-3); border-radius: var(--radius-sm); background: var(--surface-sunken); white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--text-body-sm); line-height: var(--lh-body-sm); }
+a.card { color: inherit; text-decoration: none; }

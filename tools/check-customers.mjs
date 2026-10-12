@@ -107,6 +107,7 @@ await step("reminder without a phone number: a friendly message with the exact a
   assert.match(m, /^Hello Chidi, I hope you're well\. A quick reminder about the ₦25,000/);
   assert.match(await waHref(), /^https:\/\/wa\.me\/\?text=Hello%20Chidi/);
   await p.getByText(/No phone number saved for Chidi Okeke/).waitFor();
+  await p.getByRole("link", { name: "Add a phone number" }).waitFor();
 });
 
 await step("tone and language rewrite the message, and the choice is remembered", async () => {

@@ -3,6 +3,7 @@ import { MODULES } from "./modules";
 import { QUESTIONS, visibleQuestions } from "./questions";
 import { recommend } from "./recommend";
 import { bandFor, buildProfile } from "./scoring";
+import { sanitizeAnswers } from "./state";
 import type { Answers, NeedId } from "./types";
 
 const NEEDS: NeedId[] = ["setup", "brand", "online", "customers", "demand", "team", "money", "records", "direction"];
@@ -80,8 +81,8 @@ describe("modules", () => {
       expect(["do", "draft", "guide", "connect"]).toContain(m.kind);
       if (m.kind === "do") expect(m.tool).toBeDefined();
       if (m.tool) {
-        expect(m.kind).toBe("do");
-        expect(m.tool.to).toMatch(/^\/(money|app)\//);
+        expect(["do", "draft"]).toContain(m.kind); // "do" steps tick themselves; "draft" steps offer to write it for you
+        expect(m.tool.to).toMatch(/^\/(money|app|write|assistant)(\/|\?|$)/);
         expect(m.tool.label.length).toBeGreaterThan(0);
       }
     }
@@ -137,5 +138,17 @@ describe("recommend", () => {
     const r = recommend(profile, answers, everything);
     expect(r.next).toBeUndefined();
     expect(r.upNext).toEqual([]);
+  });
+});
+
+
+describe("business facts in answers", () => {
+  it("keeps tidy facts, trims and limits them, and drops junk", () => {
+    const a = sanitizeAnswers({ businessName: "  Ada's   Kitchen ", about: "Jollof\nand zobo", place: "x".repeat(300), hours: 5, instagram: "@ada.kitchen_ng" });
+    expect(a).toMatchObject({ businessName: "Ada's Kitchen", about: "Jollof and zobo", instagram: "ada.kitchen_ng" });
+    expect(a.place).toHaveLength(100);
+    expect("hours" in a).toBe(false);
+    expect("instagram" in sanitizeAnswers({ instagram: "not a handle!" })).toBe(false);
+    expect("about" in sanitizeAnswers({ about: "   " })).toBe(false);
   });
 });

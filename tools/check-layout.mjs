@@ -101,7 +101,14 @@ const SEED_CUSTOMERS = (() => {
   b.dirty.customers = [];
   return JSON.stringify(b);
 })();
+const NO_PHONE = Object.values(JSON.parse(SEED_CUSTOMERS).sales).find((s) => !s.paid && s.customer && !["Mrs Adebayo", "Chinedu Okonkwo-Eze"].includes(s.customer))?.customer;
 const CUST_SALE = Object.values(JSON.parse(SEED_CUSTOMERS).sales).find((s) => s.customer === "Mrs Adebayo" && s.paid)?.id;
+// The same person, with facts about their business filled in (some deliberately long, to test wrapping).
+const SEED_BIZ = (() => {
+  const d = JSON.parse(SEED_READY);
+  d.answers = { ...d.answers, businessName: "Funmilayo Adeyemi-Johnson's Home Kitchen and Catering", about: "Home-cooked jollof rice, fried rice, zobo and small chops for events, made fresh every day.", place: "12 Herbert Macaulay Way, Yaba, Lagos", hours: "Mon to Sat, 10am to 6pm", instagram: "funmilayo.homekitchen" };
+  return JSON.stringify(d);
+})();
 const SEED_PRODUCTS_ONLY = JSON.stringify({ products: { [uuid(1)]: { id: uuid(1), name: "Jollof rice (plate)", price: 250000, cost: 140000 }, [uuid(2)]: { id: uuid(2), name: "Zobo (bottle)", price: 60000 } }, sales: {}, expenses: {}, dirty: { products: [], sales: [], expenses: [] } });
 // Answers given, onboarding not finished yet.
 const SEED_PARTIAL = JSON.stringify({ answers: ANSWERS, completed: false, progress: {} });
@@ -177,10 +184,25 @@ const SCREENS = [
   { name: "customer-error-phone", path: "/money/customer/new/edit", authed: true, seed: SEED_READY, act: async (p) => { await p.getByLabel("Name").fill("Tolu"); await p.getByLabel("Phone number (optional)").fill("0803"); await p.getByRole("button", { name: "Save customer" }).click(); } },
   { name: "message-reminder", path: "/money/message/reminder/" + uuid(300), authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },
   { name: "message-reminder-pidgin", path: "/money/message/reminder/" + uuid(300), authed: true, seed: SEED_READY, books: SEED_CUSTOMERS, act: async (p) => { await p.getByRole("radio", { name: "Pidgin" }).click(); await p.getByRole("radio", { name: "Firm" }).click(); } },
+  { name: "message-reminder-no-phone", path: "/money/message/reminder/" + keyFor(NO_PHONE), authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },
   { name: "message-receipt", path: "/money/message/receipt/" + CUST_SALE, authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },
   { name: "message-receipt-plain", path: "/money/message/receipt/" + uuid(100), authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },
   { name: "sale-customer-chips", path: "/money/sale", authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },
   { name: "record-owed-customer", path: "/money/record/sale/" + uuid(142), authed: true, seed: SEED_READY, books: SEED_CUSTOMERS },
+  { name: "write-hub", path: "/write", authed: true, seed: SEED_READY },
+  { name: "write-hub-known", path: "/write", authed: true, seed: SEED_BIZ, books: SEED_CUSTOMERS },
+  { name: "write-prices", path: "/write/prices", authed: true, seed: SEED_BIZ, books: SEED_CUSTOMERS },
+  { name: "write-prices-empty", path: "/write/prices", authed: true, seed: SEED_READY },
+  { name: "write-prices-pidgin", path: "/write/prices", authed: true, seed: SEED_BIZ, books: SEED_CUSTOMERS, act: async (p) => p.getByRole("radio", { name: "Pidgin" }).click() },
+  { name: "write-greeting", path: "/write/greeting", authed: true, seed: SEED_BIZ },
+  { name: "write-greeting-plain", path: "/write/greeting", authed: true, seed: SEED_READY },
+  { name: "write-away", path: "/write/away", authed: true, seed: SEED_BIZ },
+  { name: "business", path: "/business", authed: true, seed: SEED_BIZ },
+  { name: "business-empty", path: "/business", authed: true, seed: SEED_READY },
+  { name: "business-error", path: "/business", authed: true, seed: SEED_READY, act: async (p) => { await p.getByLabel("Instagram").fill("not a handle!"); await p.getByRole("button", { name: "Save" }).click(); } },
+  { name: "profile-business", path: "/app/profile", authed: true, seed: SEED_BIZ },
+  { name: "module-draft", path: "/module/online-whatsapp", authed: true, seed: SEED_READY },
+  { name: "module-draft-instagram", path: "/module/online-instagram", authed: true, seed: SEED_READY },
   { name: "library", path: "/app/library", authed: true, seed: SEED_READY },
   { name: "library-rich", path: "/app/library", authed: true, seed: SEED_RICH },
   { name: "journey", path: "/app/journey", authed: true, seed: SEED_READY },

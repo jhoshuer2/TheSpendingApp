@@ -49,6 +49,7 @@ export function ModuleDetail() {
           </span>
           <span className="chip">{NEED_LABEL[m.need]}</span>
           {m.kind === "do" && <span className="chip">Do it in SPAL</span>}
+          {m.kind === "draft" && <span className="chip">SPAL can write this</span>}
           {finished && (
             <span className="chip">
               <Icon name="check" size={14} />
@@ -62,6 +63,16 @@ export function ModuleDetail() {
         <p className="lede enter" style={{ ["--i" as string]: 2 }}>
           {m.why}
         </p>
+
+        {m.kind === "draft" && m.tool && !finished && (
+          <div className="card enter" style={{ marginTop: "var(--space-5)", ["--i" as string]: 3 }}>
+            <b>Let SPAL write it</b>
+            <span className="row__sub" style={{ display: "block", margin: "2px 0 var(--space-3)" }}>Ready to use, from what you've told SPAL. You change the words and send or post it yourself.</span>
+            <Button variant="secondary" size="md" onClick={() => navigate(m.tool!.to)}>
+              {m.tool.label}
+            </Button>
+          </div>
+        )}
 
         <h2 className="section-title">
           Steps <span className="row__sub">{ticked} of {m.steps.length}</span>
@@ -101,8 +112,8 @@ export function ModuleDetail() {
           </Button>
         ) : (
           <>
-            {!all && <p className="caption">{m.tool ? "Steps tick themselves as you go." : "Tick each step as you finish it."}</p>}
-            {!all && m.tool ? (
+            {!all && <p className="caption">{m.tool && m.kind === "do" ? "Steps tick themselves as you go." : "Tick each step as you finish it."}</p>}
+            {!all && m.tool && m.kind === "do" ? (
               <Button fullWidth onClick={() => navigate(m.tool!.to)}>
                 {m.tool.label}
               </Button>

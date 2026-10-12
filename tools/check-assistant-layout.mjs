@@ -69,6 +69,10 @@ for (const [w, h] of VIEWPORTS) {
   await p.getByTestId("draft").waitFor();
   await p.getByText(/ready on your screen/).waitFor();
   await shot("draft");
+  await say("write my instagram bio");
+  await p.getByTestId("draft").nth(1).waitFor();
+  await p.getByText(/Copy it when you're happy/).waitFor();
+  await shot("text-draft");
   await say("how much did I make this week? Please explain in a lot of detail so the answer is long enough to wrap onto several lines on a small phone");
   await p.getByText(/This week you kept/).waitFor();
   await shot("conversation");
@@ -90,4 +94,4 @@ if (failures.length) {
   console.error(`\n${failures.length} layout issue(s):\n` + [...new Set(failures)].map((f) => " - " + f).join("\n"));
   process.exit(1);
 }
-console.log(`Assistant layout check passed: 12 screens x ${VIEWPORTS.length} viewports. Screenshots in tools/out/`);
+console.log(`Assistant layout check passed: 13 screens x ${VIEWPORTS.length} viewports. Screenshots in tools/out/`);

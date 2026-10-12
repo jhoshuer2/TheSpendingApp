@@ -271,6 +271,25 @@ await step("customers (with a phone number) sync to the server and appear on ano
   await B.p.goto(APP + "/app/today");
 });
 
+await step("your business facts sync to the server and appear on another device, next to your onboarding answers", async () => {
+  await A.p.goto(APP + "/business");
+  await A.p.getByLabel("Business name").fill("Ada's Kitchen");
+  await A.p.getByLabel("Where you are").fill("Yaba, Lagos");
+  await A.p.getByLabel("Instagram").fill("@ada.kitchen");
+  await A.p.getByRole("button", { name: "Save" }).click();
+  const row = await poll("facts saved", async () => (await state()).profiles.find((r) => r.answers?.businessName === "Ada's Kitchen"));
+  assert.equal(row.answers.place, "Yaba, Lagos");
+  assert.equal(row.answers.instagram, "ada.kitchen");
+  assert.equal(row.answers.stage, "idea", "the onboarding answers are still there");
+  await B.p.goto(APP + "/business");
+  await B.p.reload();
+  // The page opens from this phone's saved copy and the newer server copy arrives a moment later; the form should pick it up.
+  await poll("the form shows the details from the other device", async () => (await B.p.getByLabel("Business name").inputValue()) === "Ada's Kitchen");
+  assert.equal(await B.p.getByLabel("Where you are").inputValue(), "Yaba, Lagos");
+  await A.p.goto(APP + "/app/today");
+  await B.p.goto(APP + "/app/today");
+});
+
 await step("wrong password and duplicate sign-up show clear messages", async () => {
   const C = await device();
   await logIn(C.p, "ada@example.com", "wrong-password");

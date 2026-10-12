@@ -1,5 +1,6 @@
 import { naira } from "../records/money";
-import type { Sale } from "../records/types";
+import type { Product, Sale } from "../records/types";
+import type { BusinessFacts } from "./facts";
 
 export type Tone = "friendly" | "short" | "firm";
 export type MsgLang = "en" | "pcm";
@@ -93,4 +94,41 @@ export function receiptMessage(i: ReceiptInput): string {
     i.lang === "pcm" ? "Thank you, we dey appreciate you!" : "Thank you for your business!",
   ];
   return out.join("\n");
+}
+
+// ---- Messages about the business itself (no customer involved) ----
+
+/** Your products and prices as one message to share. Prices come straight from your product list. */
+export function priceListMessage(i: { products: Pick<Product, "name" | "price">[]; facts: BusinessFacts; lang: MsgLang }): string {
+  const name = i.facts.businessName;
+  const shown = i.products.slice(0, 60);
+  const out = [
+    name ? `${name} price list` : "Price list",
+    ...(i.facts.place ? [i.facts.place] : []),
+    "",
+    ...shown.map((p) => `${p.name} — ${naira(p.price)}`),
+    ...(i.products.length > shown.length ? [`…and ${i.products.length - shown.length} more`] : []),
+    "",
+    ...(i.facts.hours ? [`Open: ${i.facts.hours}`] : []),
+    i.lang === "pcm" ? "To order, just message me here." : "To order, message me here.",
+  ];
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/** The message WhatsApp Business sends to someone who messages you for the first time. */
+export function greetingMessage(i: { facts: BusinessFacts; lang: MsgLang }): string {
+  const f = i.facts;
+  const welcome = f.businessName ? `Welcome to ${f.businessName}` : "Welcome";
+  if (i.lang === "pcm") {
+    return [`Hello, welcome${f.businessName ? ` to ${f.businessName}` : ""}!`, ...(f.about ? [f.about.replace(/[.!?]+$/, "") + "."] : []), ...(f.hours ? [`We dey open ${f.hours}.`] : []), "How I fit help you today?"].join(" ");
+  }
+  return [`Hello! ${welcome}.`, ...(f.about ? [f.about.replace(/[.!?]+$/, "") + "."] : []), ...(f.hours ? [`We're open ${f.hours}.`] : []), "How can I help you today?"].join(" ");
+}
+
+/** The message WhatsApp Business sends when you are closed. */
+export function awayMessage(i: { facts: BusinessFacts; lang: MsgLang }): string {
+  const f = i.facts;
+  const who = f.businessName ?? "We";
+  if (i.lang === "pcm") return `Thank you for your message! ${f.businessName ? `${who} don close for now.` : "We don close for now."} ${f.hours ? `We dey open ${f.hours}. ` : ""}We go reply you as soon as we come back.`;
+  return `Thanks for your message! ${f.businessName ? `${who} is closed right now.` : "We're closed right now."} ${f.hours ? `We're open ${f.hours}. ` : ""}We'll reply as soon as we're back.`;
 }

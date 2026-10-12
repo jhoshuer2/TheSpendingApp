@@ -24,10 +24,10 @@ export const LIMITS = {
 
 export const EXPENSE_CATEGORIES = ["stock", "transport", "rent", "staff", "data", "packaging", "utilities", "other"] as const;
 
-export const READ_TOOLS = ["get_summary", "list_owed", "list_recent", "best_sellers", "list_products", "list_customers"] as const;
-export const WRITE_TOOLS = ["propose_records", "propose_mark_paid"] as const;
+export const READ_TOOLS = ["get_summary", "list_owed", "list_recent", "best_sellers", "list_products", "list_customers", "get_business"] as const;
+export const WRITE_TOOLS = ["propose_records", "propose_mark_paid", "propose_business_facts"] as const;
 /** Prepares a message for the person to send themselves. Nothing is saved or sent. */
-export const DRAFT_TOOLS = ["draft_message"] as const;
+export const DRAFT_TOOLS = ["draft_message", "draft_text"] as const;
 export const TOOL_NAMES: readonly string[] = [...READ_TOOLS, ...WRITE_TOOLS, ...DRAFT_TOOLS];
 
 const whenSchema = {
@@ -77,6 +77,12 @@ export const TOOLS = [
     description:
       "The people the person sells to: for each, how much they have bought in total, how many sales, what they still owe and when they last bought. Biggest buyers first. Phone numbers are not included. Use for 'who are my best customers', 'who hasn't bought lately', 'how much has Chidi bought'.",
     input_schema: { type: "object", properties: { limit: { type: "integer", minimum: 1, maximum: 15, description: "How many to return. Default 8." } } },
+  },
+  {
+    name: "get_business",
+    description:
+      "The facts the person has told SPAL about their business: name, what they sell, where they are, opening hours, Instagram name. Any they haven't given are left out. Call this before writing a bio, captions or a description, and to see which facts are missing.",
+    input_schema: { type: "object", properties: {} },
   },
   {
     name: "propose_records",
@@ -151,6 +157,35 @@ export const TOOLS = [
       required: ["kind", "customer"],
     },
   },
+  {
+    name: "propose_business_facts",
+    description:
+      "Suggest saving facts the person just told you about their business, so you and the writing tools can use them later. NOTHING IS SAVED until they tap Save. Only use what they actually said; never guess or fill gaps. Include only the facts they gave.",
+    input_schema: {
+      type: "object",
+      properties: {
+        business_name: { type: "string", description: "The business name." },
+        about: { type: "string", description: "What they sell and to whom, in one line, in their own words." },
+        place: { type: "string", description: "Where they are: an area or address." },
+        hours: { type: "string", description: "Opening hours, as they said them." },
+        instagram: { type: "string", description: "Their Instagram name, without the @." },
+      },
+    },
+  },
+  {
+    name: "draft_text",
+    description:
+      "Show the person a piece of writing for their business: an Instagram bio, post captions, or a WhatsApp business description. NOTHING IS POSTED OR SENT: they read it and copy it themselves. Use only facts from get_business, what they told you, and prices from list_products. NEVER invent prices, addresses, years in business, awards or claims. An Instagram bio must be 150 characters or fewer.",
+    input_schema: {
+      type: "object",
+      properties: {
+        kind: { type: "string", enum: ["instagram_bio", "captions", "whatsapp_about", "other"] },
+        title: { type: "string", description: "A short heading, like 'Instagram bio'." },
+        text: { type: "string", description: "The writing itself, ready to copy. Plain text." },
+      },
+      required: ["kind", "title", "text"],
+    },
+  },
 ] as const;
 
 /**
@@ -189,8 +224,15 @@ EXAMPLES (how to understand people; these are not scripts)
 - "Who dey owe me?" means: call list_owed.
 - "Send Chidi a reminder" and "abeg remind Mama Tosin about her money" mean: call draft_message with kind "reminder". "Send Chidi a receipt" means kind "receipt".
 - "Who be my best customers?" means: call list_customers.
+- "Write my Instagram bio" means: call get_business (and list_products if useful), then draft_text with kind "instagram_bio". "I dey Yaba, we open 9 to 5" means: call propose_business_facts with place and hours.
 - "Mrs Bello don pay" means: call propose_mark_paid for "Mrs Bello".
 - "I sell 2 wig for 30k, then Chidi collect 2 bag rice for 25k, e never pay" is two sales in one call: the wigs (30000, paid) and the rice (25000, paid false, customer "Chidi"). Then say: "I've put the wigs down as paid and Chidi's rice as owing."
+
+YOUR BUSINESS AND WRITING FOR IT
+- The person can tell you facts about their business: what they sell, where they are, their hours, their Instagram name. When they do, offer to remember them with propose_business_facts (they tap Save). Only the facts they actually gave.
+- Before you write a bio, captions or a description, call get_business. If a fact you need is missing (what they sell, where they are), ask ONE short question first instead of guessing. Call list_products if prices or products matter.
+- Write with draft_text. Use only the person's real facts and their real product prices. Never invent a price, address, year, award, review or promise. Plain, warm, simple words; no hype, no jargon. An Instagram bio is at most 150 characters and says what they sell, where, and how to order. Captions are short, honest and easy to post.
+- Write in English unless they ask for Pidgin. After the draft is shown, say in one short line that they can copy it, and offer to change it ("shorter", "more friendly"). Never say you posted it.
 
 MESSAGES TO CUSTOMERS
 - You cannot send messages to anyone. With draft_message you can prepare a payment reminder or a receipt on the person's screen. They read it, change it if they like, and send it themselves.

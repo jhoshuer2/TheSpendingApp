@@ -175,6 +175,58 @@ await step("customers: a question about best customers, and a polite error for s
   assert.equal(await p.getByTestId("draft").count(), n);
 });
 
+const answers = () => p.evaluate(() => { const k = Object.keys(localStorage).find((x) => x.startsWith("spal.profile")); return JSON.parse(localStorage.getItem(k) ?? "{}").answers ?? {}; });
+
+await step("facts you tell the assistant are saved to your business only when you tap Save, and Undo puts them back", async () => {
+  assert.equal((await answers()).place, undefined);
+  const n = await p.getByTestId("proposal").count();
+  await say("I'm in Yaba, open 10 to 6");
+  await p.getByTestId("proposal").nth(n).waitFor();
+  const t = (await p.getByTestId("proposal").nth(n).innerText()).replace(/\n+/g, " ");
+  assert.match(t, /Where you are: Yaba/);
+  assert.match(t, /Opening hours: 10 to 6/);
+  assert.equal((await answers()).place, undefined, "nothing saved yet");
+  await p.getByTestId("proposal").nth(n).getByRole("button", { name: "Save" }).click();
+  assert.equal((await answers()).place, "Yaba");
+  assert.equal((await answers()).hours, "10 to 6");
+  await p.getByTestId("proposal").nth(n).getByRole("button", { name: "Undo" }).click();
+  assert.equal((await answers()).place, undefined, "undo removes what it added");
+  await p.getByTestId("proposal").nth(n).waitFor();
+  assert.ok(await p.locator(".acard--undone").count() >= 1);
+});
+
+await step("a bio from your facts: the assistant reads them, writes it, you copy it; nothing is posted", async () => {
+  const n = await p.getByTestId("proposal").count();
+  await say("I'm in Yaba, open 10 to 6");
+  await p.getByTestId("proposal").nth(n).getByRole("button", { name: "Save" }).click();
+  const d = await p.getByTestId("draft").count();
+  await say("write my instagram bio");
+  await p.getByTestId("draft").nth(d).waitFor();
+  const card = p.getByTestId("draft").nth(d);
+  assert.match(await card.innerText(), /Instagram bio[\s\S]*Yaba[\s\S]*Order on WhatsApp/);
+  assert.equal(await card.getByRole("link", { name: "Open WhatsApp" }).count(), 0, "a bio is copied, not sent");
+  await card.getByRole("button", { name: "Copy" }).waitFor();
+  await reply(/Copy it when you're happy/);
+  const log = JSON.stringify((await fake("assistant-log")).at(-1));
+  assert.match(log, /Nothing was posted or sent/);
+});
+
+await step("an invented price in a bio is refused before you ever see it", async () => {
+  const d = await p.getByTestId("draft").count();
+  await say("write a bio with prices");
+  await reply(/Sorry, I need to check something: The text mentions ₦999/);
+  assert.equal(await p.getByTestId("draft").count(), d, "no draft was shown");
+});
+
+await step("a link can prefill what to say, but never sends it", async () => {
+  const sent = (await fake("assistant-log")).length;
+  await p.goto(APP + "/assistant?say=" + encodeURIComponent("Write my Instagram bio"));
+  await p.getByLabel("Message").waitFor();
+  assert.equal(await p.getByLabel("Message").inputValue(), "Write my Instagram bio");
+  await p.waitForTimeout(400);
+  assert.equal((await fake("assistant-log")).length, sent, "nothing was sent");
+});
+
 await step("Pidgin: settings change the reply language and the starters", async () => {
   await p.getByRole("link", { name: "Assistant settings" }).click();
   await p.getByRole("radio", { name: "Pidgin" }).click();

@@ -103,10 +103,14 @@ export function MessageDraft({ kind }: { kind: "reminder" | "receipt" }) {
         </div>
 
         {entry && !hasNumber && (
-          <p className="note" style={{ marginTop: "var(--space-5)" }}>
-            {phone ? "That phone number doesn't look right, so WhatsApp will ask who to send it to. " : `No phone number saved for ${entry.name}, so WhatsApp will ask who to send it to. `}
-            <Link to={`/money/customer/${entry.key}/edit`}>{phone ? "Fix it" : "Add one"}</Link>
-          </p>
+          <div className="stack" style={{ marginTop: "var(--space-5)", alignItems: "flex-start" }}>
+            <p className="note" style={{ margin: 0 }}>
+              {phone ? "That phone number doesn't look right, so WhatsApp will ask who to send it to." : `No phone number saved for ${entry.name}, so WhatsApp will ask who to send it to.`}
+            </p>
+            <Link to={`/money/customer/${entry.key}/edit`} className="btn btn--secondary btn--md">
+              {phone ? "Fix the number" : "Add a phone number"}
+            </Link>
+          </div>
         )}
       </main>
 

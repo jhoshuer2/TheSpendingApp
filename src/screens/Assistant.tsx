@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
 import { Segmented } from "../design-system/Segmented";
@@ -73,27 +73,47 @@ function Card({ item }: { item: Extract<Item, { kind: "proposal" }> }) {
 function DraftCard({ draft }: { draft: Draft }) {
   const { state } = useRecords();
   const { show } = useToast();
-  const phone = buildCustomers(state).find((c) => c.key === draft.customerKey)?.phone;
+  const isText = draft.kind === "text";
+  const phone = isText ? undefined : buildCustomers(state).find((c) => c.key === draft.customerKey)?.phone;
   const link = whatsappLink(phone, draft.text) ?? `https://wa.me/?text=${encodeURIComponent(draft.text)}`;
   const edit = draft.kind === "reminder" ? `/money/message/reminder/${draft.customerKey}` : `/money/message/receipt/${draft.saleId}`;
+  const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const copy = async () => show((await copyText(draft.text)) ? "Copied." : "Couldn't copy. Select the text and copy it.");
   return (
     <div className="acard acard--draft" data-testid="draft">
       <p className="acard__head">
-        <Icon name={draft.kind === "reminder" ? "message-circle" : "receipt"} size={16} />
+        <Icon name={isText ? "sparkles" : draft.kind === "reminder" ? "message-circle" : "receipt"} size={16} />
         {draft.title}
       </p>
       <p className="acard__message">{draft.text}</p>
       <div className="acard__actions">
-        <a className="btn btn--primary btn--md" href={link} target="_blank" rel="noopener noreferrer">
-          Open WhatsApp
-        </a>
-        <Button size="md" variant="secondary" onClick={async () => show((await copyText(draft.text)) ? "Message copied." : "Couldn't copy. Select the text and copy it.")}>
-          Copy
-        </Button>
+        {isText ? (
+          <>
+            <Button size="md" onClick={copy}>
+              Copy
+            </Button>
+            {canShare && (
+              <Button size="md" variant="secondary" onClick={() => navigator.share({ text: draft.text }).catch(() => undefined)}>
+                Share
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            <a className="btn btn--primary btn--md" href={link} target="_blank" rel="noopener noreferrer">
+              Open WhatsApp
+            </a>
+            <Button size="md" variant="secondary" onClick={copy}>
+              Copy
+            </Button>
+          </>
+        )}
       </div>
-      <Link to={edit} className="link-btn" style={{ marginTop: "var(--space-1)" }}>
-        Change the words or style
-      </Link>
+      {!isText && (
+        <Link to={edit} className="link-btn" style={{ marginTop: "var(--space-1)" }}>
+          Change the words or style
+        </Link>
+      )}
     </div>
   );
 }
@@ -130,7 +150,9 @@ export function Assistant() {
   const a = useAssistant();
   const { session } = useAuth();
   const back = useBack("/app/today");
-  const [text, setText] = useState("");
+  // A link can prefill what to say (for example "Write my Instagram bio"). It is never sent until the person taps Send.
+  const [params] = useSearchParams();
+  const [text, setText] = useState(() => (params.get("say") ?? "").slice(0, MAX_INPUT_CHARS));
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const items = a.chat.items;

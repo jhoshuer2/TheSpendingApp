@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { EMPTY_RECORDS, type RecordsState } from "../records/state";
 import type { Sale } from "../records/types";
 import { buildCustomers, keyForName, normName, sortCustomers, telLink, whatsappLink, whatsappNumber } from "../records/customers";
-import { greetingName, receiptMessage, reminderMessage, whatOf } from "./templates";
+import { awayMessage, greetingMessage, greetingName, priceListMessage, receiptMessage, reminderMessage, whatOf } from "./templates";
 
 const at = (d: number) => new Date(2026, 9, d, 10).toISOString();
 const sale = (id: string, o: Partial<Sale>): Sale => ({ id, at: at(5), amount: 450000, items: [], paid: true, ...o });
@@ -139,5 +139,36 @@ describe("phone numbers", () => {
   it("builds links with the message safely encoded", () => {
     expect(whatsappLink("08031234567", "Hello & thanks!\n₦1")).toBe("https://wa.me/2348031234567?text=Hello%20%26%20thanks!%0A%E2%82%A61");
     expect(telLink("08031234567")).toBe("tel:+2348031234567");
+  });
+});
+
+
+describe("messages about the business", () => {
+  const facts = { businessName: "Ada's Kitchen", about: "Home-cooked jollof and zobo, made fresh daily.", place: "Yaba, Lagos", hours: "Mon to Sat, 10am to 6pm" };
+  const products = [{ name: "Jollof rice (plate)", price: 250000 }, { name: "Zobo (bottle)", price: 60000 }];
+
+  it("a price list has exactly the product prices, and nothing else invented", () => {
+    const m = priceListMessage({ products, facts, lang: "en" });
+    expect(m).toBe(["Ada's Kitchen price list", "Yaba, Lagos", "", "Jollof rice (plate) — ₦2,500", "Zobo (bottle) — ₦600", "", "Open: Mon to Sat, 10am to 6pm", "To order, message me here."].join("\n"));
+    expect(priceListMessage({ products, facts, lang: "pcm" })).toContain("To order, just message me here.");
+  });
+  it("copes with no business name, no place, no hours, and a long list", () => {
+    expect(priceListMessage({ products, facts: {}, lang: "en" })).toBe(["Price list", "", "Jollof rice (plate) — ₦2,500", "Zobo (bottle) — ₦600", "", "To order, message me here."].join("\n"));
+    const many = Array.from({ length: 70 }, (_, i) => ({ name: `Item ${i}`, price: 100000 }));
+    const m = priceListMessage({ products: many, facts, lang: "en" });
+    expect(m).toContain("…and 10 more");
+    expect(m).toContain("Item 59 — ₦1,000");
+    expect(m).not.toContain("Item 60");
+  });
+  it("a greeting welcomes, says what you do and when you're open, and asks how to help", () => {
+    expect(greetingMessage({ facts, lang: "en" })).toBe("Hello! Welcome to Ada's Kitchen. Home-cooked jollof and zobo, made fresh daily. We're open Mon to Sat, 10am to 6pm. How can I help you today?");
+    expect(greetingMessage({ facts, lang: "pcm" })).toBe("Hello, welcome to Ada's Kitchen! Home-cooked jollof and zobo, made fresh daily. We dey open Mon to Sat, 10am to 6pm. How I fit help you today?");
+    expect(greetingMessage({ facts: {}, lang: "en" })).toBe("Hello! Welcome. How can I help you today?");
+  });
+  it("an away message says you're closed and when you're back, without making up hours", () => {
+    expect(awayMessage({ facts, lang: "en" })).toBe("Thanks for your message! Ada's Kitchen is closed right now. We're open Mon to Sat, 10am to 6pm. We'll reply as soon as we're back.");
+    expect(awayMessage({ facts: {}, lang: "en" })).toBe("Thanks for your message! We're closed right now. We'll reply as soon as we're back.");
+    expect(awayMessage({ facts, lang: "pcm" })).toMatch(/don close for now/);
+    for (const m of [greetingMessage({ facts: {}, lang: "pcm" }), awayMessage({ facts: {}, lang: "pcm" })]) expect(m).not.toMatch(/undefined|  /);
   });
 });

@@ -3,6 +3,7 @@ import { backend } from "../backend";
 import { useAuth } from "../lib/auth";
 import { useToast } from "../lib/toast";
 import { useProfile } from "../profile/store";
+import { FACT_KEYS, factsOf, type FactKey } from "../messages/facts";
 import { readMessagePrefs } from "../messages/prefs";
 import { newId, useRecords } from "../records/store";
 import { ChatError, emptyChat, freshChat, MAX_INPUT_CHARS, needsFresh, runTurn, type Chat, type IO, type Saved, type Settings } from "./engine";
@@ -34,7 +35,7 @@ const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padSt
 
 export function AssistantProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
-  const { stored: profile } = useProfile();
+  const { stored: profile, saveAnswers } = useProfile();
   const records = useRecords();
   const { show } = useToast();
   const userId = session?.id ?? null;
@@ -56,6 +57,8 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
   recordsRef.current = records;
   const profileRef = useRef(profile);
   profileRef.current = profile;
+  const saveAnswersRef = useRef(saveAnswers);
+  saveAnswersRef.current = saveAnswers;
   const sessionRef = useRef(session);
   sessionRef.current = session;
 
@@ -109,6 +112,19 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         }
       }
     }
+    if (p.facts) {
+      // Remember what each fact was, so Undo can put it back exactly.
+      const before = factsOf(profileRef.current.answers);
+      const next = { ...profileRef.current.answers };
+      saved.facts = {};
+      for (const k of FACT_KEYS) {
+        const v = p.facts[k];
+        if (!v) continue;
+        saved.facts[k] = before[k] ?? null;
+        next[k] = v;
+      }
+      saveAnswersRef.current(next);
+    }
     return saved;
   }, []);
 
@@ -129,6 +145,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         },
         records: () => recordsRef.current.state,
         apply,
+        facts: () => factsOf(profileRef.current.answers),
         messageContext: () => ({ from: profileRef.current.answers.businessName, ...readMessagePrefs() }),
         now: () => new Date(),
         id: newId,
@@ -182,6 +199,15 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         for (const sid of item.saved.sales) r.removeRecord("sale", sid);
         for (const eid of item.saved.expenses) r.removeRecord("expense", eid);
         for (const pid of item.saved.paid) r.markUnpaid(pid);
+        if (item.saved.facts) {
+          const next = { ...profileRef.current.answers };
+          for (const k of Object.keys(item.saved.facts) as FactKey[]) {
+            const was = item.saved.facts[k];
+            if (was) next[k] = was;
+            else delete next[k];
+          }
+          saveAnswersRef.current(next);
+        }
         patchItem(id, (i) => (i.kind === "proposal" ? { ...i, status: "undone" } : i));
       },
       prepareSignOut: () => {

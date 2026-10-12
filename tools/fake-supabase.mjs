@@ -140,6 +140,9 @@ function fakeModel(messages) {
     let m;
     if (/^who .*owe/i.test(text) || /owe me money/i.test(text)) return tu("list_owed", {});
     if (/best customers?/i.test(text)) return tu("list_customers", {});
+    if (/bio with prices/i.test(text)) return tu("draft_text", { kind: "instagram_bio", title: "Instagram bio", text: "Best jollof in town, only ₦999!" });
+    if (/instagram bio|my bio\b/i.test(text)) return tu("get_business", {});
+    if ((m = /^i(?:'|’)?m in (.+?),? (?:and )?open (.+)$/i.exec(text))) return tu("propose_business_facts", { place: m[1], hours: m[2] });
     if ((m = /^send (.+?) a receipt/i.exec(text))) return tu("draft_message", { kind: "receipt", customer: m[1] });
     if ((m = /^(?:remind (.+?)|send (.+?) a reminder)\b/i.exec(text))) return tu("draft_message", { kind: "reminder", customer: (m[1] ?? m[2]).replace(/ about.*$/i, "") });
     if ((m = /^(.+?)\s+(?:don pay|has paid|paid)\b/i.exec(text))) return tu("propose_mark_paid", { customer: m[1].replace(/^(mr|mrs)\.?\s+/i, (x) => x) });
@@ -153,11 +156,13 @@ function fakeModel(messages) {
   if (results.length && !(results.every(isStatus) && text && fromText().stop_reason === "tool_use")) {
     const r = results[0];
     if (r.is_error) return say(pcm ? `Abeg, ${r.content}` : `Sorry, I need to check something: ${r.content}`);
+    if (/^A text draft/.test(r.content)) return say("Here it is. Copy it when you're happy, and tell me if you want it changed.");
     if (/^A (reminder|receipt) draft/.test(r.content)) return say("It's ready on your screen. Check it and send it yourself.");
     if (/^Saved/.test(r.content)) return say(pcm ? "I don write am down." : "Done. I've written that down.");
     if (/did not answer|not right|undid/i.test(r.content)) return say("Okay, I haven't saved it. Tell me what to change.");
     try {
       const d = JSON.parse(r.content);
+      if (d.business) return tu("draft_text", { kind: "instagram_bio", title: "Instagram bio", text: `${d.business.business_name ?? "Our shop"}. ${d.business.place ?? ""} Order on WhatsApp.`.replace(/\s+/g, " ").trim() });
       if (d.customers) return say(d.customers.length ? `Your best customer is ${d.customers[0].name}.` : "You have no customers yet.");
       if (d.current) return say(pcm ? `This week you don keep ₦${d.current.kept.toLocaleString("en-NG")}.` : `This week you kept ₦${d.current.kept.toLocaleString("en-NG")} from ₦${d.current.sold.toLocaleString("en-NG")} sold.`);
       if (d.sales) return say(d.count ? `${d.count} sales are not paid yet, ₦${d.total.toLocaleString("en-NG")} in all.` : "Nobody owes you anything.");

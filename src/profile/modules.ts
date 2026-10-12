@@ -104,7 +104,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "online-whatsapp", kind: "guide", need: "online", bands: ["starting", "growing"], minutes: 15,
+    id: "online-whatsapp", kind: "draft", tool: { label: "Write my messages", to: "/write" }, need: "online", bands: ["starting", "growing"], minutes: 15,
     title: "Set up WhatsApp Business",
     why: "Most of your customers are already on WhatsApp. Make it easy to order there.",
     steps: [
@@ -115,7 +115,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "online-instagram", kind: "guide", need: "online", bands: ["starting", "growing"], minutes: 20,
+    id: "online-instagram", kind: "draft", tool: { label: "Write my bio", to: "/assistant?say=Write%20my%20Instagram%20bio" }, need: "online", bands: ["starting", "growing"], minutes: 20,
     title: "Start a page customers can trust",
     why: "Strangers check your page before they buy. A clear page earns their trust.",
     steps: [

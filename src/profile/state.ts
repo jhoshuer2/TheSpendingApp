@@ -59,6 +59,13 @@ export function sanitizeAnswers(raw: unknown): Answers {
   }
   const bn = typeof src.businessName === "string" ? src.businessName.trim().replace(/\s+/g, " ").slice(0, 60) : "";
   if (bn) out.businessName = bn;
+  const line = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim().slice(0, max) : "");
+  for (const [k, max] of [["about", 200], ["place", 100], ["hours", 100]] as const) {
+    const v = line(src[k], max);
+    if (v) out[k] = v;
+  }
+  const ig = line(src.instagram, 40).replace(/^@+/, "");
+  if (/^[A-Za-z0-9._]{1,30}$/.test(ig)) out.instagram = ig;
   return out as Answers;
 }
 
