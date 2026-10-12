@@ -12,4 +12,4 @@ VITE_SUPABASE_URL="http://localhost:$FAKE_PORT" VITE_SUPABASE_ANON_KEY=fake node
 # Run vite directly (not via npx) so $! is the server itself and cleanup really stops it.
 node node_modules/vite/bin/vite.js preview --outDir dist-fake --port "$APP_PORT" >/dev/null 2>&1 & pids+=($!)
 for _ in $(seq 1 50); do curl -sf "http://localhost:$APP_PORT" >/dev/null && break; sleep 0.2; done
-APP_URL="http://localhost:$APP_PORT" FAKE_URL="http://localhost:$FAKE_PORT" node tools/check-backend.mjs
+APP_URL="http://localhost:$APP_PORT" FAKE_URL="http://localhost:$FAKE_PORT" node "tools/${CHECK:-check-backend}.mjs"

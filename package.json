@@ -12,6 +12,7 @@
     "check:layout": "node tools/check-layout.mjs",
     "check:flow": "node tools/check-flow.mjs",
     "check:backend": "bash tools/check-backend.sh",
+    "check:assistant": "CHECK=check-assistant bash tools/check-backend.sh",
     "test:db": "bash tools/test-db.sh",
     "check:learning": "node tools/check-learning.mjs",
     "check:money": "node tools/check-money.mjs"
