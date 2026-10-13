@@ -11,6 +11,7 @@
 //   draft         { kind, customer }: a draft_message call for that customer (the app writes the text, nothing is sent)
 //   facts         { place }: a propose_business_facts call whose place contains this
 //   draftText     { kind, maxLen?, mention? }: a draft_text of that kind; every price in it must be one of the fixture product prices (1500, 500); it must mention `mention`
+//   orAsk         true = recording the right total OR asking one clear question (and recording nothing) both pass: for wording that is genuinely ambiguous
 //   markPaid      the customer passed to propose_mark_paid
 //   tool          a read tool that must have been called
 //   nothing       true = no write tool may be called at all (it should ask, or decline)
@@ -66,7 +67,7 @@ export const CASES = [
   { id: "pcm-q-customers", say: "Who be my best customer?", tool: "list_customers" },
   { id: "pcm-bio", say: "Abeg write my Instagram bio", draftText: { kind: "instagram_bio", maxLen: 150, mention: "Yaba" } },
   { id: "pcm-facts", say: "I dey Ikeja, we dey open from 8 to 6", facts: { place: "Ikeja" }, text: true },
-  { id: "pcm-two-lines", say: "I sell 1 bag rice 45k, 2 bag beans 60k", saleTotal: 105000 },
+  { id: "pcm-two-lines", say: "I sell 1 bag rice 45k, 2 bag beans 60k", saleTotal: 105000, orAsk: true },
   { id: "pcm-last-friday", say: "Last Friday I sell 4 shirt for 20k", saleTotal: 20000, when: "2026-10-09" },
 ];
 
@@ -99,6 +100,8 @@ export function judge(c, calls, text) {
   const drafts = calls.filter((x) => x.name === "draft_message");
   const sales = writes.filter((x) => x.name === "propose_records").flatMap((x) => x.input?.sales ?? []);
   const expenses = writes.filter((x) => x.name === "propose_records").flatMap((x) => x.input?.expenses ?? []);
+  // Wording that really is ambiguous ("2 bag beans 60k": 60k for both, or each?): a clear question, with nothing recorded, is as good as a correct total.
+  if (c.orAsk && writes.length === 0 && text.includes("?")) return problems;
   const sum = (l) => l.reduce((n, x) => n + (typeof x.amount === "number" ? x.amount : NaN), 0);
 
   if (c.nothing) {

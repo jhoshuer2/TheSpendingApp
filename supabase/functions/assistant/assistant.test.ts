@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildContext, LIMITS, validateRequest } from "../_shared/assistant-protocol.ts";
+import { buildContext, LIMITS, SYSTEM_PROMPT, validateRequest } from "../_shared/assistant-protocol.ts";
 import { handle, ModelError, readConfig, type Deps, type ModelReply } from "./core.ts";
 
 const user = (text: string) => ({ role: "user", content: text });
@@ -142,5 +142,22 @@ describe("readConfig", () => {
     const c = readConfig(env({ ASSISTANT_MODEL: " claude-sonnet-5-5 ", ASSISTANT_EFFORT: "high", ASSISTANT_DAILY_LIMIT: "40", ASSISTANT_ENABLED: "false", ASSISTANT_MAX_TOKENS: "abc" }));
     expect(c).toMatchObject({ enabled: false, model: "claude-sonnet-5-5", effort: "high", dailyLimit: 40, maxTokens: 4000 });
     expect(readConfig(env({ ASSISTANT_EFFORT: "max", ASSISTANT_DAILY_LIMIT: "-3" }))).toMatchObject({ effort: "medium", dailyLimit: 25 });
+  });
+});
+
+
+describe("the instructions keep the rules the evals taught us", () => {
+  it("says to write the line before the card, because the assistant can't speak after it", () => {
+    expect(SYSTEM_PROMPT).toMatch(/write your short line FIRST, in the same reply, and THEN call the tool/);
+    expect(SYSTEM_PROMPT).toMatch(/before the tool call, not after it/);
+  });
+  it("says a sale only needs an amount, with an example of the wording that used to stall", () => {
+    expect(SYSTEM_PROMPT).toMatch(/A sale only needs an amount/);
+    expect(SYSTEM_PROMPT).toMatch(/I sell am for two thousand five hundred.*amount 2500/);
+  });
+  it("still refuses to guess amounts, and still never claims anything was saved or sent", () => {
+    expect(SYSTEM_PROMPT).toMatch(/NEVER invent or guess an amount/);
+    expect(SYSTEM_PROMPT).toMatch(/Never say or imply that something has been recorded/);
+    expect(SYSTEM_PROMPT).toMatch(/Never say it was sent/);
   });
 });
