@@ -24,6 +24,10 @@ export interface Answers {
   hours?: string;
   /** Instagram name without the @. */
   instagram?: string;
+  /** CAC registration number the person typed in, e.g. "BN 1234567". Never an ID number: SPAL does not ask for those. */
+  registeredAs?: string;
+  /** The day it was registered, YYYY-MM-DD. */
+  registeredOn?: string;
 }
 
 export type Band = "starting" | "growing" | "scaling";
@@ -48,7 +52,7 @@ export type StepKind = "do" | "draft" | "guide" | "connect";
 export interface Module {
   id: string;
   kind: StepKind;
-  /** The in-app tool that does the job. Required for "do" steps. */
+  /** The in-app tool that does the job. Required for "do" steps. A guide may also link to one that gets the person ready. */
   tool?: { label: string; to: string };
   /** Steps that tick themselves when the person does the thing, keyed by step index. */
   auto?: Record<number, AutoCheck>;

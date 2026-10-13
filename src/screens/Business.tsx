@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "../design-system/Button";
 import { Field } from "../design-system/Field";
 import { Icon } from "../design-system/Icon";
@@ -64,6 +65,14 @@ export function Business() {
           <Field label="Opening hours" value={v.hours} onChange={set("hours")} maxLength={100} hint="For example: Mon to Sat, 10am to 6pm." autoComplete="off" />
           <Field label="Instagram" prefix="@" value={v.instagram} onChange={set("instagram")} maxLength={31} error={error} autoComplete="off" autoCapitalize="none" />
         </div>
+        <Link to="/business/register" className="row" style={{ marginTop: "var(--space-6)" }}>
+          <span className="tile"><Icon name="clipboard-list" size={20} /></span>
+          <span className="row__main">
+            <span className="row__title">Register your business name</span>
+            <span className="row__sub">{stored.answers.registeredAs ? `Registered: ${stored.answers.registeredAs}` : "A guide to registering with CAC"}</span>
+          </span>
+          <span className="row__end"><Icon name="chevron-right" size={18} /></span>
+        </Link>
       </main>
       <footer className="screen__footer">
         <Button type="submit" fullWidth>

@@ -14,7 +14,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "setup-register", kind: "guide", need: "setup", bands: ["starting", "growing"], minutes: 20,
+    id: "setup-register", kind: "guide", tool: { label: "Open the registration guide", to: "/business/register" }, need: "setup", bands: ["starting", "growing"], minutes: 20,
     title: "Register your business name",
     why: "Registering lets you open a business account and look trustworthy to bigger customers.",
     steps: [

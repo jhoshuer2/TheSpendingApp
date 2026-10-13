@@ -110,3 +110,11 @@ describe("mergeState", () => {
     expect(p.openedAt).toBe("2026-10-05T08:00:00.000Z");
   });
 });
+
+describe("registration details", () => {
+  it("keeps a tidy number and day, and drops them when the number is not one", () => {
+    expect(sanitizeAnswers({ registeredAs: "bn 1234567", registeredOn: "2026-10-01" })).toMatchObject({ registeredAs: "BN 1234567", registeredOn: "2026-10-01" });
+    expect(sanitizeAnswers({ registeredAs: "my NIN 12345678901", registeredOn: "2026-10-01" })).toEqual({});
+    expect(sanitizeAnswers({ registeredAs: "BN 1234567", registeredOn: "soon" })).toEqual({ registeredAs: "BN 1234567" });
+  });
+});

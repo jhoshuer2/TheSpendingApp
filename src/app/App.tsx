@@ -18,6 +18,7 @@ import { RecordSale } from "../screens/money/RecordSale";
 import { StockCount } from "../screens/money/StockCount";
 import { Assistant, AssistantSettings } from "../screens/Assistant";
 import { Business } from "../screens/Business";
+import { Register } from "../screens/Register";
 import { Auth, ForgotPassword, ResetPassword } from "../screens/Auth";
 import { Journey } from "../screens/Journey";
 import { Library } from "../screens/Library";
@@ -92,6 +93,7 @@ export function App() {
               <Route path="/money/product/:id" element={<Gate><ProductForm /></Gate>} />
               <Route path="/money/record/:kind/:id" element={<Gate><RecordDetail /></Gate>} />
               <Route path="/business" element={<Gate><Business /></Gate>} />
+              <Route path="/business/register" element={<Gate><Register /></Gate>} />
               <Route path="/write" element={<Gate><Write /></Gate>} />
               <Route path="/write/:kind" element={<Gate><WriteDraft /></Gate>} />
               <Route path="/assistant" element={<Gate><Assistant /></Gate>} />

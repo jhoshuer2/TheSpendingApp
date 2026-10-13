@@ -81,8 +81,8 @@ describe("modules", () => {
       expect(["do", "draft", "guide", "connect"]).toContain(m.kind);
       if (m.kind === "do") expect(m.tool).toBeDefined();
       if (m.tool) {
-        expect(["do", "draft"]).toContain(m.kind); // "do" steps tick themselves; "draft" steps offer to write it for you
-        expect(m.tool.to).toMatch(/^\/(money|app|write|assistant)(\/|\?|$)/);
+        expect(["do", "draft", "guide"]).toContain(m.kind); // "do" steps tick themselves; "draft" steps offer to write it for you; a "guide" may link to a get-ready screen
+        expect(m.tool.to).toMatch(/^\/(money|app|write|assistant|business)(\/|\?|$)/);
         expect(m.tool.label.length).toBeGreaterThan(0);
       }
     }

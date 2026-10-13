@@ -19,7 +19,8 @@
     "check:money": "node tools/check-money.mjs",
     "check:customers": "node tools/check-customers.mjs",
     "check:write": "node tools/check-write.mjs",
-    "check:stock": "node tools/check-stock.mjs"
+    "check:stock": "node tools/check-stock.mjs",
+    "check:register": "node tools/check-register.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",
