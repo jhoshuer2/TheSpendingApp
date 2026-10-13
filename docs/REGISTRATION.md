@@ -18,7 +18,7 @@ Also reachable from the **Register your business name** library step ("Get ready
 ## Keeping it honest
 - No fee is stated anywhere: sources disagree and fees change. The screen says to check the CAC website before paying.
 - The screen shows "Steps last checked {date}" (`CHECKED_ON` in `guide.ts`). Update it whenever the steps are re-checked against CAC's own site.
-- The portal and search links (`CAC_PORTAL`, `CAC_SEARCH`) must be confirmed by a person before release; they were taken from public sources, not tested from here.
+- The portal and search links (`CAC_PORTAL`, `CAC_SEARCH`) were opened and confirmed working by the owner on 13 October 2026. Re-check them whenever the steps are re-checked.
 - **A lawyer or CAC-accredited agent should review the wording before this is promoted to customers.** It is a guide, not legal advice.
 
 ## Checks
