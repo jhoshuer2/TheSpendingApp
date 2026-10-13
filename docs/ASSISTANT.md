@@ -62,17 +62,19 @@ Settings (all optional, all Edge Function secrets): `ASSISTANT_MODEL` (default `
 
 ## Cost: choose the model
 
-Every message costs money, and a message that looks something up is two model calls. The instructions and tools are about 2,200 tokens. Rough cost of a typical exchange (one look-up round, around 5,500 tokens in and 1,200 out, **before** cache savings), at list prices from the Claude API model table (check Anthropic's pricing page before relying on these):
+Measured with `tools/eval-assistant.mjs` on 37 realistic messages (short, one message each, medium effort), at list prices from the Claude API model table (check Anthropic's pricing page before relying on them):
 
-| Model | Price per million tokens (in / out) | Rough cost per exchange | At 25 messages a day, 30 days |
-|---|---|---|---|
-| `claude-opus-5-5` (default) | $4 / $20 | about 4 cents | up to about $30 per person |
-| `claude-sonnet-5-5` | $2 / $10 | about 2 cents | up to about $15 per person |
-| `claude-haiku-5-5` | $0.10 / $0.50 | about 0.1 cent | up to about $1 per person |
+| Model | Price per million tokens (in / out) | Score | Cost per message | Worst case: 25 messages a day for 30 days |
+|---|---|---|---|---|
+| `claude-opus-5-5` (default) | $4 / $20 | 33/37 | about $0.0036 | about $2.70 per person |
+| `claude-sonnet-5-5` | $2 / $10 | 34/37 | about $0.0012 | about $0.90 per person |
+| `claude-haiku-5-5` | $0.10 / $0.50 | 33/37 | about $0.0001 | about $0.08 per person |
 
-Most people will send far fewer than 25 a day, so real averages will be much lower, but plan from the worst case. The two limits are your safety net: with the defaults the whole product can't spend more than about `2000 × cost per message` a day.
+No model got an amount wrong. The misses were an explanation line left out, a sale with no item named, and one genuinely ambiguous message, which the instructions and test now handle (see `Known limits`). English was 19/19 for all three; Pidgin 14 to 15 of 18.
 
-**Recommendation:** run the Pidgin and English test (below) with your key on all three, then pick the cheapest model that scores well on **amounts** (a wrong amount in someone's books is the failure that matters). I have not run it against a real model, so I can't tell you which one that is.
+These are short chats. Real conversations carry history and tool results, so expect somewhat more per message, but nothing close to the 10x I first estimated. The two daily limits (per person and global) are your safety net: with the defaults the whole product can't spend more than about `2000 × cost per message` a day.
+
+**Recommendation:** Sonnet 5.5 (best score, still cheap). Haiku 5.5 is a fair choice if cost matters most: it scored the same as Opus at roughly 1/36 of the price. Switch with `npx supabase secrets set ASSISTANT_MODEL=claude-sonnet-5-5` (no redeploy needed). 37 short messages cannot prove how a model copes with long or messy real chats, and you tap Save on every card, so a wrong guess is caught either way. Re-run the eval after any change to the instructions.
 
 ## Test Pidgin and English before you trust it
 
@@ -110,3 +112,4 @@ The model-facing instructions explain Pidgin money and phrasing ("don pay", "dey
 - No cross-device chat history (the chat lives on one phone; the records sync as always).
 - No streaming: you see the reply when it's complete (a few seconds).
 - The model's per-message price depends on your choice above.
+- "2 bag beans 60k" is genuinely ambiguous (60k for both bags, or each?). The assistant may ask instead of recording; the eval counts either a correct total or a clear question as a pass.

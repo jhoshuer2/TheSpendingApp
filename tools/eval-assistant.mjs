@@ -79,6 +79,12 @@ if (args.includes("--self-test")) {
   assert.equal(ok, CASES.length, "a perfect answerer should pass every case");
   const wantsNothing = CASES.filter((c) => c.nothing).length;
   assert.equal(idlePass, wantsNothing, "an answerer that never acts should pass only the cases that want no action");
+  // For genuinely ambiguous wording, one clear question passes; silence does not.
+  const ambiguous = CASES.find((c) => c.orAsk);
+  const asker = async () => ({ content: [{ type: "text", text: "Is the 60k for both bags of beans, or each?" }], usage: { input: 1000, output: 100 } });
+  assert.equal((await runCase(ambiguous, asker)).problems.length, 0, "a clear question should pass an ambiguous case");
+  assert.ok((await runCase(ambiguous, idle)).problems.length > 0, "doing and saying nothing should still fail it");
+  assert.ok((await runCase(CASES.find((c) => c.id === "en-sale-wig"), asker)).problems.length > 0, "asking should NOT pass a case that was not ambiguous");
   // A wrong amount, a wrong date and an invented record must each be caught.
   const wrong = (c, input) => judge(c, [{ name: "propose_records", input }], "x");
   assert.ok(wrong(CASES[0], { sales: [{ amount: 450 }] }).length);
