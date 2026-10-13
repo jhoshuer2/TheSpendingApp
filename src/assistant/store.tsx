@@ -112,6 +112,17 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         }
       }
     }
+    if (p.stock) {
+      saved.stock = [];
+      for (const c of p.stock) {
+        const prod = r.state.products[c.productId];
+        if (!prod) continue; // removed since the card was made
+        saved.stock.push({ id: prod.id, before: { ...(prod.stock !== undefined && prod.countedAt ? { stock: prod.stock, countedAt: prod.countedAt } : {}), ...(prod.lowAt !== undefined ? { lowAt: prod.lowAt } : {}) } });
+        if (c.set !== undefined) r.setStock(prod.id, c.set);
+        else if (c.add !== undefined) r.addStock(prod.id, c.add);
+        if (c.lowAt !== undefined) r.setLowAt(prod.id, c.lowAt);
+      }
+    }
     if (p.facts) {
       // Remember what each fact was, so Undo can put it back exactly.
       const before = factsOf(profileRef.current.answers);
@@ -199,6 +210,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         for (const sid of item.saved.sales) r.removeRecord("sale", sid);
         for (const eid of item.saved.expenses) r.removeRecord("expense", eid);
         for (const pid of item.saved.paid) r.markUnpaid(pid);
+        for (const st of item.saved.stock ?? []) r.restoreStock(st.id, st.before);
         if (item.saved.facts) {
           const next = { ...profileRef.current.answers };
           for (const k of Object.keys(item.saved.facts) as FactKey[]) {

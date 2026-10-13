@@ -15,6 +15,7 @@ import { Products } from "../screens/money/Products";
 import { RecordDetail } from "../screens/money/RecordDetail";
 import { RecordExpense } from "../screens/money/RecordExpense";
 import { RecordSale } from "../screens/money/RecordSale";
+import { StockCount } from "../screens/money/StockCount";
 import { Assistant, AssistantSettings } from "../screens/Assistant";
 import { Business } from "../screens/Business";
 import { Auth, ForgotPassword, ResetPassword } from "../screens/Auth";
@@ -86,6 +87,7 @@ export function App() {
               <Route path="/money/customer/:key/edit" element={<Gate><CustomerForm /></Gate>} />
               <Route path="/money/message/reminder/:key" element={<Gate><MessageDraft kind="reminder" /></Gate>} />
               <Route path="/money/message/receipt/:id" element={<Gate><MessageDraft kind="receipt" /></Gate>} />
+              <Route path="/money/stock" element={<Gate><StockCount /></Gate>} />
               <Route path="/money/products" element={<Gate><Products /></Gate>} />
               <Route path="/money/product/:id" element={<Gate><ProductForm /></Gate>} />
               <Route path="/money/record/:kind/:id" element={<Gate><RecordDetail /></Gate>} />

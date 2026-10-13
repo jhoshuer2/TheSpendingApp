@@ -86,6 +86,13 @@ const SEED_BOOKS = (() => {
   });
   return JSON.stringify({ products, sales, expenses, dirty: { products: [], sales: [], expenses: [] } });
 })();
+// The same shop with its stock counted: one plenty, one running low, one out, one not tracked.
+const SEED_STOCK = (() => {
+  const b = JSON.parse(SEED_BOOKS);
+  const counted = ago(20);
+  [[1, 80, 10], [2, 12, 10], [3, 0, 5]].forEach(([i, stock, lowAt]) => { Object.assign(b.products[uuid(i)], { stock, countedAt: counted, lowAt }); });
+  return JSON.stringify(b);
+})();
 // The same shop with named customers (some with phone numbers), a few unpaid, and one saved customer with no sales yet.
 const keyFor = (name) => "n_" + Buffer.from(name.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/g, " ").trim()).toString("base64url");
 const SEED_CUSTOMERS = (() => {
@@ -167,6 +174,14 @@ const SCREENS = [
   { name: "products", path: "/money/products", authed: true, seed: SEED_READY, books: SEED_BOOKS },
   { name: "product-new", path: "/money/product/new", authed: true, seed: SEED_READY },
   { name: "product-edit", path: "/money/product/" + uuid(1), authed: true, seed: SEED_READY, books: SEED_BOOKS },
+  { name: "money-stock", path: "/app/money", authed: true, seed: SEED_READY, books: SEED_STOCK },
+  { name: "products-stock", path: "/money/products", authed: true, seed: SEED_READY, books: SEED_STOCK },
+  { name: "product-edit-stock", path: "/money/product/" + uuid(1), authed: true, seed: SEED_READY, books: SEED_STOCK },
+  { name: "product-track-on", path: "/money/product/new", authed: true, seed: SEED_READY, act: async (p) => p.getByRole("switch", { name: /Track how many I have/ }).click() },
+  { name: "product-track-error", path: "/money/product/new", authed: true, seed: SEED_READY, act: async (p) => { await p.getByRole("switch", { name: /Track how many I have/ }).click(); await p.getByRole("button", { name: "Save product" }).click(); } },
+  { name: "stock-count", path: "/money/stock", authed: true, seed: SEED_READY, books: SEED_STOCK },
+  { name: "stock-count-empty", path: "/money/stock", authed: true, seed: SEED_READY, books: SEED_BOOKS },
+  { name: "sale-stock-warning", path: "/money/sale", authed: true, seed: SEED_READY, books: SEED_STOCK, act: async (p) => { await p.getByRole("radio", { name: "Pick products" }).click(); await p.getByRole("button", { name: "Add one Fried rice (plate)" }).click(); for (let i = 0; i < 4; i++) await p.getByRole("button", { name: "Add one Zobo (bottle)" }).click(); } },
   { name: "product-error", path: "/money/product/new", authed: true, seed: SEED_READY, act: async (p) => p.getByRole("button", { name: "Save product" }).click() },
   { name: "record-sale", path: "/money/record/sale/" + uuid(100), authed: true, seed: SEED_READY, books: SEED_BOOKS },
   { name: "record-owed", path: "/money/record/sale/" + uuid(142), authed: true, seed: SEED_READY, books: SEED_BOOKS },

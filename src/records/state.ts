@@ -25,6 +25,11 @@ export const EMPTY_RECORDS: RecordsState = { customers: {}, products: {}, sales:
 export const isRecordsDirty = (s: RecordsState): boolean => s.dirty.customers.length + s.dirty.products.length + s.dirty.sales.length + s.dirty.expenses.length > 0;
 
 const MAX_KOBO = 100_000_000_000;
+export const MAX_STOCK = 1_000_000;
+const whole = (v: unknown, min: number, max: number): number | undefined => {
+  const n = typeof v === "string" ? Number(v) : v;
+  return typeof n === "number" && Number.isInteger(n) && n >= min && n <= max ? n : undefined;
+};
 const categories = new Set<string>(EXPENSE_CATEGORIES.map((c) => c.id));
 
 const str = (v: unknown, max: number): string | undefined => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined);
@@ -51,7 +56,17 @@ export function cleanProduct(r: unknown): Product | null {
   const pid = id(o.id), name = str(o.name, 80), price = kobo(o.price, 0);
   if (!pid || !name || price === undefined) return null;
   const cost = kobo(o.cost, 0);
-  return { id: pid, name, price, ...(cost !== undefined ? { cost } : {}), ...(o.archived === true ? { archived: true } : {}) };
+  // A count always comes with the time it was taken; one without the other is not trusted.
+  const count = whole(o.stock, 0, MAX_STOCK), countedAt = iso(o.countedAt ?? o.counted_at);
+  const tracked = count !== undefined && countedAt !== undefined;
+  const lowAt = whole(o.lowAt ?? o.low_at, 0, MAX_STOCK);
+  return {
+    id: pid, name, price,
+    ...(cost !== undefined ? { cost } : {}),
+    ...(o.archived === true ? { archived: true } : {}),
+    ...(tracked ? { stock: count, countedAt } : {}),
+    ...(lowAt !== undefined ? { lowAt } : {}),
+  };
 }
 
 function cleanItems(v: unknown): SaleItem[] {

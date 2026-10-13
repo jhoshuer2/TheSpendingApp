@@ -9,6 +9,7 @@ import {
   type RecordsState,
 } from "./state";
 import { normName } from "./customers";
+import { stockLeft } from "./stock";
 import type { Customer, Expense, ExpenseCategory, Product, RecordKind, Sale, SaleItem } from "./types";
 
 export type RecordsStatus = "loading" | "ready" | "error";
@@ -50,6 +51,17 @@ export interface ProductInput {
   name: string;
   price: number;
   cost?: number;
+  /** undefined = leave tracking as it is; null = stop tracking; a number = count now. */
+  stock?: number | null;
+  /** undefined = leave as it is; null = no warning level; a number = warn at or below. */
+  lowAt?: number | null;
+}
+
+/** What a product's count was, so a change can be undone exactly. */
+export interface StockBefore {
+  stock?: number;
+  countedAt?: string;
+  lowAt?: number;
 }
 
 interface RecordsApi {
@@ -70,6 +82,14 @@ interface RecordsApi {
   restoreRecord: (kind: RecordKind, id: string) => void;
   saveProduct: (p: ProductInput) => Product;
   archiveProduct: (id: string, archived: boolean) => void;
+  /** Count a product now. Starts tracking it if it wasn't. */
+  setStock: (id: string, count: number) => void;
+  /** Bought more: adds to what is left now (never below nothing) and counts from now. */
+  addStock: (id: string, more: number) => void;
+  /** The level to warn at, or null for none. */
+  setLowAt: (id: string, level: number | null) => void;
+  /** Put a product's count back exactly as it was (for Undo). */
+  restoreStock: (id: string, before: StockBefore) => void;
   /** Save a customer's details. Changing the name also updates their past sales so they stay together. */
   saveCustomer: (c: CustomerInput) => Customer;
   /** Remove from the list (their sales stay). */
@@ -316,10 +336,41 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
       saveProduct: (input) => {
         const id = input.id ?? newId();
         const prev = state.products[id];
-        const p: Product = { id, name: input.name.trim().slice(0, 80), price: input.price, ...(input.cost !== undefined ? { cost: input.cost } : {}), ...(prev?.archived ? { archived: true } : {}) };
+        const now = new Date().toISOString();
+        const count = (n: number) => Math.max(0, Math.min(1_000_000, Math.round(n)));
+        const tracking = input.stock === null ? {} : typeof input.stock === "number" ? { stock: count(input.stock), countedAt: now } : prev && prev.stock !== undefined && prev.countedAt ? { stock: prev.stock, countedAt: prev.countedAt } : {};
+        const low = input.lowAt === null ? undefined : typeof input.lowAt === "number" ? count(input.lowAt) : prev?.lowAt;
+        const p: Product = { id, name: input.name.trim().slice(0, 80), price: input.price, ...(input.cost !== undefined ? { cost: input.cost } : {}), ...(prev?.archived ? { archived: true } : {}), ...tracking, ...(low !== undefined ? { lowAt: low } : {}) };
         change((s) => ({ ...s, products: { ...s.products, [id]: p } }), { products: [id] });
         return p;
       },
+      setStock: (id, count) => {
+        const stock = Math.max(0, Math.min(1_000_000, Math.round(count)));
+        change((s) => (s.products[id] ? { ...s, products: { ...s.products, [id]: { ...s.products[id], stock, countedAt: new Date().toISOString() } } } : s), { products: [id] });
+      },
+      addStock: (id, more) =>
+        change((s) => {
+          const p = s.products[id];
+          if (!p) return s;
+          // Counting from now: what is left now (not below nothing) plus what came in.
+          const base = Math.max(0, stockLeft(s, p) ?? 0);
+          const stock = Math.max(0, Math.min(1_000_000, Math.round(base + more)));
+          return { ...s, products: { ...s.products, [id]: { ...p, stock, countedAt: new Date().toISOString() } } };
+        }, { products: [id] }),
+      setLowAt: (id, level) =>
+        change((s) => {
+          const p = s.products[id];
+          if (!p) return s;
+          const { lowAt: _l, ...rest } = p;
+          return { ...s, products: { ...s.products, [id]: { ...rest, ...(level !== null ? { lowAt: Math.max(0, Math.min(1_000_000, Math.round(level))) } : {}) } } };
+        }, { products: [id] }),
+      restoreStock: (id, before) =>
+        change((s) => {
+          const p = s.products[id];
+          if (!p) return s;
+          const { stock: _s, countedAt: _c, lowAt: _l, ...rest } = p;
+          return { ...s, products: { ...s.products, [id]: { ...rest, ...(before.stock !== undefined && before.countedAt ? { stock: before.stock, countedAt: before.countedAt } : {}), ...(before.lowAt !== undefined ? { lowAt: before.lowAt } : {}) } } };
+        }, { products: [id] }),
       archiveProduct: (id, archived) =>
         change((s) => (s.products[id] ? { ...s, products: { ...s.products, [id]: archived ? { ...s.products[id], archived: true } : without(s.products[id], "archived") } } : s), { products: [id] }),
       saveCustomer: (input) => {
