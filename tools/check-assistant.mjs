@@ -227,6 +227,47 @@ await step("a link can prefill what to say, but never sends it", async () => {
   assert.equal((await fake("assistant-log")).length, sent, "nothing was sent");
 });
 
+const product = async () => (Object.values((await books()).products ?? {}).find((x) => /^Jollof rice/.test(x.name)) ?? {});
+const left = async () => { const b = await books(); const x = Object.values(b.products).find((q) => /^Jollof rice/.test(q.name)); const from = Date.parse(x.countedAt); return x.stock - Object.values(b.sales).filter((s) => !s.deletedAt && Date.parse(s.at) >= from).flatMap((s) => s.items).filter((i) => i.productId === x.id).reduce((n, i) => n + i.qty, 0); };
+
+await step("stock: the assistant reads what's left, a sale by product takes it down, 'bought more' is a card to Save, and Undo puts it back", async () => {
+  await p.goto(APP + "/money/product/new");
+  await p.getByLabel("Name").fill("Jollof rice (plate)");
+  await p.getByLabel("Price you sell it for").fill("1500");
+  await p.getByRole("switch", { name: /Track how many I have/ }).click();
+  await p.getByLabel("How many do you have now?").fill("20");
+  await p.getByLabel(/Tell me when it gets low/).fill("5");
+  await p.getByRole("button", { name: "Save product" }).click();
+  await p.waitForURL("**/money/products");
+  await poll("the count reached the server", async () => (await (await fetch(FAKE + "/__fake/state")).json()).products.find((r) => /^Jollof/.test(r.name) && r.stock === 20 && r.low_at === 5 && r.counted_at));
+  await p.goto(APP + "/assistant");
+  await p.getByLabel("Message").waitFor();
+  await say("how many jollof do I have left?");
+  await reply(/You have 20 Jollof rice \(plate\) left\./);
+  // A sale recorded through the assistant is matched to the product, so it comes off the stock.
+  const n = await p.getByTestId("proposal").count();
+  await say("I sold 3 plates of jollof for ₦4,500");
+  await p.getByTestId("proposal").nth(n).getByRole("button", { name: "Save" }).click();
+  assert.equal(await left(), 17);
+  // Bought more: a card, nothing changes until Save.
+  const m = await p.getByTestId("proposal").count();
+  await say("I bought 20 more jollof");
+  await p.getByTestId("proposal").nth(m).waitFor();
+  assert.match((await p.getByTestId("proposal").nth(m).innerText()).replace(/\n+/g, " "), /Jollof rice \(plate\): 20 more \(37 in stock\)/);
+  assert.equal(await left(), 17, "nothing saved yet");
+  await p.getByTestId("proposal").nth(m).getByRole("button", { name: "Save" }).click();
+  assert.equal(await left(), 37);
+  await poll("the new count reached the server", async () => (await (await fetch(FAKE + "/__fake/state")).json()).products.find((r) => /^Jollof/.test(r.name) && r.stock === 37));
+  await p.getByTestId("proposal").nth(m).getByRole("button", { name: "Undo" }).click();
+  assert.equal(await left(), 17, "undo puts the old count back");
+  assert.equal((await product()).lowAt, 5, "and keeps the warning level");
+  // Counting something that isn't counted yet needs a number; the assistant is told why when it doesn't have one.
+  const k = await p.getByTestId("proposal").count();
+  await say("I bought 5 more zobo");
+  await reply(/Sorry, I need to check something: Update 1: no product called "zobo"/);
+  assert.equal(await p.getByTestId("proposal").count(), k);
+});
+
 await step("Pidgin: settings change the reply language and the starters", async () => {
   await p.getByRole("link", { name: "Assistant settings" }).click();
   await p.getByRole("radio", { name: "Pidgin" }).click();

@@ -1,7 +1,7 @@
 import { buildContext, READ_TOOLS, type Block, type ChatMessage } from "../../supabase/functions/_shared/assistant-protocol.ts";
 import type { RecordsState } from "../records/state";
 import type { BusinessFacts, FactKey } from "../messages/facts";
-import { AUTO_LIMIT_KOBO, buildDraft, buildFactsProposal, buildMarkPaidProposal, buildRecordsProposal, buildTextDraft, describeProposal, proposalTotal, runReadTool, type Draft, type MessageContext, type Proposal } from "./tools";
+import { AUTO_LIMIT_KOBO, buildDraft, buildFactsProposal, buildMarkPaidProposal, buildRecordsProposal, buildStockProposal, buildTextDraft, describeProposal, proposalTotal, runReadTool, type Draft, type MessageContext, type Proposal } from "./tools";
 
 export type ReplyLanguage = "en" | "pcm";
 export type Autonomy = "ask" | "auto";
@@ -25,6 +25,8 @@ export interface Saved {
   paid: string[];
   /** What each saved fact was before (null = it wasn't set), so Undo can put it back. */
   facts?: Partial<Record<FactKey, string | null>>;
+  /** What each product's count was before, so Undo can put it back. */
+  stock?: { id: string; before: { stock?: number; countedAt?: string; lowAt?: number } }[];
 }
 export type ProposalStatus = "pending" | "saved" | "dismissed" | "undone";
 
@@ -191,7 +193,7 @@ export async function runTurn(
         pending.push({ toolUseId: u.id, content: `A text draft ("${d.draft.title}") is on the person's screen. Nothing was posted or sent: they read it and copy it themselves. Offer to change it if they want.` });
         continue;
       }
-      const built = u.name === "propose_records" ? buildRecordsProposal(u.input, io.records(), io.now()) : u.name === "propose_mark_paid" ? buildMarkPaidProposal(u.input, io.records()) : u.name === "propose_business_facts" ? buildFactsProposal(u.input) : null;
+      const built = u.name === "propose_records" ? buildRecordsProposal(u.input, io.records(), io.now()) : u.name === "propose_mark_paid" ? buildMarkPaidProposal(u.input, io.records()) : u.name === "propose_business_facts" ? buildFactsProposal(u.input) : u.name === "propose_stock" ? buildStockProposal(u.input, io.records()) : null;
       if (!built || !built.ok) {
         pending.push({ toolUseId: u.id, content: built ? built.error : `Unknown tool ${u.name.slice(0, 40)}.`, isError: true });
         continue;

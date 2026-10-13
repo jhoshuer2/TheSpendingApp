@@ -237,6 +237,21 @@ await step("products sync to the server", async () => {
   assert.equal(prod.archived, false);
 });
 
+await step("a stock count syncs to the server and appears on another device", async () => {
+  await A.p.goto(APP + "/money/products");
+  await A.p.getByRole("link", { name: /Jollof rice/ }).first().click();
+  await A.p.getByRole("switch", { name: /Track how many I have/ }).click();
+  await A.p.getByLabel("How many do you have now?").fill("12");
+  await A.p.getByLabel(/Tell me when it gets low/).fill("3");
+  await A.p.getByRole("button", { name: "Save product" }).click();
+  const prod = await poll("stock saved", async () => (await state()).products.find((r) => r.name === "Jollof rice (plate)" && r.stock === 12));
+  assert.equal(prod.low_at, 3);
+  assert.ok(prod.counted_at, "a count always has a time");
+  await B.p.goto(APP + "/money/products");
+  await B.p.reload();
+  await B.p.getByText("12 left").first().waitFor();
+});
+
 await step("customers (with a phone number) sync to the server and appear on another device; a rename follows the sales", async () => {
   await A.p.goto(APP + "/money/sale");
   await A.p.getByRole("button", { name: "Four" }).waitFor().catch(() => {});

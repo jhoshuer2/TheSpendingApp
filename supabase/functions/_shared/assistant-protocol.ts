@@ -24,8 +24,8 @@ export const LIMITS = {
 
 export const EXPENSE_CATEGORIES = ["stock", "transport", "rent", "staff", "data", "packaging", "utilities", "other"] as const;
 
-export const READ_TOOLS = ["get_summary", "list_owed", "list_recent", "best_sellers", "list_products", "list_customers", "get_business"] as const;
-export const WRITE_TOOLS = ["propose_records", "propose_mark_paid", "propose_business_facts"] as const;
+export const READ_TOOLS = ["get_summary", "list_owed", "list_recent", "best_sellers", "list_products", "list_customers", "get_business", "get_stock"] as const;
+export const WRITE_TOOLS = ["propose_records", "propose_mark_paid", "propose_business_facts", "propose_stock"] as const;
 /** Prepares a message for the person to send themselves. Nothing is saved or sent. */
 export const DRAFT_TOOLS = ["draft_message", "draft_text"] as const;
 export const TOOL_NAMES: readonly string[] = [...READ_TOOLS, ...WRITE_TOOLS, ...DRAFT_TOOLS];
@@ -82,6 +82,12 @@ export const TOOLS = [
     name: "get_business",
     description:
       "The facts the person has told SPAL about their business: name, what they sell, where they are, opening hours, Instagram name. Any they haven't given are left out. Call this before writing a bio, captions or a description, and to see which facts are missing.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_stock",
+    description:
+      "How much stock the person has of the products they keep a count for: what is left now, the level they want a warning at, and whether each is ok, low or out. Also says how many products are not counted. Use for 'how many bags of rice do I have left', 'what is running low', 'do I need to buy anything'.",
     input_schema: { type: "object", properties: {} },
   },
   {
@@ -186,6 +192,32 @@ export const TOOLS = [
       required: ["kind", "title", "text"],
     },
   },
+  {
+    name: "propose_stock",
+    description:
+      "Suggest changing stock counts. 'set' = the person counted this many right now; 'add' = they bought or received this many more. NOTHING IS SAVED until they tap Save, and Undo puts the old count back. Use the product's own name (from get_stock or list_products). Use set when they say how many they HAVE; use add when they say they GOT more. A product that is not counted yet needs 'set' (ask how many they have now).",
+    input_schema: {
+      type: "object",
+      properties: {
+        updates: {
+          type: "array",
+          minItems: 1,
+          maxItems: 20,
+          items: {
+            type: "object",
+            properties: {
+              product: { type: "string", description: "The product's name as the person said it." },
+              set: { type: "integer", minimum: 0, description: "They counted this many now." },
+              add: { type: "integer", minimum: 1, description: "They got this many more." },
+              low_at: { type: "integer", minimum: 0, description: "Warn them when they have this many or fewer." },
+            },
+            required: ["product"],
+          },
+        },
+      },
+      required: ["updates"],
+    },
+  },
 ] as const;
 
 /**
@@ -226,9 +258,16 @@ EXAMPLES (how to understand people; these are not scripts)
 - "Who dey owe me?" means: call list_owed.
 - "Send Chidi a reminder" and "abeg remind Mama Tosin about her money" mean: call draft_message with kind "reminder". "Send Chidi a receipt" means kind "receipt".
 - "Who be my best customers?" means: call list_customers.
+- "How many rice I get left?" means: call get_stock. "I don buy 20 more bag rice" means: call propose_stock with add 20 for rice.
 - "Write my Instagram bio" means: call get_business (and list_products if useful), then draft_text with kind "instagram_bio". "I dey Yaba, we open 9 to 5" means: call propose_business_facts with place and hours.
 - "Mrs Bello don pay" means: call propose_mark_paid for "Mrs Bello".
 - "I sell 2 wig for 30k, then Chidi collect 2 bag rice for 25k, e never pay" is two sales in one call: the wigs (30000, paid) and the rice (25000, paid false, customer "Chidi"). Then say: "I've put the wigs down as paid and Chidi's rice as owing."
+
+STOCK
+- The person can keep a count of how many they have of each product. Stock goes down by itself only when a sale is recorded by picking products. Never change a count unless they told you a number.
+- "How many bags of rice do I have left?" and "what's running low?" mean: call get_stock.
+- When they say they counted ("I have 30 zobo now", "na 12 bag rice remain") use propose_stock with set. When they say they got more ("I bought 20 more bags", "I don buy 50 more") use add. If the product is not counted yet, ask how many they have now and use set. If a number or product is unclear, ask ONE short question.
+- Write your short line first, then call the tool, as with sales. They tap Save and can Undo.
 
 YOUR BUSINESS AND WRITING FOR IT
 - The person can tell you facts about their business: what they sell, where they are, their hours, their Instagram name. When they do, offer to remember them with propose_business_facts (they tap Save). Only the facts they actually gave.

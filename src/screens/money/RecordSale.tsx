@@ -11,6 +11,7 @@ import { useToast } from "../../lib/toast";
 import { buildCustomers, normName } from "../../records/customers";
 import { digitsToKobo, naira, pressKey } from "../../records/money";
 import { useRecords } from "../../records/store";
+import { leftLabel, stockLeft } from "../../records/stock";
 import type { SaleItem } from "../../records/types";
 import { WhenPicker, whenToIso, type When } from "./WhenPicker";
 
@@ -95,7 +96,16 @@ export function RecordSale() {
               <div className="row" key={p.id} style={{ cursor: "default" }}>
                 <span className="row__main">
                   <span className="row__title">{p.name}</span>
-                  <span className="row__sub">{naira(p.price)}</span>
+                  {(() => {
+                    const left = stockLeft(state, p);
+                    const over = left !== null && (qty[p.id] ?? 0) > Math.max(0, left);
+                    return (
+                      <>
+                        <span className="row__sub">{naira(p.price)}{left !== null ? ` · ${leftLabel(left)}` : ""}</span>
+                        {over && <span className="row__sub row__sub--warn" role="status">{left! <= 0 ? "You have none left. You can still record it." : `You only have ${left} left. You can still record it.`}</span>}
+                      </>
+                    );
+                  })()}
                 </span>
                 <span className="stepper">
                   <button type="button" aria-label={`Remove one ${p.name}`} disabled={!qty[p.id]} onClick={() => bump(p.id, -1)}>

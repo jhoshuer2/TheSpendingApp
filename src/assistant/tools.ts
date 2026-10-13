@@ -1,6 +1,7 @@
 import { EXPENSE_CATEGORIES } from "../../supabase/functions/_shared/assistant-protocol.ts";
 import { categoryName, liveSales, owed, periodRanges, summarize, ledger, localDay, saleTitle } from "../records/calc";
 import { buildCustomers, normName, type CustomerEntry } from "../records/customers";
+import { isTracked, stockLeft, stockLines } from "../records/stock";
 import { FACT_KEYS, FACT_LABEL, type BusinessFacts } from "../messages/facts";
 import { receiptMessage, reminderMessage, type MsgLang, type Tone } from "../messages/templates";
 import { MAX_NAIRA, toKobo } from "../records/money";
@@ -28,6 +29,20 @@ export interface Proposal {
   markPaid?: { customer: string; saleIds: string[]; total: number };
   /** Facts about the business to remember (saved to the profile). */
   facts?: BusinessFacts;
+  /** Stock counts to change. */
+  stock?: StockChange[];
+}
+
+export interface StockChange {
+  productId: string;
+  name: string;
+  /** They counted this many now. */
+  set?: number;
+  /** They got this many more. */
+  add?: number;
+  lowAt?: number;
+  /** What will be in stock afterwards, worked out when the card was made, so the card can say it. */
+  result?: number;
 }
 export type Built = { ok: true; proposal: Proposal } | { ok: false; error: string };
 
@@ -167,6 +182,7 @@ export function describeProposal(p: Proposal): string[] {
   }
   for (const e of p.expenses) lines.push(`${e.note || categoryName(e.category)}: ${money(e.amount)} spent`);
   if (p.markPaid) lines.push(`${p.markPaid.customer} paid ${money(p.markPaid.total)}`);
+  for (const c of p.stock ?? []) lines.push(`${c.name}: ${c.set !== undefined ? `${c.set} in stock` : c.add !== undefined ? `${c.add} more (${c.result} in stock)` : ""}${c.lowAt !== undefined ? `${c.set !== undefined || c.add !== undefined ? " · " : ""}warn at ${c.lowAt}` : ""}`);
   if (p.facts) for (const k of FACT_KEYS) if (p.facts[k]) lines.push(`${FACT_LABEL[k]}: ${k === "instagram" ? "@" : ""}${p.facts[k]}`);
   return lines;
 }
@@ -217,6 +233,15 @@ export function runReadTool(name: string, input: unknown, state: RecordsState, n
     case "list_products": {
       const ps = Object.values(state.products).filter((p) => !p.archived).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 60);
       return cap(JSON.stringify({ products: ps.map((p) => ({ name: p.name, price: naira(p.price), ...(p.cost !== undefined ? { cost: naira(p.cost) } : {}) })), ...(ps.length ? {} : { note: "The person has not added any products yet." }) }));
+    }
+    case "get_stock": {
+      const lines = stockLines(state);
+      const untracked = Object.values(state.products).filter((p) => !p.archived && !isTracked(p));
+      return cap(JSON.stringify({
+        counted: lines.slice(0, 40).map((l) => ({ product: l.product.name, left: l.left, status: l.status, ...(l.product.lowAt !== undefined ? { warn_at: l.product.lowAt } : {}) })),
+        not_counted: untracked.slice(0, 40).map((p) => p.name),
+        ...(lines.length ? {} : { note: "No stock is being counted yet." }),
+      }));
     }
     case "get_business": {
       const given = FACT_KEYS.filter((k) => facts[k]);
@@ -344,3 +369,40 @@ export function buildTextDraft(input: unknown, state: RecordsState): BuiltDraft 
   const title = oneLine(o.title, 80) ?? TEXT_TITLE[kind];
   return { ok: true, draft: { kind: "text", title, text: body } };
 }
+
+
+// ---- Stock changes ----
+const MAX_STOCK = 1_000_000;
+const whole = (v: unknown, min: number): number | undefined => (typeof v === "number" && Number.isInteger(v) && v >= min && v <= MAX_STOCK ? v : undefined);
+
+/** Counts the person just told the assistant about, matched to their products. Nothing is changed until they tap Save. */
+export function buildStockProposal(input: unknown, state: RecordsState): Built {
+  const list = obj(input).updates;
+  if (!Array.isArray(list) || list.length === 0) return { ok: false, error: "No updates. Ask the person which product and how many." };
+  if (list.length > 20) return { ok: false, error: "Too many at once. Send at most 20 products." };
+  const products = Object.values(state.products).filter((p) => !p.archived);
+  const out: StockChange[] = [];
+  for (const [i, raw] of list.entries()) {
+    const u = obj(raw), label = `Update ${i + 1}`;
+    const name = text(u.product, 80);
+    if (!name) return { ok: false, error: `${label}: which product? Ask the person.` };
+    const exact = products.filter((p) => normName(p.name) === normName(name));
+    const near = exact.length ? exact : products.filter((p) => normName(name).length >= 2 && (normName(p.name).includes(normName(name)) || normName(name).includes(normName(p.name))));
+    if (near.length === 0) return { ok: false, error: `${label}: no product called "${name.slice(0, 40)}". Their products: ${products.slice(0, 10).map((p) => p.name).join(", ") || "none yet"}. Ask which one they mean.` };
+    if (near.length > 1) return { ok: false, error: `${label}: more than one product matches "${name.slice(0, 40)}": ${near.slice(0, 5).map((p) => p.name).join(", ")}. Ask which one.` };
+    const p = near[0];
+    if (out.some((c) => c.productId === p.id)) return { ok: false, error: `${label}: ${p.name} appears twice. Send one update per product.` };
+    const set = u.set === undefined ? undefined : whole(u.set, 0), add = u.add === undefined ? undefined : whole(u.add, 1), lowAt = u.low_at === undefined ? undefined : whole(u.low_at, 0);
+    if (u.set !== undefined && set === undefined) return { ok: false, error: `${label}: the count for ${p.name} must be a whole number from 0 up. Ask the person.` };
+    if (u.add !== undefined && add === undefined) return { ok: false, error: `${label}: "more" for ${p.name} must be a whole number of 1 or more. If they have fewer now, ask how many they have and use set.` };
+    if (u.low_at !== undefined && lowAt === undefined) return { ok: false, error: `${label}: the warning level for ${p.name} must be a whole number from 0 up.` };
+    if (set !== undefined && add !== undefined) return { ok: false, error: `${label}: give either set or add for ${p.name}, not both.` };
+    if (set === undefined && add === undefined && lowAt === undefined) return { ok: false, error: `${label}: say how many they have (set) or how many more they got (add) for ${p.name}.` };
+    if (add !== undefined && !isTracked(p)) return { ok: false, error: `${label}: ${p.name} isn't being counted yet. Ask how many they have now and use set.` };
+    if (lowAt !== undefined && set === undefined && add === undefined && !isTracked(p)) return { ok: false, error: `${label}: ${p.name} isn't being counted yet. Ask how many they have now first.` };
+    const result = set !== undefined ? set : add !== undefined ? Math.max(0, stockLeft(state, p) ?? 0) + add : undefined;
+    out.push({ productId: p.id, name: p.name, ...(set !== undefined ? { set } : {}), ...(add !== undefined ? { add } : {}), ...(lowAt !== undefined ? { lowAt } : {}), ...(result !== undefined ? { result: Math.min(result, MAX_STOCK) } : {}) });
+  }
+  return { ok: true, proposal: { sales: [], expenses: [], stock: out } };
+}
+

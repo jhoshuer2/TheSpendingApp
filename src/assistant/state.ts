@@ -2,7 +2,7 @@ import { validateRequest } from "../../supabase/functions/_shared/assistant-prot
 import { DEFAULT_SETTINGS, emptyChat, type Chat, type Item, type Pending, type ProposalStatus, type Saved, type Settings } from "./engine";
 import { cleanExpense, cleanSale } from "../records/state";
 import { FACT_KEYS, type BusinessFacts } from "../messages/facts";
-import type { Draft, Proposal } from "./tools";
+import type { Draft, Proposal, StockChange } from "./tools";
 
 export interface Stored {
   chat: Chat;
@@ -38,13 +38,26 @@ function cleanProposal(raw: unknown): Proposal | null {
     if (!customer || !saleIds.length || typeof m.total !== "number" || !Number.isFinite(m.total) || m.total < 0) return null;
     out.markPaid = { customer, saleIds, total: m.total };
   }
+  if (Array.isArray(o.stock)) {
+    const cleanInt = (v: unknown, min: number) => (typeof v === "number" && Number.isInteger(v) && v >= min && v <= 1_000_000 ? v : undefined);
+    const stock = o.stock.slice(0, 20).flatMap((c): StockChange[] => {
+      const x = (c && typeof c === "object" ? c : {}) as Record<string, unknown>;
+      const productId = typeof x.productId === "string" && /^[0-9a-zA-Z-]{8,64}$/.test(x.productId) ? x.productId : null;
+      const name = str(x.name, 80);
+      if (!productId || !name) return [];
+      const set = cleanInt(x.set, 0), add = cleanInt(x.add, 1), lowAt = cleanInt(x.lowAt, 0), result = cleanInt(x.result, 0);
+      if (set === undefined && add === undefined && lowAt === undefined) return [];
+      return [{ productId, name, ...(set !== undefined ? { set } : {}), ...(add !== undefined ? { add } : {}), ...(lowAt !== undefined ? { lowAt } : {}), ...(result !== undefined ? { result } : {}) }];
+    });
+    if (stock.length) out.stock = stock;
+  }
   const f = (o.facts && typeof o.facts === "object" ? o.facts : null) as Record<string, unknown> | null;
   if (f) {
     const facts: BusinessFacts = {};
     for (const k of FACT_KEYS) if (typeof f[k] === "string" && (f[k] as string).trim()) facts[k] = (f[k] as string).trim().slice(0, 200);
     if (Object.keys(facts).length) out.facts = facts;
   }
-  return out.sales.length + out.expenses.length > 0 || out.markPaid || out.facts ? out : null;
+  return out.sales.length + out.expenses.length > 0 || out.markPaid || out.facts || out.stock ? out : null;
 }
 
 function cleanItem(raw: unknown): Item | null {
@@ -72,7 +85,16 @@ function cleanItem(raw: unknown): Item | null {
     const sv = (o.saved && typeof o.saved === "object" ? o.saved : null) as Record<string, unknown> | null;
     const savedFacts: Saved["facts"] = {};
     if (sv?.facts && typeof sv.facts === "object") for (const k of FACT_KEYS) { const v = (sv.facts as Record<string, unknown>)[k]; if (v === null) savedFacts[k] = null; else if (typeof v === "string") savedFacts[k] = v.slice(0, 200); }
-    const saved: Saved | undefined = sv ? { sales: ids(sv.sales), expenses: ids(sv.expenses), paid: ids(sv.paid), ...(Object.keys(savedFacts).length ? { facts: savedFacts } : {}) } : undefined;
+    const savedStock: NonNullable<Saved["stock"]> = [];
+    if (Array.isArray(sv?.stock)) for (const e of sv.stock.slice(0, 20)) {
+      const x = (e && typeof e === "object" ? e : {}) as Record<string, unknown>, b = (x.before && typeof x.before === "object" ? x.before : {}) as Record<string, unknown>;
+      if (typeof x.id !== "string" || !/^[0-9a-zA-Z-]{8,64}$/.test(x.id)) continue;
+      const n = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 1_000_000 ? v : undefined);
+      const when = typeof b.countedAt === "string" && !Number.isNaN(Date.parse(b.countedAt)) ? new Date(b.countedAt).toISOString() : undefined;
+      const stock = n(b.stock), lowAt = n(b.lowAt);
+      savedStock.push({ id: x.id, before: { ...(stock !== undefined && when ? { stock, countedAt: when } : {}), ...(lowAt !== undefined ? { lowAt } : {}) } });
+    }
+    const saved: Saved | undefined = sv ? { sales: ids(sv.sales), expenses: ids(sv.expenses), paid: ids(sv.paid), ...(Object.keys(savedFacts).length ? { facts: savedFacts } : {}), ...(savedStock.length ? { stock: savedStock } : {}) } : undefined;
     return { kind: "proposal", id, proposal, status, ...(o.auto === true ? { auto: true } : {}), ...(o.stale === true ? { stale: true } : {}), ...(saved ? { saved } : {}) };
   }
   return null;

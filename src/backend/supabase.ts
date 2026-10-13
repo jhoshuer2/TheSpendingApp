@@ -189,7 +189,7 @@ export function createRecords(client: SupabaseClient, userId: string): RemoteRec
     },
     async push(batch: RecordsBatch) {
       await upsert("customers", batch.customers.map((r) => ({ user_id: userId, id: r.id, name: r.name, phone: r.phone ?? null, note: r.note ?? null, archived: r.archived === true })));
-      await upsert("products", batch.products.map((r) => ({ user_id: userId, id: r.id, name: r.name, price: r.price, cost: r.cost ?? null, archived: r.archived === true })));
+      await upsert("products", batch.products.map((r) => ({ user_id: userId, id: r.id, name: r.name, price: r.price, cost: r.cost ?? null, archived: r.archived === true, stock: r.stock ?? null, counted_at: r.stock !== undefined ? r.countedAt ?? null : null, low_at: r.lowAt ?? null })));
       await upsert("sales", batch.sales.map((r) => ({ user_id: userId, id: r.id, at: r.at, amount: r.amount, items: r.items, note: r.note ?? null, customer: r.customer ?? null, paid: r.paid, paid_at: r.paidAt ?? null, deleted_at: r.deletedAt ?? null })));
       await upsert("expenses", batch.expenses.map((r) => ({ user_id: userId, id: r.id, at: r.at, amount: r.amount, category: r.category, note: r.note ?? null, deleted_at: r.deletedAt ?? null })));
     },

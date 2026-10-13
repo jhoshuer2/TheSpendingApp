@@ -265,6 +265,39 @@ do $$ begin
 end $$;
 reset role;
 
+-- 11. Stock counts on products: optional, bounded, and a count always has its time.
+insert into auth.users (id, email) values (gen_random_uuid(), 'stock@example.com');
+create temp table _stock_user as select id from auth.users where email = 'stock@example.com';
+grant select on _stock_user to authenticated;
+select pg_temp.as_user((select id from _stock_user));
+insert into public.products (user_id, id, name, price) values (auth.uid(), 'cccccccc-0000-0000-0000-000000000001', 'Rice (bag)', 5000000);
+select pg_temp.assert((select stock is null and counted_at is null and low_at is null from public.products where id = 'cccccccc-0000-0000-0000-000000000001'), 'products need no stock count (existing products are unchanged)');
+update public.products set stock = 20, counted_at = now(), low_at = 5 where id = 'cccccccc-0000-0000-0000-000000000001';
+select pg_temp.assert((select stock = 20 and low_at = 5 from public.products where id = 'cccccccc-0000-0000-0000-000000000001'), 'a product can have a stock count and a low level');
+update public.products set stock = 0, counted_at = now() where id = 'cccccccc-0000-0000-0000-000000000001';
+select pg_temp.assert((select stock = 0 from public.products where id = 'cccccccc-0000-0000-0000-000000000001'), 'a count of zero is allowed (out of stock)');
+do $$ begin
+  begin update public.products set stock = -1, counted_at = now() where id = 'cccccccc-0000-0000-0000-000000000001';
+    raise exception 'FAILED: accepted a negative count';
+  exception when check_violation then raise notice 'ok - rejects a negative count'; end;
+  begin update public.products set stock = 1000001, counted_at = now() where id = 'cccccccc-0000-0000-0000-000000000001';
+    raise exception 'FAILED: accepted a count over a million';
+  exception when check_violation then raise notice 'ok - rejects a count over a million'; end;
+  begin update public.products set low_at = -2 where id = 'cccccccc-0000-0000-0000-000000000001';
+    raise exception 'FAILED: accepted a negative low level';
+  exception when check_violation then raise notice 'ok - rejects a negative low level'; end;
+  begin update public.products set stock = 5, counted_at = null where id = 'cccccccc-0000-0000-0000-000000000001';
+    raise exception 'FAILED: accepted a count with no time';
+  exception when check_violation then raise notice 'ok - rejects a count without the time it was taken'; end;
+  begin update public.products set stock = null where id = 'cccccccc-0000-0000-0000-000000000001';
+    raise exception 'FAILED: accepted a time with no count';
+  exception when check_violation then raise notice 'ok - rejects a time without a count'; end;
+end $$;
+update public.products set stock = null, counted_at = null where id = 'cccccccc-0000-0000-0000-000000000001';
+select pg_temp.assert((select stock is null from public.products where id = 'cccccccc-0000-0000-0000-000000000001'), 'stopping tracking clears the count');
+reset role;
+delete from auth.users where id = (select id from _stock_user);
+
 -- Deleting an account deletes its books.
 delete from auth.users where email = 'bola@example.com';
 select pg_temp.assert((select count(*) from public.sales) = 0 and (select count(*) from public.products) = 0 and (select count(*) from public.expenses) = 0, 'deleting an account deletes its records');

@@ -5,7 +5,7 @@ import type { Product, Sale } from "../records/types";
 import { toChatError } from "../backend/supabase";
 import { sanitizeStored } from "./state";
 import { ChatError, DEFAULT_SETTINGS, emptyChat, freshChat, needsFresh, runTurn, type Chat, type IO, type ModelReply, type Settings } from "./engine";
-import { amountsIn, buildDraft, buildFactsProposal, buildMarkPaidProposal, buildRecordsProposal, buildTextDraft, describeProposal, runReadTool } from "./tools";
+import { amountsIn, buildDraft, buildFactsProposal, buildStockProposal, buildMarkPaidProposal, buildRecordsProposal, buildTextDraft, describeProposal, runReadTool } from "./tools";
 
 const at = (d: number) => new Date(2026, 9, d, 10).toISOString();
 const NOW = new Date(2026, 9, 12, 15, 0); // Monday 12 Oct 2026, 3pm
@@ -533,5 +533,71 @@ describe("facts and writing in a conversation", () => {
     const p = s.chat.items[1];
     expect(p.kind === "proposal" && p.proposal.facts).toEqual({ place: "Yaba" });
     expect(p.kind === "proposal" && p.saved?.facts).toEqual({ place: null, hours: "9 to 5" });
+  });
+});
+
+
+// ---- stock ----
+const counted = (): RecordsState => {
+  const b = books();
+  return { ...b, products: { ...b.products, [rice.id]: { ...rice, stock: 20, countedAt: new Date(2026, 9, 9, 9).toISOString(), lowAt: 5 } } };
+};
+
+describe("get_stock", () => {
+  it("says what is left (minus what was sold since the count), what is low, and what isn't counted", () => {
+    const d = JSON.parse(runReadTool("get_stock", {}, counted(), NOW));
+    expect(d.counted).toEqual([{ product: "Jollof rice", left: 17, status: "ok", warn_at: 5 }]);
+    expect(d.not_counted).toEqual(["Zobo"]);
+    expect(JSON.parse(runReadTool("get_stock", {}, books(), NOW)).note).toBeTruthy();
+  });
+});
+
+describe("propose_stock", () => {
+  it("sets a count, or adds to what is left now, and says what will be in stock", () => {
+    const set = buildStockProposal({ updates: [{ product: "jollof rice", set: 30 }] }, counted());
+    expect(set.ok && set.proposal.stock).toEqual([{ productId: rice.id, name: "Jollof rice", set: 30, result: 30 }]);
+    const add = buildStockProposal({ updates: [{ product: "Jollof", add: 20 }] }, counted());
+    expect(add.ok && add.proposal.stock?.[0]).toMatchObject({ add: 20, result: 37 }); // 17 left now + 20
+    expect(add.ok && describeProposal(add.proposal)).toEqual(["Jollof rice: 20 more (37 in stock)"]);
+    expect(set.ok && describeProposal(set.proposal)).toEqual(["Jollof rice: 30 in stock"]);
+  });
+  it("starts counting a product with set, but won't add to something that isn't counted yet", () => {
+    const start = buildStockProposal({ updates: [{ product: "Zobo", set: 40, low_at: 10 }] }, counted());
+    expect(start.ok && describeProposal(start.proposal)).toEqual(["Zobo: 40 in stock · warn at 10"]);
+    const add = buildStockProposal({ updates: [{ product: "Zobo", add: 10 }] }, counted());
+    expect(!add.ok && add.error).toMatch(/isn't being counted yet.*use set/);
+    expect(buildStockProposal({ updates: [{ product: "Zobo", low_at: 3 }] }, counted()).ok).toBe(false);
+    expect(buildStockProposal({ updates: [{ product: "Jollof rice", low_at: 3 }] }, counted()).ok).toBe(true);
+  });
+  it("never guesses the product, and checks every number", () => {
+    expect(buildStockProposal({ updates: [{ product: "Nothing", set: 1 }] }, counted()).ok).toBe(false);
+    const state = counted();
+    state.products = { ...state.products, "p-jollof-0002": { id: "p-jollof-0002", name: "Jollof rice (party)", price: 1 } };
+    const amb = buildStockProposal({ updates: [{ product: "Jollof", set: 1 }] }, state);
+    expect(!amb.ok && amb.error).toMatch(/more than one product/);
+    for (const bad of [{ set: -1 }, { set: 1.5 }, { set: 2_000_000 }, { add: 0 }, { add: -4 }, { add: "ten" }, { set: 5, add: 5 }, {}]) {
+      expect(buildStockProposal({ updates: [{ product: "Jollof rice", ...bad }] }, counted()).ok).toBe(false);
+    }
+    expect(buildStockProposal({ updates: [{ product: "Jollof rice", set: 1 }, { product: "jollof rice", set: 2 }] }, counted()).ok).toBe(false);
+    expect(buildStockProposal({ updates: [] }, counted()).ok).toBe(false);
+    expect(buildStockProposal({}, counted()).ok).toBe(false);
+    expect(buildStockProposal({ updates: Array.from({ length: 21 }, () => ({ product: "Jollof rice", set: 1 })) }, counted()).ok).toBe(false);
+  });
+  it("is a card to Save, then Undo puts the old count back (the store keeps what it was)", async () => {
+    const h = harness([reply([say("Got it."), use("t1", "propose_stock", { updates: [{ product: "Jollof rice", add: 20 }] })]), reply([say("Done.")])], counted());
+    const r = await runTurn(start(), { text: "I bought 20 more bags of rice" }, DEFAULT_SETTINGS, WHO, h.io);
+    const card = r.chat.items.find((i) => i.kind === "proposal");
+    expect(card && card.kind === "proposal" && card.status).toBe("pending");
+    expect(card && card.kind === "proposal" && card.proposal.stock?.[0]).toMatchObject({ add: 20, result: 37 });
+    expect(h.applied).toHaveLength(0);
+  });
+  it("survives a reload, including what Undo needs", () => {
+    const stored = { settings: { replyLanguage: "en", autonomy: "ask" }, consented: true, chat: { day: "2026-10-12", api: [], pending: [], items: [
+      { kind: "proposal", id: "p1", status: "saved", proposal: { sales: [], expenses: [], stock: [{ productId: "p-rice-0001", name: "Jollof rice", add: 20, result: 37 }, { productId: "bad id", name: "x", set: 1 }] }, saved: { sales: [], expenses: [], paid: [], stock: [{ id: "p-rice-0001", before: { stock: 17, countedAt: "2026-10-09T08:00:00.000Z", lowAt: 5 } }, { id: "nope", before: {} }] } },
+    ] } };
+    const s2 = sanitizeStored(JSON.parse(JSON.stringify(stored)), "2026-10-12");
+    const it = s2.chat.items[0];
+    expect(it.kind === "proposal" && it.proposal.stock).toEqual([{ productId: "p-rice-0001", name: "Jollof rice", add: 20, result: 37 }]);
+    expect(it.kind === "proposal" && it.saved?.stock).toEqual([{ id: "p-rice-0001", before: { stock: 17, countedAt: "2026-10-09T08:00:00.000Z", lowAt: 5 } }]);
   });
 });

@@ -6,6 +6,7 @@ import { Money } from "../../design-system/Money";
 import { SpalSymbol } from "../../design-system/SpalSymbol";
 import { naira } from "../../records/money";
 import { useRecords } from "../../records/store";
+import { leftLabel, stockLeft, stockStatus } from "../../records/stock";
 
 /** What you sell, with prices, and what each one costs you. Add them once, then record sales in a tap. */
 export function Products() {
@@ -40,6 +41,11 @@ export function Products() {
               <Link key={p.id} to={`/money/product/${p.id}`} className="row">
                 <span className="row__main">
                   <span className="row__title">{p.name}</span>
+                  {(() => {
+                    const left = stockLeft(state, p);
+                    const status = stockStatus(left, p.lowAt);
+                    return left !== null ? <span className={`row__sub${status && status !== "ok" ? " row__sub--warn" : ""}`}>{status === "low" ? `Running low: ${leftLabel(left)}` : leftLabel(left)}</span> : null;
+                  })()}
                   <span className="row__sub">{p.cost !== undefined ? (p.price > p.cost ? `Costs ${naira(p.cost)} · you keep ${naira(p.price - p.cost)}` : `Costs ${naira(p.cost)}. Check the price`) : "Add what it costs you"}</span>
                 </span>
                 <Money kobo={p.price} size={16} />
@@ -52,7 +58,10 @@ export function Products() {
         )}
 
         {products.length > 0 && (
-          <div style={{ marginTop: "var(--space-5)" }}>
+          <div className="inline-row" style={{ marginTop: "var(--space-5)", flexWrap: "wrap" }}>
+            <Button variant="secondary" size="md" onClick={() => navigate("/money/stock")}>
+              Count your stock
+            </Button>
             <Button variant="secondary" size="md" iconRight={<Icon name="share" size={18} />} onClick={() => navigate("/write/prices")}>
               Share your price list
             </Button>

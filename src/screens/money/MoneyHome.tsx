@@ -9,6 +9,7 @@ import { dayLabel, groupByDay, ledger, localDay, owed, periodRanges, summarize, 
 import { compareText, recordInsights } from "../../records/insights";
 import { useToast } from "../../lib/toast";
 import { useRecords } from "../../records/store";
+import { leftLabel, runningLow, stockLines } from "../../records/stock";
 
 const PERIODS: { value: Period; label: string }[] = [
   { value: "day", label: "Today" },
@@ -53,6 +54,8 @@ export function MoneyHome() {
   const insights = recordInsights(state, now).slice(0, 3);
   const compare = compareText(state, period, now);
   const empty = entries.length === 0;
+  const low = runningLow(state);
+  const trackedCount = stockLines(state).length;
   const hasProducts = Object.values(state.products).some((p) => !p.archived);
 
   return (
@@ -128,6 +131,27 @@ export function MoneyHome() {
             </>
           )}
 
+          {low.length > 0 && (
+            <>
+              <h2 className="section-title">
+                Running low <span className="row__sub">{low.length === 1 ? "1 product" : `${low.length} products`}</span>
+              </h2>
+              <div className="list">
+                {low.slice(0, 4).map((l) => (
+                  <Link key={l.product.id} to="/money/stock" className="row">
+                    <span className="row__main">
+                      <span className="row__title">{l.product.name}</span>
+                      <span className="row__sub row__sub--warn">{leftLabel(l.left)}</span>
+                    </span>
+                    <span className="row__end">
+                      <Icon name="chevron-right" size={18} />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+
           {insights.length > 0 && (
             <>
               <h2 className="section-title">What SPAL sees</h2>
@@ -177,6 +201,20 @@ export function MoneyHome() {
             <Icon name="chevron-right" size={18} />
           </span>
         </Link>
+        {hasProducts && (
+          <Link to="/money/stock" className="row">
+            <span className="tile">
+              <Icon name="package" size={20} />
+            </span>
+            <span className="row__main">
+              <span className="row__title">Your stock</span>
+              <span className="row__sub">{trackedCount ? `Counting ${trackedCount} ${trackedCount === 1 ? "product" : "products"}. Count again any time.` : "Count what you have and know when to buy more"}</span>
+            </span>
+            <span className="row__end">
+              <Icon name="chevron-right" size={18} />
+            </span>
+          </Link>
+        )}
         <Link to="/money/customers" className="row">
           <span className="tile">
             <Icon name="users" size={20} />

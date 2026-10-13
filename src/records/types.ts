@@ -18,6 +18,12 @@ export interface Product {
   price: number;
   cost?: number;
   archived?: boolean;
+  /** How many you counted. Present only when you track this product's stock. */
+  stock?: number;
+  /** When you counted. What was sold after this moment is taken off the count. Always set with `stock`. */
+  countedAt?: string;
+  /** Warn when what's left drops to this or below. */
+  lowAt?: number;
 }
 
 /** Someone you sell to. Sales keep the name as text; this holds the extra details. */

@@ -30,7 +30,7 @@ const TABLES = {
   profiles: { key: (r) => r.id, owner: "id", defaults: { name: "", answers: {}, completed: false, learning: true, active_days: [], last_seen: null } },
   step_progress: { key: (r) => `${r.user_id}:${r.module_id}`, owner: "user_id", defaults: { steps: [], done_at: null, opened_at: null, snoozed_until: null, dismissed: false } },
   customers: { key: (r) => `${r.user_id}:${r.id}`, owner: "user_id", defaults: { phone: null, note: null, archived: false } },
-  products: { key: (r) => `${r.user_id}:${r.id}`, owner: "user_id", defaults: { cost: null, archived: false } },
+  products: { key: (r) => `${r.user_id}:${r.id}`, owner: "user_id", defaults: { cost: null, archived: false, stock: null, counted_at: null, low_at: null } },
   sales: { key: (r) => `${r.user_id}:${r.id}`, owner: "user_id", defaults: { items: [], note: null, customer: null, paid: true, paid_at: null, deleted_at: null } },
   expenses: { key: (r) => `${r.user_id}:${r.id}`, owner: "user_id", defaults: { note: null, deleted_at: null } },
 };
@@ -140,6 +140,9 @@ function fakeModel(messages) {
     let m;
     if (/^who .*owe/i.test(text) || /owe me money/i.test(text)) return tu("list_owed", {});
     if (/best customers?/i.test(text)) return tu("list_customers", {});
+    if ((m = /^i (?:bought|got) (\d+) more (?:(?:bags?|bottles?|plates?|pieces?) of )?(.+)$/i.exec(text))) return tu("propose_stock", { updates: [{ product: m[2], add: Number(m[1]) }] });
+    if ((m = /^i (?:have|counted) (\d+) (.+?) now$/i.exec(text))) return tu("propose_stock", { updates: [{ product: m[2], set: Number(m[1]) }] });
+    if (/how many .* (left|do i have)|running low/i.test(text)) return tu("get_stock", {});
     if (/bio with prices/i.test(text)) return tu("draft_text", { kind: "instagram_bio", title: "Instagram bio", text: "Best jollof in town, only ₦999!" });
     if (/instagram bio|my bio\b/i.test(text)) return tu("get_business", {});
     if ((m = /^i(?:'|’)?m in (.+?),? (?:and )?open (.+)$/i.exec(text))) return tu("propose_business_facts", { place: m[1], hours: m[2] });
@@ -162,6 +165,7 @@ function fakeModel(messages) {
     if (/did not answer|not right|undid/i.test(r.content)) return say("Okay, I haven't saved it. Tell me what to change.");
     try {
       const d = JSON.parse(r.content);
+      if (d.counted) return say(d.counted.length ? `You have ${d.counted.map((c) => `${c.left} ${c.product}`).join(" and ")} left.` : "You haven't counted any stock yet.");
       if (d.business) return tu("draft_text", { kind: "instagram_bio", title: "Instagram bio", text: `${d.business.business_name ?? "Our shop"}. ${d.business.place ?? ""} Order on WhatsApp.`.replace(/\s+/g, " ").trim() });
       if (d.customers) return say(d.customers.length ? `Your best customer is ${d.customers[0].name}.` : "You have no customers yet.");
       if (d.current) return say(pcm ? `This week you don keep ₦${d.current.kept.toLocaleString("en-NG")}.` : `This week you kept ₦${d.current.kept.toLocaleString("en-NG")} from ₦${d.current.sold.toLocaleString("en-NG")} sold.`);
