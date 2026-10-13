@@ -7,7 +7,7 @@
 // With no model named it runs claude-opus-5-5, claude-sonnet-5-5 and claude-haiku-5-5 so you can compare them.
 // It spends real money (a few cents per model). Each case is a fresh conversation. Fixed fake books answer any lookups.
 import assert from "node:assert/strict";
-import { SYSTEM_PROMPT, TOOLS, READ_TOOLS, buildContext } from "../supabase/functions/_shared/assistant-protocol.ts";
+import { SYSTEM_PROMPT, TOOLS, READ_TOOLS, DRAFT_TOOLS, buildContext } from "../supabase/functions/_shared/assistant-protocol.ts";
 import { CASES, FIXTURE, TODAY, costUSD, judge } from "./eval-assistant-lib.mjs";
 
 const args = process.argv.slice(2);
@@ -20,6 +20,12 @@ const [weekday, today] = TODAY.split(" ");
 const ctx = (lang) => buildContext({ today, weekday, name: "Ada", businessType: "food", replyLanguage: lang });
 // Every case is sent with the default reply language (English): people write in Pidgin, the assistant should understand it either way.
 const langOf = (c) => (c.id.startsWith("pcm") ? "pcm" : "en");
+
+/** What the app tells the assistant after it shows a draft (kept in step with src/assistant/engine.ts). */
+const draftResult = (u) =>
+  u.name === "draft_text"
+    ? `A text draft ("${String(u.input?.title ?? "Draft").slice(0, 80)}") is on the person's screen. Nothing was posted or sent: they read it and copy it themselves. Offer to change it if they want.`
+    : `A ${u.input?.kind} draft for ${u.input?.customer} is on the person's screen. Nothing was sent: they read it, change it if they like, and send it themselves.`;
 
 /** Run one case to the end, answering lookups from the fixture and leaving any proposals unanswered (the person hasn't tapped Save). */
 async function runCase(c, call) {
@@ -34,8 +40,10 @@ async function runCase(c, call) {
     text += r.content.filter((b) => b.type === "text").map((b) => b.text).join("\n");
     const uses = r.content.filter((b) => b.type === "tool_use");
     calls.push(...uses);
-    if (!uses.length || uses.some((u) => !READ_TOOLS.includes(u.name))) break; // a proposal or a draft is left for the person, so the exchange ends here
-    messages.push({ role: "user", content: uses.map((u) => ({ type: "tool_result", tool_use_id: u.id, content: JSON.stringify(FIXTURE[u.name] ?? {}) })) });
+    // A proposal (a card to save) is left for the person, so the exchange ends there. Lookups and drafts carry on: in the app the
+    // assistant is told "the draft is on the person's screen, nothing was sent" and gets to say its line after it.
+    if (!uses.length || uses.some((u) => !READ_TOOLS.includes(u.name) && !DRAFT_TOOLS.includes(u.name))) break;
+    messages.push({ role: "user", content: uses.map((u) => ({ type: "tool_result", tool_use_id: u.id, content: DRAFT_TOOLS.includes(u.name) ? draftResult(u) : JSON.stringify(FIXTURE[u.name] ?? {}) })) });
   }
   return { calls, text, usage, problems: judge(c, calls, text) };
 }
@@ -56,7 +64,9 @@ async function evaluate(model, cases, call) {
 
 if (args.includes("--self-test")) {
   // A perfect answerer must score 100%; one that never does anything must fail every case that wants an action. This proves the scoring can fail.
-  const oracle = (c) => async () => {
+  const afterResult = (messages) => Array.isArray(messages.at(-1).content) && messages.at(-1).content.some((b) => b.type === "tool_result");
+  const oracle = (c) => async (messages) => {
+    if (afterResult(messages)) return { content: [{ type: "text", text: "It is ready for you to check." }], usage: { input: 1000, output: 100 } };
     const sales = [], expenses = [];
     if (c.saleTotal !== undefined) sales.push({ amount: c.saleTotal, ...(c.customer ? { customer: c.customer } : {}), ...(c.unpaid ? { paid: false, customer: c.unpaid } : {}), ...(c.when ? { when: c.when } : {}) });
     if (c.expenseTotal !== undefined) expenses.push({ amount: c.expenseTotal, category: c.categories?.[0] ?? "other", ...(c.when ? { when: c.when } : {}) });
@@ -79,6 +89,14 @@ if (args.includes("--self-test")) {
   assert.equal(ok, CASES.length, "a perfect answerer should pass every case");
   const wantsNothing = CASES.filter((c) => c.nothing).length;
   assert.equal(idlePass, wantsNothing, "an answerer that never acts should pass only the cases that want no action");
+  // A draft is judged on what the assistant says once it is told the draft is on screen (as in the app), not only before it.
+  const draftCase = CASES.find((c) => c.id === "en-draft-reminder");
+  const draftThen = (after) => async (messages) =>
+    afterResult(messages)
+      ? { content: after ? [{ type: "text", text: after }] : [], usage: { input: 1000, output: 100 } }
+      : { content: [{ type: "tool_use", id: "t1", name: "draft_message", input: { kind: "reminder", customer: "Chidi" } }], usage: { input: 1000, output: 100 } };
+  assert.equal((await runCase(draftCase, draftThen("It's ready. Check it and send it from WhatsApp."))).problems.length, 0, "speaking after the draft is on screen should pass");
+  assert.ok((await runCase(draftCase, draftThen(""))).problems.length > 0, "never saying anything should still fail");
   // For genuinely ambiguous wording, one clear question passes; silence does not.
   const ambiguous = CASES.find((c) => c.orAsk);
   const asker = async () => ({ content: [{ type: "text", text: "Is the 60k for both bags of beans, or each?" }], usage: { input: 1000, output: 100 } });

@@ -72,6 +72,8 @@ Measured with `tools/eval-assistant.mjs` on 37 realistic messages (short, one me
 
 No model got an amount wrong. The misses were an explanation line left out, a sale with no item named, and one genuinely ambiguous message, which the instructions and test now handle (see `Known limits`). English was 19/19 for all three; Pidgin 14 to 15 of 18.
 
+**After the instruction fixes** (49 cases, Sonnet 5.5): 45/49, English 24/26, Pidgin 21/23, about $0.0015 per message. None of the misses was about money. All four were "send a reminder or receipt" cases, judged before the assistant's line after the draft; the eval now carries on after a draft the way the app does (see `tools/eval-assistant.mjs`), so re-run it to get the corrected score.
+
 These are short chats. Real conversations carry history and tool results, so expect somewhat more per message, but nothing close to the 10x I first estimated. The two daily limits (per person and global) are your safety net: with the defaults the whole product can't spend more than about `2000 × cost per message` a day.
 
 **Recommendation:** Sonnet 5.5 (best score, still cheap). Haiku 5.5 is a fair choice if cost matters most: it scored the same as Opus at roughly 1/36 of the price. Switch with `npx supabase secrets set ASSISTANT_MODEL=claude-sonnet-5-5` (no redeploy needed). 37 short messages cannot prove how a model copes with long or messy real chats, and you tap Save on every card, so a wrong guess is caught either way. Re-run the eval after any change to the instructions.
