@@ -14,7 +14,7 @@ const longDay = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString(
 
 function External({ href, children, variant = "secondary" }: { href: string; children: string; variant?: "primary" | "secondary" }) {
   return (
-    <a className={`btn btn--${variant} btn--md`} href={href} target="_blank" rel="noopener noreferrer">
+    <a className={`btn btn--${variant} ${variant === "primary" ? "btn--lg btn--full" : "btn--md"}`} href={href} target="_blank" rel="noopener noreferrer">
       {children}
       <Icon name="arrow-up-right" size={16} />
       <span className="sr-only"> (opens in a new tab)</span>
@@ -134,7 +134,10 @@ export function Register() {
             ))}
           </div>
         ) : (
-          <p className="caption">Add your name above, or <Link to="/business">what you sell and where you are</Link>, and it shows here ready to copy.</p>
+          <>
+            <p className="caption">Add your name above, or fill in what you sell and where you are, and it shows here ready to copy.</p>
+            <Link to="/business" className="btn btn--secondary btn--md">Fill in Your business</Link>
+          </>
         )}
 
         <h2 className="section-title">On the CAC website</h2>
@@ -142,7 +145,6 @@ export function Register() {
           {PORTAL_STEPS.map((s) => <li key={s}>{s}</li>)}
         </ol>
         <p className="caption">Many people do this themselves online. An accredited agent is optional and costs more.</p>
-        <External href={CAC_PORTAL} variant="primary">Open the CAC website</External>
 
         <h2 className="section-title">Check it and save it</h2>
         <form className="form" onSubmit={save} noValidate>
@@ -151,10 +153,13 @@ export function Register() {
           <p className="caption">SPAL can only check that the number looks right. To see that it's real, search it on CAC's site.</p>
           <div className="actions-row">
             <External href={CAC_SEARCH}>Search on CAC</External>
-            <Button type="submit">Save</Button>
+            <Button type="submit" variant="secondary" size="md">Save</Button>
           </div>
         </form>
       </main>
+      <footer className="screen__footer">
+        <External href={CAC_PORTAL} variant="primary">Open the CAC website</External>
+      </footer>
     </div>
   );
 }
