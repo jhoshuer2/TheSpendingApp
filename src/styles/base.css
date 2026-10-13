@@ -29,7 +29,7 @@ img, svg { display: block; max-width: 100%; }
   .app { height: min(100dvh - 48px, 880px); border-radius: var(--radius-xl); box-shadow: var(--shadow-shell); }
 }
 
-:where(a, button, input):focus-visible { outline: none; box-shadow: var(--focus-ring); }
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;

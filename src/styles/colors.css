@@ -32,7 +32,7 @@
 
   --text-primary:var(--ink-900);
   --text-secondary:var(--ink-500);
-  --text-tertiary:var(--ink-400);   /* timestamps, placeholders — never essential copy */
+  --text-tertiary:#676F69;          /* timestamps, placeholders, the currency glyph. 4.5:1 on paper and white (ink-400 was 2.9:1). Quieter than secondary by size, not by contrast. */
   --text-on-accent:#FFFFFF;
   --text-inverse:#F3F5F2;
   --text-inverse-secondary:rgba(243,245,242,0.62);
@@ -78,6 +78,7 @@
   --line:rgba(238,241,237,0.08);
   --line-strong:rgba(238,241,237,0.14);
   --accent:#17864D;
+  --focus-ring:0 0 0 2px var(--surface-app), 0 0 0 4px var(--accent-text); /* re-resolved here so the night surface and accent are used */
   --accent-soft:rgba(70,178,122,0.12);
   --accent-text:#6CC796;
   --money-in:#6CC796;
