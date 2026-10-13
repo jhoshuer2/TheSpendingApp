@@ -2,6 +2,7 @@ import { DAY_KEY } from "../learning/time";
 import { MODULES } from "./modules";
 import { QUESTIONS } from "./questions";
 import type { Answers } from "./types";
+import { checkRegNumber, cleanDay } from "../registration/guide";
 
 export interface Progress {
   /** Indices of the steps the person has ticked. */
@@ -66,6 +67,10 @@ export function sanitizeAnswers(raw: unknown): Answers {
   }
   const ig = line(src.instagram, 40).replace(/^@+/, "");
   if (/^[A-Za-z0-9._]{1,30}$/.test(ig)) out.instagram = ig;
+  const reg = checkRegNumber(line(src.registeredAs, 20));
+  if (reg.ok) out.registeredAs = reg.value;
+  const on = cleanDay(src.registeredOn);
+  if (reg.ok && on) out.registeredOn = on;
   return out as Answers;
 }
 

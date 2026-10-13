@@ -1,20 +1,13 @@
-# Stock counts
+# Business registration (guide and verify)
 
-Decisions (from the person who owns the product):
-- Stock goes down only when sales are recorded by **picking products**, never from a typed amount.
-- The assistant can save stock changes through a Save card; Undo (and the stock screen) can always change them back.
-- Registration guidance comes in a second PR, after this one.
+Plan agreed in chat: guide the person, check what SPAL can, never register or send anything, never touch ID numbers.
 
-## Plan
-- [ ] Data: products get `stock`, `counted_at`, `low_at` (all optional). Left now = count minus what was sold since the count.
-- [ ] Migration `20261016000000_stock.sql` + database tests
-- [ ] Pure logic `src/records/stock.ts` + unit tests (left, low, out, backdated sales, deleted sales, add stock)
-- [ ] Sync (supabase client, fake server, cleaning of server rows)
-- [ ] Store: setStock, addStock, stop tracking, restore
-- [ ] Screens: track toggle in the product form, "Count your stock", left/low shown on Products, Money home "Running low", sale screen shows left and warns (never blocks)
-- [ ] Assistant: `get_stock` (read), `propose_stock` (Save card with Undo), instructions, eval cases
-- [ ] Browser checks (demo mode, backend sync, assistant), layout screens, docs (`docs/STOCK.md`)
-- [ ] Full sweep, PR
+- [x] Pure logic: sensitive-word nudge, loose registration-number check, day check (`src/registration/guide.ts`) + tests
+- [x] Profile answers `registeredAs` / `registeredOn` (sanitised, synced with the profile, no SQL)
+- [x] Screen `/business/register`: name ideas, ready list, pack with Copy, portal steps, check and save
+- [x] Entry points: library step `setup-register` ("Get ready with SPAL"), Your business row
+- [x] Browser check `npm run check:register`
+- [ ] Layout screens at 7 viewports (running)
+- [ ] Full sweep, docs, PR
 
-## Review
-(to fill in)
+## Review (to fill in)

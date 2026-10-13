@@ -74,6 +74,16 @@ export function ModuleDetail() {
           </div>
         )}
 
+        {m.kind === "guide" && m.tool && !finished && (
+          <div className="card enter" style={{ marginTop: "var(--space-5)", ["--i" as string]: 3 }}>
+            <b>Get ready with SPAL</b>
+            <span className="row__sub" style={{ display: "block", margin: "2px 0 var(--space-3)" }}>A guide, a checklist and a copy-ready pack. You do the registering yourself.</span>
+            <Button variant="secondary" size="md" onClick={() => navigate(m.tool!.to)}>
+              {m.tool.label}
+            </Button>
+          </div>
+        )}
+
         <h2 className="section-title">
           Steps <span className="row__sub">{ticked} of {m.steps.length}</span>
         </h2>
