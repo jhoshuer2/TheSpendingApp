@@ -16,6 +16,8 @@
 .btn:active:not(:disabled) { transform: scale(var(--press-scale)); }
 .btn:disabled { cursor: default; }
 .btn[aria-disabled="true"], .btn:disabled:not([data-loading]) { opacity: 0.42; }
+/* A disabled primary stays readable: a flat grey with ink text, not a faded green with white text. */
+.btn--primary[aria-disabled="true"], .btn--primary:disabled:not([data-loading]) { opacity: 1; background: var(--ink-200); color: var(--ink-600); box-shadow: none; }
 .btn__dots { display: flex; gap: 5px; }
 .btn__dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: btn-pulse 1s var(--ease-in-out) infinite; }
 .btn__dots i:nth-child(2) { animation-delay: 0.14s; }
@@ -29,7 +31,7 @@
   background: var(--surface-card); color: var(--text-primary); box-shadow: var(--shadow-tactile-light);
   transition: transform var(--dur-1) var(--ease-out);
 }
-.icon-btn:active { transform: scale(var(--press-scale)); }
+.icon-btn:active { transform: scale(var(--press-scale-icon)); }
 
 /* Text link-style button, 44px tall hit area */
 .link-btn {
@@ -133,7 +135,7 @@
 .opt--on .check, .check--on { background: var(--ink-900); box-shadow: none; }
 
 /* ---------- Progress bar ---------- */
-.bar { flex: 1; height: 4px; border-radius: var(--radius-full); background: var(--ink-150); overflow: hidden; }
+.bar { flex: 1; height: 4px; border-radius: var(--radius-full); background: var(--ink-300); overflow: hidden; }
 .bar i { display: block; height: 100%; border-radius: inherit; background: var(--ink-900); transition: width var(--dur-3) var(--ease-out); }
 .screen__header--bar { gap: var(--space-4); }
 
@@ -213,7 +215,7 @@
 /* ---------- Week strip ---------- */
 .week { display: flex; justify-content: space-between; gap: var(--space-2); }
 .week__day { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.week__day i { width: 100%; max-width: 32px; height: 10px; border-radius: var(--radius-full); background: var(--ink-150); }
+.week__day i { width: 100%; max-width: 32px; height: 10px; border-radius: var(--radius-full); background: var(--ink-300); }
 .week__day i.on { background: var(--accent); }
 .week__day span { font-size: var(--text-caption); color: var(--text-secondary); }
 
