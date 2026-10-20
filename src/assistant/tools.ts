@@ -155,13 +155,14 @@ export function buildMarkPaidProposal(input: unknown, state: RecordsState): Buil
   const name = text(obj(input).customer, 80);
   if (!name) return { ok: false, error: "Which customer? Ask the person." };
   const unpaid = owed(state).list.filter((s) => s.customer);
-  const owing = [...new Set(unpaid.map((s) => s.customer as string))];
+  // "Ada" and "ada." are one person, as on the Customers screen.
+  const owing = [...new Map(unpaid.map((s) => [norm(s.customer as string), s.customer as string] as const)).values()];
   const n = norm(name);
   const exact = owing.filter((c) => norm(c) === n);
   const hits = exact.length ? exact : owing.filter((c) => n.length >= 2 && (norm(c).includes(n) || n.includes(norm(c))));
   if (hits.length === 0) return { ok: false, error: owing.length ? `Nobody called "${name}" owes anything. People who owe: ${owing.slice(0, 10).join(", ")}.` : `Nobody owes anything right now, so there is nothing to mark as paid.` };
   if (hits.length > 1) return { ok: false, error: `More than one customer matches "${name}": ${hits.slice(0, 5).join(", ")}. Ask the person which one.` };
-  const sales = unpaid.filter((s) => s.customer === hits[0]);
+  const sales = unpaid.filter((s) => norm(s.customer as string) === norm(hits[0]));
   return { ok: true, proposal: { sales: [], expenses: [], markPaid: { customer: hits[0], saleIds: sales.map((s) => s.id), total: sales.reduce((n2, s) => n2 + s.amount, 0) } } };
 }
 
