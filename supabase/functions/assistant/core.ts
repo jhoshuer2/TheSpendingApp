@@ -47,13 +47,25 @@ const fail = (status: number, error: string, message: string, extra: Record<stri
 export async function handle(body: unknown, authorization: string | null, deps: Deps): Promise<Result> {
   if (!deps.config.enabled) return fail(503, "disabled", "The assistant is switched off for now.");
 
-  const user = await deps.authenticate(authorization);
+  // These talk to the database. If they can't, say so in JSON (the browser hides a bare 500 behind a CORS error).
+  const busy = () => fail(503, "busy", "The assistant is busy. Please try again in a moment.");
+  let user;
+  try {
+    user = await deps.authenticate(authorization);
+  } catch {
+    return busy();
+  }
   if (!user) return fail(401, "unauthorized", "Please sign in again.");
 
   const v = validateRequest(body);
   if (!v.ok) return fail(v.status, v.error, v.message);
 
-  const quota = await deps.takeQuota(user.userId);
+  let quota;
+  try {
+    quota = await deps.takeQuota(user.userId);
+  } catch {
+    return busy();
+  }
   if (quota === "user_limit") return fail(429, "quota", "You've used all your assistant messages for today. They come back tomorrow.", { scope: "user" });
   if (quota === "global_limit") return fail(429, "quota", "The assistant is very busy right now. Please try again later.", { scope: "global" });
 
@@ -71,7 +83,7 @@ export async function handle(body: unknown, authorization: string | null, deps: 
     return { status: 200, body: { content: reply.content, stop_reason: reply.stopReason, model: reply.model, usage: reply.usage } };
   } catch (e) {
     const reason = e instanceof ModelError ? e.reason : "failed";
-    if (reason === "busy") return fail(503, "busy", "The assistant is busy. Please try again in a moment.");
+    if (reason === "busy") return busy();
     if (reason === "config") return fail(500, "not_configured", "The assistant isn't set up properly yet.");
     return fail(502, "model_failed", "The assistant couldn't answer just now. Please try again.");
   }
