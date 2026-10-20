@@ -50,17 +50,17 @@ function Card({ item }: { item: Extract<Item, { kind: "proposal" }> }) {
       </ul>
       {item.status === "pending" && (
         <div className="acard__actions">
-          <Button size="md" onClick={() => a.save(item.id)}>
+          <Button size="md" disabled={a.busy} onClick={() => a.save(item.id)}>
             Save
           </Button>
-          <Button size="md" variant="secondary" onClick={() => a.dismiss(item.id)}>
+          <Button size="md" variant="secondary" disabled={a.busy} onClick={() => a.dismiss(item.id)}>
             Not right
           </Button>
         </div>
       )}
       {item.status === "saved" && (
         <div className="acard__actions">
-          <button type="button" className="link-btn" onClick={() => a.undo(item.id)}>
+          <button type="button" className="link-btn" disabled={a.busy} onClick={() => a.undo(item.id)}>
             Undo
           </button>
         </div>
