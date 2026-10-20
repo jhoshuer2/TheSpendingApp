@@ -109,7 +109,7 @@
 
 /* ---------- Empty state ---------- */
 .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-3); padding: var(--space-12) var(--space-4); }
-.empty h2 { font-size: var(--text-title-2); line-height: var(--lh-title-2); letter-spacing: var(--ls-title-2); font-weight: 500; }
+.empty h1, .empty h2 { font-size: var(--text-title-2); line-height: var(--lh-title-2); letter-spacing: var(--ls-title-2); font-weight: 500; }
 .empty p { max-width: 28ch; font-size: var(--text-body); color: var(--text-secondary); }
 
 /* ---------- Option card (onboarding answers) ---------- */
