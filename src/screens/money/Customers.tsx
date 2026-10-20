@@ -6,12 +6,13 @@ import { Icon } from "../../design-system/Icon";
 import { Money } from "../../design-system/Money";
 import { SpalSymbol } from "../../design-system/SpalSymbol";
 import { useBack } from "../../lib/useBack";
+import { calendarDaysAgo } from "../../records/calc";
 import { buildCustomers, normName, sortCustomers, type CustomerEntry } from "../../records/customers";
 import { useRecords } from "../../records/store";
 
 const ago = (iso: string | undefined, now: Date): string => {
   if (!iso) return "No sales yet";
-  const days = Math.floor((now.getTime() - new Date(iso).getTime()) / 86_400_000);
+  const days = calendarDaysAgo(iso, now);
   if (days <= 0) return "Bought today";
   if (days === 1) return "Bought yesterday";
   if (days < 14) return `Bought ${days} days ago`;

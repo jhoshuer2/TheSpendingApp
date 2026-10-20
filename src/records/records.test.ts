@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayLabel, evaluateAuto, groupByDay, ledger, owed, periodRanges, saleTitle, summarize } from "./calc";
+import { calendarDaysAgo, dayLabel, evaluateAuto, groupByDay, ledger, owed, periodRanges, saleTitle, summarize } from "./calc";
 import { compareText, recordInsights } from "./insights";
 import { digitsToKobo, formatNaira, MAX_DIGITS, naira, pressKey, toKobo } from "./money";
 import { cleanExpense, cleanProduct, cleanSale, EMPTY_RECORDS, isRecordsDirty, mergePulled, requeueRejected, sanitizeRecords, type RecordsState } from "./state";
@@ -130,6 +130,16 @@ describe("the list", () => {
     expect(dayLabel(g[0].key, NOW)).toBe("Today");
     expect(dayLabel(g[1].key, NOW)).toBe("Yesterday");
     expect(dayLabel(g[2].key, NOW)).toMatch(/9 Oct|Oct 9/);
+  });
+});
+
+describe("how long ago", () => {
+  const early = new Date(2026, 9, 14, 9, 0, 0);
+  it("counts calendar days, not 24-hour blocks", () => {
+    expect(calendarDaysAgo(t(0, 8), early)).toBe(0);
+    expect(calendarDaysAgo(t(1, 12), early)).toBe(1); // "Yesterday" is saved at midday, 21 hours before 9am
+    expect(calendarDaysAgo(t(1, 20), early)).toBe(1);
+    expect(calendarDaysAgo(t(3, 23), early)).toBe(3);
   });
 });
 
