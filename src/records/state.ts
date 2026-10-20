@@ -24,7 +24,7 @@ export const EMPTY_RECORDS: RecordsState = { customers: {}, products: {}, sales:
 
 export const isRecordsDirty = (s: RecordsState): boolean => s.dirty.customers.length + s.dirty.products.length + s.dirty.sales.length + s.dirty.expenses.length > 0;
 
-const MAX_KOBO = 100_000_000_000;
+export const MAX_KOBO = 100_000_000_000;
 export const MAX_STOCK = 1_000_000;
 const whole = (v: unknown, min: number, max: number): number | undefined => {
   const n = typeof v === "string" ? Number(v) : v;
@@ -69,10 +69,21 @@ export function cleanProduct(r: unknown): Product | null {
   };
 }
 
+/** The server keeps at most 4096 bytes of items per sale (jsonb); stay well under so a sale is never half saved. */
+const MAX_ITEMS_BYTES = 3000;
+const MAX_SALE_ITEMS = 50;
+
+/** Why a sale can't be saved as entered, in plain words, or null. Catches what the server would refuse for good. */
+export function saleLimitProblem(amount: number, items: SaleItem[]): string | null {
+  if (amount > MAX_KOBO) return "That total is too big to record. Check the quantities.";
+  if (items.length > MAX_SALE_ITEMS || new TextEncoder().encode(JSON.stringify(items)).length > MAX_ITEMS_BYTES) return "That's too many different products for one sale. Record it as two sales.";
+  return null;
+}
+
 function cleanItems(v: unknown): SaleItem[] {
   if (!Array.isArray(v)) return [];
   const out: SaleItem[] = [];
-  for (const it of v.slice(0, 50)) {
+  for (const it of v.slice(0, MAX_SALE_ITEMS)) {
     const o = (it && typeof it === "object" ? it : {}) as Record<string, unknown>;
     const name = str(o.name, 80), unit = kobo(o.unitPrice, 0);
     const qty = typeof o.qty === "number" && Number.isInteger(o.qty) && o.qty >= 1 && o.qty <= 100000 ? o.qty : undefined;

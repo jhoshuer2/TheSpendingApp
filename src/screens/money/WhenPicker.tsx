@@ -5,14 +5,18 @@ export type When = { kind: "today" } | { kind: "yesterday" } | { kind: "other"; 
 
 const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-/** The ISO time to save, or null if the chosen date is missing or in the future. Past days are saved at midday. */
+/** Furthest back a record can be dated (the server refuses anything over 10 years; the assistant allows the same 5). */
+const YEARS_BACK = 5;
+
+/** The ISO time to save, or null if the chosen date is missing, in the future, or too long ago. Past days are saved at midday. */
 export function whenToIso(w: When, now = new Date()): string | null {
   if (w.kind === "today") return now.toISOString();
   if (w.kind === "yesterday") return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12).toISOString();
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(w.date);
   if (!m) return null;
   const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12);
-  return d.getTime() > now.getTime() ? null : d.toISOString();
+  if (d.getTime() > now.getTime() || d.getFullYear() < now.getFullYear() - YEARS_BACK) return null;
+  return d.toISOString();
 }
 
 /** "When was it?": today, yesterday, or any earlier day. People often write things down later. */
@@ -26,7 +30,7 @@ export function WhenPicker({ when, onChange }: { when: When; onChange: (w: When)
         options={[{ value: "today", label: "Today" }, { value: "yesterday", label: "Yesterday" }, { value: "other", label: "Another day" }]}
         onChange={(k) => onChange(k === "other" ? { kind: "other", date: dayKey(new Date()) } : { kind: k })}
       />
-      {when.kind === "other" && <Field label="Date" type="date" max={dayKey(new Date())} value={when.date} onChange={(e) => onChange({ kind: "other", date: e.target.value })} />}
+      {when.kind === "other" && <Field label="Date" type="date" min={`${new Date().getFullYear() - YEARS_BACK}-01-01`} max={dayKey(new Date())} value={when.date} onChange={(e) => onChange({ kind: "other", date: e.target.value })} />}
     </div>
   );
 }
