@@ -1,11 +1,22 @@
 ---
 name: art-director
-description: Art-directs web pages the way an editorial designer would, with real typographic scale contrast, a committed grid, one accent colour and one signature motion. Use when designing or redesigning a page, building a landing page, hero or marketing section, choosing type, grid, colour or animation, or when someone says the layout looks generic, looks like a template, looks like Bootstrap, feels flat, or needs art direction. Not for backend or component logic.
+description: Composition, scale and motion guidance for SPAL screens (SPAL tokens from spal-design win on font, colour and components). Art-directs web pages the way an editorial designer would, with real typographic scale contrast, a committed grid, one accent colour and one signature motion. Use when designing or redesigning a page, building a landing page, hero or marketing section, choosing type, grid, colour or animation, or when someone says the layout looks generic, looks like a template, looks like Bootstrap, feels flat, or needs art direction. Not for backend or component logic.
 ---
 
 # Art Director
 
 Art-direct the page. Decide type, grid, colour and motion before you write markup.
+
+## Scope in this repo (SPAL)
+
+`spal-design` is the source of truth for tokens and components. In this repo this skill guides composition only: scale contrast, hierarchy, whitespace and rhythm, alignment, and motion discipline.
+
+- **Use SPAL's tokens.** Font is Satoshi, and colour, spacing, radius and components come from `.claude/skills/spal-design/` and `docs/DESIGN-DIRECTION.md`. Where this file names a palette, font stack, pairing or hex value, ignore it.
+- **The direction card** keeps its Ratio, Body, Display, Grid, Unit, Signature and Motion-off lines. Its Paper, Ink, Muted, Rule and Accent lines are filled from SPAL tokens, never invented.
+- **Cards are allowed.** SPAL's grouped raised cards, pills and rounded surfaces are the brand. The "hairlines, not cards" rule and generic tells 2 and 10 do not apply to app screens. The rest of the tells still do.
+- **Mobile app limits.** Touch targets stay at least 44px, and `npm run check:layout` must pass. Display sizes are capped to what fits at 320px, so use the focal-element rule in `docs/DESIGN-DIRECTION.md` rather than 5x body.
+- **Motion** stays in the three speed bands, uses transform and opacity only, and honours `prefers-reduced-motion`.
+- **Marketing or landing pages** outside the app may use the full skill below, still on SPAL's font and colours.
 
 Reference points: Readymag editorial sites, Swiss and Bauhaus posters, printed magazines. Not dashboards. Not component library demos.
 
