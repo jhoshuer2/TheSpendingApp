@@ -152,6 +152,7 @@
   border-radius: var(--radius-lg); background: var(--surface-card); box-shadow: var(--shadow-1), var(--highlight-top);
 }
 .hero__title { font-size: var(--text-display); line-height: var(--lh-display); letter-spacing: var(--ls-display); font-weight: 500; }
+@media (max-width: 359px) { .hero__title { font-size: var(--text-title-1); line-height: var(--lh-title-1); letter-spacing: var(--ls-title-1); } }
 .hero__why { font-size: var(--text-body); line-height: var(--lh-body); color: var(--text-secondary); }
 .hero__why b { display: block; margin-bottom: var(--space-0-5); font-size: var(--text-caption); font-weight: 500; color: var(--text-primary); }
 
