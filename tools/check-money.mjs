@@ -186,7 +186,10 @@ await step("you can record things you forgot, for earlier days, but not for the 
   await p.getByRole("radio", { name: "Another day" }).click();
   await p.getByLabel("Date").fill(dayKey(-3));
   await p.getByRole("button", { name: "Record ₦2,000" }).click();
-  await p.getByText("Choose a date that isn't in the future.").waitFor();
+  await p.getByText("Choose a date from the last 5 years, not in the future.").waitFor();
+  await p.getByLabel("Date").fill("2010-01-01"); // the server refuses anything over 10 years old, for good
+  await p.getByRole("button", { name: "Record ₦2,000" }).click();
+  await p.getByText("Choose a date from the last 5 years, not in the future.").waitFor();
   await p.getByRole("button", { name: "Back" }).click();
   await p.getByText("Yesterday").first().waitFor();
 });

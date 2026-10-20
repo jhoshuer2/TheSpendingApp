@@ -98,6 +98,12 @@ export const localDay = (iso: string): string => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
+/** Whole calendar days between a moment and now, by the clock on the wall: 9pm last night is 1 at 8am, not 0. */
+export const calendarDaysAgo = (iso: string, now: Date): number => {
+  const d = new Date(iso);
+  return Math.round((at(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - at(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) / 86_400_000);
+};
+
 /** "Today", "Yesterday", or "Mon 12 Oct", for grouping the list. */
 export function dayLabel(key: string, now: Date): string {
   const d = new Date(`${key}T12:00:00`);

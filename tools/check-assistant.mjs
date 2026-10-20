@@ -122,6 +122,23 @@ await step("ignoring a card and carrying on counts as not saved", async () => {
   assert.ok(await p.locator(".acard--dismissed").count() >= 2);
 });
 
+await step("a card can't be answered while the assistant is mid-reply, so a Save is never overwritten", async () => {
+  const n0 = await p.getByTestId("proposal").count();
+  await say("I spent 900 on bus");
+  await p.getByTestId("proposal").nth(n0).waitFor();
+  const before = (await live("expenses")).length;
+  await p.route("**/functions/v1/assistant", async (r) => { await new Promise((ok) => setTimeout(ok, 1500)); await r.continue(); });
+  await say("who owes me money?");
+  await p.getByRole("status").waitFor();
+  // el.click() fires nothing on a disabled button, which is the point.
+  await card().getByRole("button", { name: "Save" }).evaluate((el) => el.click());
+  await reply(/Nobody owes you/);
+  await p.unroute("**/functions/v1/assistant");
+  const recorded = (await live("expenses")).length - before;
+  const undoable = await card().getByRole("button", { name: "Undo" }).count();
+  assert.equal(recorded > 0, undoable > 0, `recorded ${recorded} expense(s) but the card ${undoable ? "offers Undo" : "says it was not saved"}`);
+});
+
 await step("a customer who owes: saved as unpaid, then 'don pay' (Pidgin) marks it paid", async () => {
   await say("Chidi owes me ₦2,000");
   await card().getByRole("button", { name: "Save" }).click();

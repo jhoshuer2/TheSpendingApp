@@ -51,7 +51,7 @@ export function NotFound() {
       <main className="screen__body" style={{ display: "grid", placeItems: "center" }}>
         <div className="empty enter">
           <SpalSymbol symbol="focus" size={72} />
-          <h2>We can't find that page</h2>
+          <h1>We can't find that page</h1>
           <p>It may have moved. Head back and pick up from the start.</p>
         </div>
       </main>

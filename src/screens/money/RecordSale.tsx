@@ -10,6 +10,7 @@ import { useBack } from "../../lib/useBack";
 import { useToast } from "../../lib/toast";
 import { buildCustomers, normName } from "../../records/customers";
 import { digitsToKobo, naira, pressKey } from "../../records/money";
+import { saleLimitProblem } from "../../records/state";
 import { useRecords } from "../../records/store";
 import { leftLabel, stockLeft } from "../../records/stock";
 import type { SaleItem } from "../../records/types";
@@ -53,8 +54,10 @@ export function RecordSale() {
   const save = () => {
     if (amount <= 0) return setError(mode === "quick" ? "Enter how much it was." : "Pick at least one product.");
     if (paid === "owes" && !customer.trim()) return setError("Who owes you? Add their name so you remember.");
+    const tooMuch = saleLimitProblem(amount, mode === "products" ? items : []);
+    if (tooMuch) return setError(tooMuch);
     const at = whenToIso(when);
-    if (at === null) return setError("Choose a date that isn't in the future.");
+    if (at === null) return setError("Choose a date from the last 5 years, not in the future.");
     const sale = addSale({ amount, items: mode === "products" ? items : [], note: mode === "quick" ? note : undefined, customer: customer.trim() || undefined, paid: paid === "paid", at });
     show(`Recorded ${naira(sale.amount)}.`, () => removeRecord("sale", sale.id));
     back();

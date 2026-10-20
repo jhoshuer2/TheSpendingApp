@@ -27,7 +27,7 @@ export function RecordExpense() {
     if (amount <= 0) return setError("Enter how much you spent.");
     if (!category) return setError("Pick what it was for.");
     const at = whenToIso(when);
-    if (at === null) return setError("Choose a date that isn't in the future.");
+    if (at === null) return setError("Choose a date from the last 5 years, not in the future.");
     const e = addExpense({ amount, category, note, at });
     show(`Recorded ${naira(e.amount)} spent.`, () => removeRecord("expense", e.id));
     back();

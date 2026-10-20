@@ -197,13 +197,15 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         if (f) void run({ text: f.text, retry: true });
       },
       save: (id) => {
+        if (busyRef.current) return; // the turn in flight rewrites the chat and would undo this
         const item = chatRef.current.items.find((i) => i.id === id);
         if (!item || item.kind !== "proposal" || item.status !== "pending") return;
         const saved = apply(item.proposal);
         patchItem(id, (i) => (i.kind === "proposal" ? { ...i, status: "saved", saved } : i));
       },
-      dismiss: (id) => patchItem(id, (i) => (i.kind === "proposal" && i.status === "pending" ? { ...i, status: "dismissed" } : i)),
+      dismiss: (id) => !busyRef.current && patchItem(id, (i) => (i.kind === "proposal" && i.status === "pending" ? { ...i, status: "dismissed" } : i)),
       undo: (id) => {
+        if (busyRef.current) return;
         const item = chatRef.current.items.find((i) => i.id === id);
         if (!item || item.kind !== "proposal" || item.status !== "saved" || !item.saved) return;
         const r = recordsRef.current;

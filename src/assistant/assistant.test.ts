@@ -95,6 +95,14 @@ describe("propose_mark_paid", () => {
   });
 });
 
+describe("propose_mark_paid with one customer spelled two ways", () => {
+  it("treats 'Ada' and 'ada.' as the same person, as the Customers screen does, and marks both sales", () => {
+    const sale = (id: string, customer: string): Sale => ({ id, at: new Date(2026, 9, 12, 10).toISOString(), amount: 100000, items: [], paid: false, customer });
+    const r = buildMarkPaidProposal({ customer: "ada" }, books({ sales: { a1: sale("a1", "Ada"), a2: sale("a2", "ada.") } }));
+    expect(r.ok && r.proposal.markPaid).toMatchObject({ saleIds: ["a1", "a2"], total: 200000 });
+  });
+});
+
 describe("read tools", () => {
   it("summarises in naira with the previous period", () => {
     const out = JSON.parse(runReadTool("get_summary", { period: "week" }, books(), NOW));

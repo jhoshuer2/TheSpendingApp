@@ -41,5 +41,5 @@ img, svg { display: block; max-width: 100%; }
 @keyframes enter { from { opacity: 0; transform: translateY(var(--rise)); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }

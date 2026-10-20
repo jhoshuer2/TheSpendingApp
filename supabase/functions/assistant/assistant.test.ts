@@ -108,6 +108,15 @@ describe("handle", () => {
     expect((await handle({ messages: [] }, "Bearer good", r.d)).status).toBe(400);
     expect(r.calls).toEqual([]);
   });
+  it("answers with JSON, not a crash, when the sign-in check or the usage count fails", async () => {
+    for (const over of [{ takeQuota: async () => { throw new Error("rpc down"); } }, { authenticate: async () => { throw new Error("network"); } }]) {
+      const { d, calls } = deps(over);
+      const r = await handle(body, "Bearer good", d);
+      expect(r.status).toBe(503);
+      expect(r.body.error).toBe("busy");
+      expect(calls).not.toContain("model");
+    }
+  });
   it("stops at the limits without calling the model", async () => {
     for (const q of ["user_limit", "global_limit"] as const) {
       const { d, calls } = deps({ takeQuota: async () => q });

@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { dayLabel, evaluateAuto, groupByDay, ledger, owed, periodRanges, saleTitle, summarize } from "./calc";
+import { calendarDaysAgo, dayLabel, evaluateAuto, groupByDay, ledger, owed, periodRanges, saleTitle, summarize } from "./calc";
 import { compareText, recordInsights } from "./insights";
 import { digitsToKobo, formatNaira, MAX_DIGITS, naira, pressKey, toKobo } from "./money";
-import { cleanExpense, cleanProduct, cleanSale, EMPTY_RECORDS, isRecordsDirty, mergePulled, requeueRejected, sanitizeRecords, type RecordsState } from "./state";
+import { cleanExpense, cleanProduct, cleanSale, EMPTY_RECORDS, isRecordsDirty, mergePulled, requeueRejected, sanitizeRecords, saleLimitProblem, type RecordsState } from "./state";
+import { whenToIso } from "../screens/money/WhenPicker";
 import type { Expense, Product, Sale } from "./types";
 
 // Wed 14 Oct 2026, midday local time. Dates are built locally so the tests pass in any timezone.
@@ -130,6 +131,35 @@ describe("the list", () => {
     expect(dayLabel(g[0].key, NOW)).toBe("Today");
     expect(dayLabel(g[1].key, NOW)).toBe("Yesterday");
     expect(dayLabel(g[2].key, NOW)).toMatch(/9 Oct|Oct 9/);
+  });
+});
+
+describe("how long ago", () => {
+  const early = new Date(2026, 9, 14, 9, 0, 0);
+  it("counts calendar days, not 24-hour blocks", () => {
+    expect(calendarDaysAgo(t(0, 8), early)).toBe(0);
+    expect(calendarDaysAgo(t(1, 12), early)).toBe(1); // "Yesterday" is saved at midday, 21 hours before 9am
+    expect(calendarDaysAgo(t(1, 20), early)).toBe(1);
+    expect(calendarDaysAgo(t(3, 23), early)).toBe(3);
+  });
+});
+
+describe("limits the server enforces, caught on the entry screen", () => {
+  const item = (name: string, i = 0) => ({ productId: `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`, name, qty: 1, unitPrice: 100_000 });
+  it("refuses a product total over the ₦1bn the server accepts", () => {
+    expect(saleLimitProblem(100_000_000_000, [item("Rice")])).toBeNull();
+    expect(saleLimitProblem(100_000_000_001, [item("Rice")])).toMatch(/too big/);
+  });
+  it("refuses a sale whose products would not be saved in full (51 products, or long names that overflow the 4KB the server keeps)", () => {
+    expect(saleLimitProblem(500_000, [item("Rice", 1), item("Beans", 2), item("Zobo", 3)])).toBeNull();
+    expect(saleLimitProblem(500_000, Array.from({ length: 51 }, (_, i) => item(`Item ${i}`, i)))).toMatch(/too many/);
+    expect(saleLimitProblem(500_000, Array.from({ length: 25 }, (_, i) => item("🍛".repeat(60), i)))).toMatch(/too many/);
+  });
+  it("accepts a date up to five years back and refuses older ones or the future", () => {
+    const now = new Date(2026, 9, 14, 12);
+    expect(whenToIso({ kind: "other", date: "2021-10-14" }, now)).not.toBeNull();
+    expect(whenToIso({ kind: "other", date: "2010-01-01" }, now)).toBeNull();
+    expect(whenToIso({ kind: "other", date: "2026-10-15" }, now)).toBeNull();
   });
 });
 
