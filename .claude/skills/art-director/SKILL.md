@@ -18,6 +18,14 @@ Art-direct the page. Decide type, grid, colour and motion before you write marku
 - **Motion** stays in the three speed bands, uses transform and opacity only, and honours `prefers-reduced-motion`.
 - **Marketing or landing pages** outside the app may use the full skill below, still on SPAL's font and colours.
 
+**Ignore these rules on app screens** (SPAL's own values win; they are kept below for marketing pages only):
+- Type: display at 5x body, the weight/tracking table above 40px, two families, uppercase 11px overlines. SPAL is Satoshi only, tops out at `--text-money` 48px, weight 500 at most, and has no uppercase overlines.
+- Grid and space: 12 columns, `clamp()` page margins, "never 6+6", the 8px unit, 96-192px section gaps, one grid break, one empty quadrant. SPAL is one 20px-gutter column on a 4pt unit with 36px between sections.
+- Colour: the paper/ink/accent values, "accent under 5%", "never pure white". SPAL's green is the primary-button colour and `--paper-raised` is white.
+- Motion numbers: 8-24px travel, 40-80ms stagger, 120-180ms and 700-1200ms bands, the expo ease. SPAL runs a 6px rise, 30ms stagger, 160-200ms state changes, 560ms for hero numbers and `cubic-bezier(.2,0,0,1)`. Keep the rules: three bands, transform and opacity only, entrance once, complete when motion is off.
+- Signature moves (line-masked reveal, horizontal rail, sticky columns, rotated type, scroll scrubbing) and the Tailwind section. Use one settle on the focal number instead.
+- Iris is the one permitted second hue, for SPAL AI surfaces only. Use the night-theme tokens (`--surface-*`, `--line-*`), never raw `--ink-*`, so dark mode flips.
+
 Reference points: Readymag editorial sites, Swiss and Bauhaus posters, printed magazines. Not dashboards. Not component library demos.
 
 Numbers and full tables live in [reference.md](reference.md). Worked fixes live in [examples.md](examples.md). Open them when you need a value or a pattern.

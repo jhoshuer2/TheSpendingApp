@@ -23,20 +23,32 @@ export function Journey() {
   const weekSummary = `Active on ${week.activeDays} of the last 7 days, ${week.stepsFinished} ${week.stepsFinished === 1 ? "step" : "steps"} finished this week.`;
   const unlocked = milestones.filter((m) => m.unlocked).length;
 
+  if (entries.length === 0) {
+    // Nothing to chart yet: just the one thing to do, not a dashboard of zeros.
+    return (
+      <>
+        <div className="page-head">
+          <h1 className="title title--page">Journey</h1>
+          <p>Your progress builds up here.</p>
+        </div>
+        <div className="empty enter">
+          <SpalSymbol symbol="growth" size={72} />
+          <h2>Nothing finished yet</h2>
+          <p>Finish a step from Today and you'll start to see how far you've come.</p>
+          <Link to="/app/today" className="btn btn--secondary btn--md">
+            Go to Today
+          </Link>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <div className="page-head">
         <h1 className="title title--page">Journey</h1>
         <p>{finished.length === 0 ? "Your progress builds up here." : `${finished.length} ${finished.length === 1 ? "step" : "steps"} finished so far.`}</p>
       </div>
-
-      {entries.length === 0 && (
-        <div className="empty enter">
-          <SpalSymbol symbol="growth" size={72} />
-          <h2>Nothing finished yet</h2>
-          <p>Finish a step from Today and you'll start to see how far you've come.</p>
-        </div>
-      )}
 
       {learning ? (
         <>

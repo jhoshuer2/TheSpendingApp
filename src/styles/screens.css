@@ -56,7 +56,7 @@
 .composer { display: flex; align-items: flex-end; gap: var(--space-2); padding: var(--space-2) var(--space-page-x) calc(env(safe-area-inset-bottom, 0px) + var(--space-3)); background: var(--surface-app); }
 .composer__input { flex: 1; min-width: 0; resize: none; min-height: var(--control-h); max-height: 120px; padding: 13px var(--space-4); border: 0; border-radius: var(--radius-lg); background: var(--surface-card); color: var(--text-primary); box-shadow: inset 0 0 0 1px var(--line); font: inherit; font-size: 16px; line-height: 22px; }
 .composer__input:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--iris-600), var(--focus-ring); }
-.composer__send { flex: none; display: grid; place-items: center; width: var(--control-h); height: var(--control-h); border: 0; border-radius: var(--radius-full); background: var(--iris-600); color: #fff; cursor: pointer; }
+.composer__send { flex: none; display: grid; place-items: center; width: var(--control-h); height: var(--control-h); border: 0; border-radius: var(--radius-full); background: var(--iris-600); color: var(--text-on-accent); cursor: pointer; }
 .composer__send:disabled { opacity: 0.4; cursor: default; }
 @media (max-width: 359px) { .composer { padding-left: var(--space-page-x-sm); padding-right: var(--space-page-x-sm); } }
 .assist-btn { flex: none; display: inline-grid; place-items: center; width: var(--hit-min); height: var(--hit-min); border-radius: var(--radius-full); background: var(--iris-50); color: var(--iris-600); }

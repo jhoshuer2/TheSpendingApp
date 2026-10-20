@@ -70,20 +70,28 @@ export function MoneyHome() {
         </Link>
       </div>
 
-      <div className="actions" style={{ marginTop: "var(--space-6)" }}>
-        <Button onClick={() => navigate("/money/sale")} iconRight={<Icon name="plus" size={18} />}>
-          Record a sale
-        </Button>
-        <Button variant="secondary" onClick={() => navigate("/money/expense")}>
-          Add an expense
-        </Button>
-      </div>
+      {!empty && (
+        <div className="actions" style={{ marginTop: "var(--space-6)" }}>
+          <Button onClick={() => navigate("/money/sale")} iconRight={<Icon name="plus" size={18} />}>
+            Record a sale
+          </Button>
+          <Button variant="secondary" onClick={() => navigate("/money/expense")}>
+            Add an expense
+          </Button>
+        </div>
+      )}
 
       {empty ? (
         <div className="empty enter">
           <SpalSymbol symbol="profit" size={72} />
           <h2>Record your first sale</h2>
           <p>It takes a few seconds. SPAL will show you what you actually keep.</p>
+          <Button onClick={() => navigate("/money/sale")} iconRight={<Icon name="plus" size={18} />}>
+            Record a sale
+          </Button>
+          <button type="button" className="link-btn" onClick={() => navigate("/money/expense")}>
+            Add an expense instead
+          </button>
         </div>
       ) : (
         <>
