@@ -49,9 +49,7 @@ export function Profile() {
       </div>
 
       <div className="card stack" style={{ marginTop: "var(--space-6)" }}>
-        <p className="hero__title" style={{ fontSize: "var(--text-title-2)" }}>
-          {session?.name}
-        </p>
+        <p className="profile__name">{session?.name}</p>
         <p className="row__sub">{session?.email}</p>
         <p className="row__sub" role="status">
           {saved}
@@ -59,9 +57,8 @@ export function Profile() {
         </p>
       </div>
 
-      <h2 className="section-title">Your business</h2>
+      <h2 className="section-title">Where you are</h2>
       <div className="card stack">
-        <p className="row__sub">Where you are</p>
         <p className="row__title">{BAND_LABEL[profile.band]}</p>
       </div>
 
@@ -137,36 +134,59 @@ export function Profile() {
         </Link>
       </div>
 
-      <div className="stack" style={{ marginTop: "var(--space-section-gap)", alignItems: "flex-start" }}>
-        {confirmReset ? (
-          <div className="card stack" role="alertdialog" aria-label="Forget what SPAL has noticed">
-            <p className="hero__why">
-              <b>Forget what SPAL has noticed?</b>
-              This clears your active days and when you opened steps. Your finished steps and hidden steps stay.
-            </p>
-            <div className="inline-row">
-              <Button
-                size="md"
-                onClick={() => {
-                  resetLearning();
-                  setConfirmReset(false);
-                }}
-              >
-                Forget
-              </Button>
-              <Button variant="ghost" size="md" onClick={() => setConfirmReset(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button variant="secondary" size="md" onClick={() => setConfirmReset(true)}>
-            Forget what SPAL has noticed
-          </Button>
+      <h2 className="section-title">Your answers and data</h2>
+      <div className="list">
+        <button type="button" className="row" onClick={() => navigate("/onboarding")}>
+          <span className="tile">
+            <Icon name="pencil" size={20} />
+          </span>
+          <span className="row__main">
+            <span className="row__title">Change my answers</span>
+            <span className="row__sub">Redo the questions SPAL started from</span>
+          </span>
+          <span className="row__end">
+            <Icon name="chevron-right" size={18} />
+          </span>
+        </button>
+        {!confirmReset && (
+          <button type="button" className="row" onClick={() => setConfirmReset(true)}>
+            <span className="tile">
+              <Icon name="eye" size={20} />
+            </span>
+            <span className="row__main">
+              <span className="row__title">Forget what SPAL has noticed</span>
+              <span className="row__sub">Clears your active days and when you opened steps</span>
+            </span>
+            <span className="row__end">
+              <Icon name="chevron-right" size={18} />
+            </span>
+          </button>
         )}
-        <Button variant="secondary" size="md" onClick={() => navigate("/onboarding")}>
-          Change my answers
-        </Button>
+      </div>
+      {confirmReset && (
+        <div className="card stack" role="alertdialog" aria-label="Forget what SPAL has noticed" style={{ marginTop: "var(--space-3)" }}>
+          <p className="hero__why">
+            <b>Forget what SPAL has noticed?</b>
+            This clears your active days and when you opened steps. Your finished steps and hidden steps stay.
+          </p>
+          <div className="inline-row">
+            <Button
+              size="md"
+              onClick={() => {
+                resetLearning();
+                setConfirmReset(false);
+              }}
+            >
+              Forget
+            </Button>
+            <Button variant="ghost" size="md" onClick={() => setConfirmReset(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="stack" style={{ marginTop: "var(--space-section-gap)", alignItems: "flex-start" }}>
         <Button
           variant="ghost"
           size="md"
