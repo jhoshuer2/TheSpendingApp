@@ -131,7 +131,9 @@ await step("the learning choice survives a reload", async () => {
 await step("'Forget what SPAL has noticed' needs confirming, then clears days and opened-times but keeps finished steps", async () => {
   await p.getByRole("switch", { name: /Learn from how I use SPAL/ }).click(); // back on
   await p.getByRole("button", { name: "Forget what SPAL has noticed" }).click();
+  assert.equal(await p.evaluate(() => !!document.activeElement?.closest('[role="alertdialog"]')), true, "focus moves into the confirm card, so a keyboard user hears it");
   await p.getByRole("button", { name: "Cancel" }).click();
+  assert.match(await p.evaluate(() => document.activeElement?.textContent ?? ""), /Forget what SPAL has noticed/, "closing it puts focus back on the row that opened it");
   assert.ok((await cache()).activity.days.length > 0, "cancel must not clear anything");
   await p.getByRole("button", { name: "Forget what SPAL has noticed" }).click();
   await p.getByRole("button", { name: "Forget", exact: true }).click();

@@ -215,6 +215,3 @@ export async function runTurn(
   }
   return { chat };
 }
-
-/** Does this chat end with the model's turn unfinished (results owed that the person isn't being asked about)? */
-export const canContinue = (chat: Chat): boolean => chat.pending.some((p) => "content" in p) && !chat.items.some((i) => i.kind === "proposal" && i.status === "pending");
