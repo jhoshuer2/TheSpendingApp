@@ -19,7 +19,7 @@ export function ModuleDetail() {
   // Remember when this step was first opened (it helps SPAL learn your pace). Does nothing when learning is off.
   useEffect(() => {
     if (m) openModule(m.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Once per step: openModule changes whenever the profile does, and re-running it on each change would re-stamp the opened time.
   }, [m?.id]);
   if (!m) return <Navigate to="/app/today" replace />;
 
