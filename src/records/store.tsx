@@ -140,17 +140,22 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   const flush = useCallback((): Promise<void> => {
     if (flushing.current) return flushing.current;
 
-    /** Take a row off the queue: sent, or refused for good. Only if it is still exactly what we sent. */
-    const settle = (table: "customers" | "products" | "sales" | "expenses", id: string, sentJson: string, outcome: "sent" | "rejected") => {
-      const cur = ref.current;
-      if (JSON.stringify(cur[table][id]) !== sentJson) return; // edited meanwhile: stays queued
-      const prefix = { customers: "customer", products: "product", sales: "sale", expenses: "expense" }[table];
-      commit({
-        ...cur,
-        dirty: { ...cur.dirty, [table]: cur.dirty[table].filter((x) => x !== id) },
-        rejected: outcome === "rejected" ? [...new Set([...cur.rejected, `${prefix}:${id}`])] : cur.rejected,
-      });
+    /** Take rows off the queue: sent, or refused for good. Only those still exactly what we sent. One commit for the lot, so a big backlog is one write, not one per row. */
+    type Table = "customers" | "products" | "sales" | "expenses";
+    const settle = (rows: { table: Table; id: string; sentJson: string }[], outcome: "sent" | "rejected") => {
+      let next = ref.current;
+      for (const { table, id, sentJson } of rows) {
+        if (JSON.stringify(ref.current[table][id]) !== sentJson) continue; // edited meanwhile: stays queued
+        const prefix = { customers: "customer", products: "product", sales: "sale", expenses: "expense" }[table];
+        next = {
+          ...next,
+          dirty: { ...next.dirty, [table]: next.dirty[table].filter((x) => x !== id) },
+          rejected: outcome === "rejected" ? [...new Set([...next.rejected, `${prefix}:${id}`])] : next.rejected,
+        };
+      }
+      if (next !== ref.current) commit(next);
     };
+    const asRows = (table: Table, rows: { id: string }[]) => rows.map((r) => ({ table, id: r.id, sentJson: JSON.stringify(r) }));
 
     const run = async () => {
       const remote = remoteRef.current;
@@ -169,7 +174,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
           };
           try {
             await remote.push(sent);
-            for (const t of ["customers", "products", "sales", "expenses"] as const) for (const r of sent[t]) settle(t, r.id, JSON.stringify(r), "sent");
+            settle((["customers", "products", "sales", "expenses"] as const).flatMap((t) => asRows(t, sent[t])), "sent");
           } catch (e) {
             if (!(e instanceof PermanentError)) throw e;
             // The server refused something in this batch for good. Find which rows, so one bad row can't hold up the rest.
@@ -177,10 +182,10 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
               for (const r of sent[t]) {
                 try {
                   await remote.push({ customers: [], products: [], sales: [], expenses: [], [t]: [r] });
-                  settle(t, r.id, JSON.stringify(r), "sent");
+                  settle(asRows(t, [r]), "sent");
                 } catch (e2) {
                   if (!(e2 instanceof PermanentError)) throw e2;
-                  settle(t, r.id, JSON.stringify(r), "rejected");
+                  settle(asRows(t, [r]), "rejected");
                 }
               }
             }
