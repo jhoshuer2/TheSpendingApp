@@ -72,6 +72,7 @@ await step("Today shows one next step with the reason for it", async () => {
   await p.getByRole("button", { name: "See my first step" }).click();
   await p.waitForURL("**/app/today");
   await p.getByText("Why this step").waitFor();
+  assert.equal(await p.title(), "Today · SPAL", "each screen names itself in the tab");
   assert.equal(await p.getByRole("article").count(), 1);
 });
 
