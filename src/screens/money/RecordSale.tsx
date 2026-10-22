@@ -8,6 +8,7 @@ import { Money } from "../../design-system/Money";
 import { Segmented } from "../../design-system/Segmented";
 import { useBack } from "../../lib/useBack";
 import { useToast } from "../../lib/toast";
+import { liveSales, streakInfo } from "../../records/calc";
 import { buildCustomers, normName } from "../../records/customers";
 import { digitsToKobo, naira, pressKey } from "../../records/money";
 import { saleLimitProblem } from "../../records/state";
@@ -21,7 +22,7 @@ type Mode = "quick" | "products";
 /** Record a sale in a few taps: type the amount, or pick the products. Nothing else is needed. */
 export function RecordSale() {
   const back = useBack("/app/money");
-  const { show } = useToast();
+  const { celebrate } = useToast();
   const { products, addSale, removeRecord, state } = useRecords();
   const [mode, setMode] = useState<Mode>("quick");
   const [digits, setDigits] = useState("");
@@ -59,7 +60,14 @@ export function RecordSale() {
     const at = whenToIso(when);
     if (at === null) return setError("Choose a date from the last 5 years, not in the future.");
     const sale = addSale({ amount, items: mode === "products" ? items : [], note: mode === "quick" ? note : undefined, customer: customer.trim() || undefined, paid: paid === "paid", at });
-    show(`Recorded ${naira(sale.amount)}.`, () => removeRecord("sale", sale.id));
+    // The habit, said out loud: it only counts as today's streak if the sale is dated today.
+    const before = streakInfo(state, new Date());
+    celebrate({
+      kobo: sale.amount,
+      first: liveSales(state).length === 0,
+      streak: when.kind !== "today" ? 0 : before.doneToday ? before.count : before.count + 1,
+      onUndo: () => removeRecord("sale", sale.id),
+    });
     back();
   };
 

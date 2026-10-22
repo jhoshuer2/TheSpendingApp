@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calendarDaysAgo, dayLabel, evaluateAuto, groupByDay, ledger, owed, periodRanges, saleTitle, summarize } from "./calc";
+import { calendarDaysAgo, dayLabel, streakInfo, evaluateAuto, groupByDay, ledger, owed, periodRanges, saleTitle, summarize } from "./calc";
 import { compareText, recordInsights } from "./insights";
 import { digitsToKobo, formatNaira, MAX_DIGITS, naira, pressKey, toKobo } from "./money";
 import { cleanExpense, cleanProduct, cleanSale, EMPTY_RECORDS, isRecordsDirty, mergePulled, requeueRejected, sanitizeRecords, saleLimitProblem, type RecordsState } from "./state";
@@ -160,6 +160,26 @@ describe("limits the server enforces, caught on the entry screen", () => {
     expect(whenToIso({ kind: "other", date: "2021-10-14" }, now)).not.toBeNull();
     expect(whenToIso({ kind: "other", date: "2010-01-01" }, now)).toBeNull();
     expect(whenToIso({ kind: "other", date: "2026-10-15" }, now)).toBeNull();
+  });
+});
+
+describe("the daily streak", () => {
+  it("counts consecutive days with a sale or an expense, ending today", () => {
+    const s = state([sale({ at: t(0, 9) }), sale({ at: t(1) })], [exp({ at: t(2, 15) })]);
+    const k = streakInfo(s, NOW);
+    expect(k).toMatchObject({ count: 3, doneToday: true });
+    expect(k.days).toHaveLength(7);
+    expect(k.days.map((d) => d.done)).toEqual([false, false, false, false, true, true, true]);
+    expect(k.days[6].today).toBe(true);
+  });
+  it("is still alive if today is empty but yesterday was recorded; a missed day breaks it", () => {
+    expect(streakInfo(state([sale({ at: t(1) }), sale({ at: t(2) })]), NOW)).toMatchObject({ count: 2, doneToday: false });
+    expect(streakInfo(state([sale({ at: t(0) }), sale({ at: t(2) })]), NOW).count).toBe(1);
+    expect(streakInfo(state([sale({ at: t(2) })]), NOW).count).toBe(0);
+    expect(streakInfo(EMPTY_RECORDS, NOW)).toMatchObject({ count: 0, doneToday: false });
+  });
+  it("ignores deleted records", () => {
+    expect(streakInfo(state([sale({ at: t(0), deletedAt: t(0) })]), NOW).count).toBe(0);
   });
 });
 

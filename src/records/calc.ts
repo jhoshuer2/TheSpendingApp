@@ -104,6 +104,29 @@ export const calendarDaysAgo = (iso: string, now: Date): number => {
   return Math.round((at(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - at(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) / 86_400_000);
 };
 
+export interface Streak {
+  /** Consecutive days with a sale or an expense. Still alive if today is empty but yesterday was recorded. */
+  count: number;
+  doneToday: boolean;
+  /** The last seven days, oldest first. */
+  days: { key: string; label: string; done: boolean; today: boolean }[];
+}
+
+/** The habit: did you record something today, and how many days in a row. Deleted records don't count. */
+export function streakInfo(s: RecordsState, now: Date): Streak {
+  const active = new Set([...liveSales(s), ...liveExpenses(s)].map((x) => localDay(x.at)));
+  const dayAt = (back: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate() - back, 12);
+  const key = (back: number) => localDay(dayAt(back).toISOString());
+  const doneToday = active.has(key(0));
+  let count = 0;
+  for (let back = doneToday ? 0 : 1; active.has(key(back)); back++) count++;
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const back = 6 - i;
+    return { key: key(back), label: dayAt(back).toLocaleDateString("en-NG", { weekday: "narrow" }), done: active.has(key(back)), today: back === 0 };
+  });
+  return { count, doneToday, days };
+}
+
 /** "Today", "Yesterday", or "Mon 12 Oct", for grouping the list. */
 export function dayLabel(key: string, now: Date): string {
   const d = new Date(`${key}T12:00:00`);
