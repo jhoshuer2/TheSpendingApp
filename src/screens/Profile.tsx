@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Aura } from "../design-system/Aura";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
+import { Orb } from "../design-system/Orb";
 import { Switch } from "../design-system/Switch";
 import { shortDate } from "../lib/format";
 import { useAuth } from "../lib/auth";
@@ -9,6 +11,7 @@ import { moduleById } from "../profile/modules";
 import { BAND_LABEL, NEED_LABEL } from "../profile/scoring";
 import { useAssistant } from "../assistant/store";
 import { useProfile } from "../profile/store";
+import { streakInfo } from "../records/calc";
 import { useRecords } from "../records/store";
 import { NEED_ICON } from "../profile/ui";
 
@@ -29,6 +32,7 @@ export function Profile() {
     wasConfirming.current = confirmReset;
   }, [confirmReset]);
   const learning = stored.activity.learning;
+  const streak = streakInfo(records.state, new Date());
   const refused = records.rejectedCount > 0 ? ` ${records.rejectedCount === 1 ? "1 record couldn't" : `${records.rejectedCount} records couldn't`} be saved to your account. ${records.rejectedCount === 1 ? "It's" : "They're"} kept on this phone.` : "";
   const saved =
     mode === "local" ? "Saved on this device only (demo mode)" : sync === "saving" || records.sync === "saving" ? "Saving…" : sync === "offline" || records.sync === "offline" ? "Waiting for a connection. We'll save your changes when you're back online." : "All changes saved";
@@ -53,23 +57,34 @@ export function Profile() {
 
   return (
     <>
-      <div className="page-head">
+      <div className="page-head page-head--row">
         <h1 className="title title--page">Profile</h1>
+        <Link to="/assistant" className="orb-link" aria-label="Talk to SPAL Assistant">
+          <Orb size={44} />
+        </Link>
       </div>
 
-      <div className="card stack" style={{ marginTop: "var(--space-6)" }}>
+      <section className="me enter" data-theme="night" style={{ marginTop: "var(--space-5)" }}>
+        <Aura variant="night" />
+        <span className="me__avatar" aria-hidden="true">
+          {(session?.name ?? "?").trim().charAt(0).toUpperCase()}
+        </span>
         <p className="profile__name">{session?.name}</p>
-        <p className="row__sub">{session?.email}</p>
-        <p className="row__sub" role="status">
+        <p className="me__email">{session?.email}</p>
+        <div className="chips">
+          <span className="chip">{BAND_LABEL[profile.band]}</span>
+          {streak.count > 0 && (
+            <span className="chip">
+              <Icon name="flame" size={14} />
+              {streak.count} {streak.count === 1 ? "day" : "days"} in a row
+            </span>
+          )}
+        </div>
+        <p className="me__status" role="status">
           {saved}
           {mode !== "local" && refused}
         </p>
-      </div>
-
-      <h2 className="section-title">Where you are</h2>
-      <div className="card stack">
-        <p className="row__title">{BAND_LABEL[profile.band]}</p>
-      </div>
+      </section>
 
       <h2 className="section-title">What we're focusing on</h2>
       <div className="list">
@@ -80,7 +95,6 @@ export function Profile() {
             </span>
             <span className="row__main">
               <span className="row__title">{NEED_LABEL[n.id]}</span>
-              <span className="row__sub">{n.reasons[0]}</span>
             </span>
           </div>
         ))}

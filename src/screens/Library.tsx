@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Icon } from "../design-system/Icon";
+import { Orb } from "../design-system/Orb";
 import { MODULES } from "../profile/modules";
 import { NEED_LABEL } from "../profile/scoring";
 import { useProfile } from "../profile/store";
@@ -15,17 +16,29 @@ export function Library() {
 
   return (
     <>
-      <div className="page-head">
-        <h1 className="title title--page">Library</h1>
-        <p>Start anything, any time. Your most useful areas come first.</p>
+      <div className="page-head page-head--row">
+        <div>
+          <h1 className="title title--page">Library</h1>
+          <p>Start anything, any time.</p>
+        </div>
+        <Link to="/assistant" className="orb-link" aria-label="Talk to SPAL Assistant">
+          <Orb size={44} />
+        </Link>
       </div>
-      {groups.map((g) => (
-        <section key={g.need}>
-          <h2 className="section-title">{NEED_LABEL[g.need]}</h2>
+      {groups.map((g, gi) => (
+        <section key={g.need} className="enter" style={{ ["--i" as string]: gi }}>
+          <h2 className="section-title section-title--split">
+            {NEED_LABEL[g.need]}
+            <span className="group-progress" aria-label={`${g.items.filter((m) => done.has(m.id)).length} of ${g.items.length} finished`}>
+              {g.items.map((m) => (
+                <i key={m.id} className={done.has(m.id) ? "on" : ""} />
+              ))}
+            </span>
+          </h2>
           <div className="list">
             {g.items.map((m) => (
               <Link key={m.id} to={`/module/${m.id}`} className="row">
-                <span className="tile">
+                <span className={`tile${done.has(m.id) ? " tile--done" : ""}`}>
                   <Icon name={done.has(m.id) ? "check" : NEED_ICON[m.need]} size={20} />
                 </span>
                 <span className="row__main">

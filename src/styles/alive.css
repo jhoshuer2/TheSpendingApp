@@ -120,3 +120,28 @@
 @media (max-height: 700px) { .kept .daybars { display: none; } }
 @media (max-height: 600px) { .voice--optional { display: none; } }
 .welcome .link-btn, .welcome .link-btn strong { color: #fff; }
+
+/* Journey and Profile: the number or the person, on the atmosphere */
+.stat, .me { position: relative; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); padding: var(--space-6) var(--space-5); border-radius: var(--radius-lg); }
+.stat > :not(.aura), .me > :not(.aura) { position: relative; z-index: 1; }
+.stat .aura i, .me .aura i { filter: blur(34px) brightness(0.68); }
+.stat__label, .stat__sub, .me__email, .me__status { color: rgba(255, 255, 255, 0.9); font-size: var(--text-body-sm); }
+.stat__num { font-size: var(--text-money); line-height: var(--lh-money); letter-spacing: var(--ls-money); font-weight: 500; font-variant-numeric: tabular-nums; color: #fff; }
+.stat .week { width: 100%; margin-top: var(--space-3); }
+.stat .week__day span { color: rgba(255, 255, 255, 0.9); }
+.me .profile__name { color: #fff; }
+.me__avatar { display: grid; place-items: center; width: var(--space-12); height: var(--space-12); border-radius: 50%; background: #8cd3a8; color: #0b100e; font-size: var(--text-title-2); font-weight: 500; }
+.me .chips { margin-top: var(--space-1); }
+.me__status { margin-top: var(--space-2); }
+
+/* Milestones are collected: an unlocked one pops in */
+.milestone:not(.milestone--locked) .tile { animation: dot-pop var(--dur-4) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 60ms + 200ms); }
+
+/* Library: how far through each area, at a glance */
+.section-title--split { display: flex; align-items: center; justify-content: space-between; }
+.group-progress { display: inline-flex; gap: 4px; }
+.group-progress i { width: 14px; height: 6px; border-radius: var(--radius-full); background: var(--ink-150); }
+.group-progress i.on { background: var(--accent); }
+.tile--done { background: var(--accent); color: var(--text-on-accent); }
+.milestone:not(.milestone--locked) .tile { background: var(--accent); color: var(--text-on-accent); }
+.voice--plain::before { display: none; }
