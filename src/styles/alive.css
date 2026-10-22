@@ -184,7 +184,7 @@
 .splash--pro .splash__mark { gap: var(--space-6); }
 .splash--pro .splash__mark > img { filter: brightness(0); opacity: 0.9; width: clamp(110px, 36vw, 150px); }
 .splash__orb { position: relative; display: grid; place-items: center; animation: orb-arrive 700ms var(--ease-out) both; }
-.splash__glow { position: absolute; width: 340px; height: 340px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 255, 170, 0.5), rgba(63, 117, 238, 0.3) 45%, rgba(63, 117, 238, 0.1) 70%, transparent); animation: glow-bloom 1100ms var(--ease-out) 100ms both; }
+.splash__glow { position: absolute; width: min(340px, 96vw); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 255, 170, 0.5), rgba(63, 117, 238, 0.3) 45%, rgba(63, 117, 238, 0.1) 70%, transparent); animation: glow-bloom 1100ms var(--ease-out) 100ms both; }
 @keyframes orb-arrive { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
 @keyframes glow-bloom { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 .splash__dust { position: absolute; inset: 0; pointer-events: none; }
