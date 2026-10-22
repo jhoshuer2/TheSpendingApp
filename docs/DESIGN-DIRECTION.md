@@ -16,6 +16,14 @@ The app should feel like something you open every day, not something you read.
 - **Less text:** one idea per block. If a screen needs a paragraph to be understood, change the screen.
 - **Motion:** settle only (fast out, long gentle stop), transform and opacity, once. Everything is complete and readable with motion off.
 
+## First run: pro, not busy
+Reference: Mercury-calm welcome screens, one hero object on a quiet canvas.
+- **One hero per screen**, no boxes around it. The splash is the orb with a glow blooming behind it; each welcome slide is one large visual (a huge count-up, a big week chart, the orb).
+- **Two-tone headline:** tight bold line, then the same size in muted ink (`.hl`, `.title--hero`). This is the one place bold (700) headlines are allowed.
+- **Two pills at most:** a black ink pill (`btn--ink`) and an outlined one, then a quiet text link. Green stays the colour of actions inside the app.
+- **Gradient is a diffusion mesh, never blobs:** `Aura` is a few very large radial fields with a smoothstep falloff, blended like frosted glass, with fine grain. Palette from the reference: white, mint `#00FFAA`, blue `#3F75EE`, black. `night` for cards under white text (measured at least 5.7:1 behind every card), `dawn` for pale canvases.
+- **Motion has an order:** the mark, then its glow, then the headline line by line, then the buttons.
+
 ## Layout principles
 1. **One focal element per screen** (big number, headline or hero card), everything else clearly secondary.
 2. **One primary action per screen**, placed in the thumb zone (bottom), full width where it is the main action.

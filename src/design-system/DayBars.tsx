@@ -4,17 +4,19 @@ interface DayBarsProps {
   days: { key: string; label: string; total: number; today: boolean }[];
   /** What the bars measure, for people who can't see them. */
   what: string;
+  /** light = for use on a pale canvas. */
+  tone?: "dark" | "light";
 }
 
 /**
  * Seven thin bars on a baseline, one per day, today in the bright mint. One series, so no legend: the card around it names it.
  * The bars grow up from the baseline once. The sentence in aria-label carries the numbers.
  */
-export function DayBars({ days, what }: DayBarsProps) {
+export function DayBars({ days, what, tone = "dark" }: DayBarsProps) {
   const max = Math.max(...days.map((d) => d.total), 1);
   const spoken = `${what}: ${days.map((d) => `${d.today ? "today" : d.label} ${d.total > 0 ? naira(d.total) : "none"}`).join(", ")}.`;
   return (
-    <div className="daybars" role="img" aria-label={spoken}>
+    <div className={`daybars${tone === "light" ? " daybars--light" : ""}`} role="img" aria-label={spoken}>
       {days.map((d, i) => (
         <span key={d.key} className={`daybars__day${d.today ? " daybars__day--today" : ""}`}>
           <span className="daybars__col">

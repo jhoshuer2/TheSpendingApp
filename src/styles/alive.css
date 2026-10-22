@@ -2,7 +2,7 @@
 
 /* Aura */
 .aura { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
-.aura i { position: absolute; border-radius: 50%; filter: blur(34px); animation-timing-function: var(--ease-in-out); animation-iteration-count: infinite; animation-direction: alternate; will-change: transform; }
+.aura i { position: absolute; animation-timing-function: var(--ease-in-out); animation-iteration-count: infinite; animation-direction: alternate; will-change: transform; }
 .aura__grain { position: absolute; inset: 0; opacity: 0.5; mix-blend-mode: overlay; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E"); }
 @keyframes aura-drift-0 { from { transform: translate(0, 0) scale(1); } to { transform: translate(6%, -4%) scale(1.06); } }
 @keyframes aura-drift-1 { from { transform: translate(0, 0) scale(1.04); } to { transform: translate(-5%, 3%) scale(0.97); } }
@@ -24,7 +24,6 @@
 .hero--night { position: relative; overflow: hidden; isolation: isolate; }
 .hero--night > :not(.aura) { position: relative; z-index: 1; }
 .hero--night .hero__title { font-size: var(--text-display); }
-.hero--night .aura i { filter: blur(34px) brightness(0.68); } /* keeps light text readable wherever the colour settles */
 .hero--night .hero__why { color: rgba(255, 255, 255, 0.9); }
 .hero--night .link-btn--quiet { color: #fff; }
 .hero--night .hero__why b { color: #fff; }
@@ -62,7 +61,6 @@
 /* Money: the number you came for, on the atmosphere, with the week behind it */
 .kept { position: relative; overflow: hidden; isolation: isolate; }
 .kept > :not(.aura) { position: relative; z-index: 1; }
-.kept .aura i { filter: blur(34px) brightness(0.68); }
 .kept .kept__label, .kept .kept__split span, .kept .kept__note { color: rgba(255, 255, 255, 0.9); }
 
 .daybars { display: flex; align-items: flex-end; gap: var(--space-2); height: 88px; }
@@ -85,7 +83,6 @@
 /* First run: night, atmosphere, the product in miniature */
 .splash { position: relative; overflow: hidden; isolation: isolate; }
 .splash__mark { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-5); }
-.splash .aura i, .welcome .aura i, .building-screen .aura i, .plan .aura i { filter: blur(40px) brightness(0.62); }
 
 .welcome, .building-screen { position: relative; isolation: isolate; overflow: hidden; background: var(--surface-app); }
 .welcome > :not(.aura), .building-screen > :not(.aura) { position: relative; z-index: 1; }
@@ -124,7 +121,6 @@
 /* Journey and Profile: the number or the person, on the atmosphere */
 .stat, .me { position: relative; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); padding: var(--space-6) var(--space-5); border-radius: var(--radius-lg); }
 .stat > :not(.aura), .me > :not(.aura) { position: relative; z-index: 1; }
-.stat .aura i, .me .aura i { filter: blur(34px) brightness(0.68); }
 .stat__label, .stat__sub, .me__email, .me__status { color: rgba(255, 255, 255, 0.9); font-size: var(--text-body-sm); }
 .stat__num { font-size: var(--text-money); line-height: var(--lh-money); letter-spacing: var(--ls-money); font-weight: 500; font-variant-numeric: tabular-nums; color: #fff; }
 .stat .week { width: 100%; margin-top: var(--space-3); }
@@ -145,3 +141,53 @@
 .tile--done { background: var(--accent); color: var(--text-on-accent); }
 .milestone:not(.milestone--locked) .tile { background: var(--accent); color: var(--text-on-accent); }
 .voice--plain::before { display: none; }
+
+/* ---------- First run, pro: one hero object, a two-tone headline, two pills ---------- */
+.btn--ink { background: var(--ink-900); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 1px 2px rgba(5, 8, 10, 0.2); }
+.btn--outline { background: transparent; color: var(--ink-900); box-shadow: inset 0 0 0 1.5px var(--ink-200); }
+.btn--ink:disabled:not([data-loading]) { opacity: 1; background: var(--ink-200); color: var(--ink-500); box-shadow: none; }
+
+/* The signature headline: tight and bold, then the same size in muted ink */
+.hl { display: flex; flex-direction: column; text-align: center; font-size: clamp(30px, 9.4vw, 40px); line-height: 1.04; letter-spacing: -0.045em; }
+.hl__a { font-weight: 700; color: var(--ink-900); }
+.hl__b { font-weight: 500; color: var(--ink-500); }
+.title--hero { font-size: clamp(28px, 8.4vw, 36px); line-height: 1.06; letter-spacing: -0.04em; font-weight: 700; color: var(--ink-900); }
+.title--hero + .lede { font-size: var(--text-title-3); color: var(--ink-500); }
+
+.welcome-pro { position: relative; isolation: isolate; overflow: hidden; background: var(--paper, #f6f6f1); }
+.welcome-pro > :not(.aura) { position: relative; z-index: 1; }
+.welcome-pro .welcome__copy { padding-top: var(--space-8); }
+.welcome-pro .welcome__body { justify-content: flex-start; }
+.welcome-pro .welcome__visual { flex: 1; min-height: 0; display: grid; place-items: center; }
+.welcome-pro .link-btn, .welcome-pro .link-btn strong { color: var(--ink-900); }
+.welcome-pro .link-btn { color: var(--ink-500); }
+.welcome-pro .link-btn strong { text-decoration: underline; text-underline-offset: 3px; }
+
+.art-pro { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); text-align: center; }
+.art-pro__label { font-size: var(--text-body); color: var(--ink-500); }
+.art-pro .money { color: var(--ink-900); }
+.art-pro .money__cur { color: var(--ink-400); }
+.art-pro__pill { display: inline-flex; align-items: center; gap: var(--space-1); height: var(--space-10); padding: 0 var(--space-5); border-radius: var(--radius-full); background: var(--ink-900); color: #fff; font-size: var(--text-body); font-weight: 500; animation: reward-in var(--dur-4) var(--ease-out) 700ms both; }
+.art-pro__pill svg { color: #00ffaa; }
+.art-pro .daybars { width: min(300px, 78vw); height: 120px; }
+.daybars--light .daybars__col i { background: rgba(5, 8, 10, 0.18); }
+.daybars--light .daybars__day--today .daybars__col i { background: var(--ink-900); }
+.daybars--light .daybars__col i.daybars__none { background: rgba(5, 8, 10, 0.1); }
+.daybars--light .daybars__label { color: var(--ink-500); }
+.daybars--light .daybars__day--today .daybars__label { color: var(--ink-900); }
+.art-pro .voice { margin-top: 0; text-align: center; }
+.art-pro__streak { display: flex; align-items: center; gap: var(--space-2); color: var(--ink-900); }
+.art-pro__streak i { width: 12px; height: 12px; border-radius: 50%; background: var(--ink-900); animation: dot-pop var(--dur-3) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 80ms + 500ms); }
+
+/* Splash: the orb arrives, a glow blooms behind it, dust drifts, the wordmark rises */
+.splash--pro { background: var(--paper, #f6f6f1); color: var(--ink-900); }
+.splash--pro .splash__mark { gap: var(--space-6); }
+.splash--pro .splash__mark > img { filter: brightness(0); opacity: 0.9; width: clamp(110px, 36vw, 150px); }
+.splash__orb { position: relative; display: grid; place-items: center; animation: orb-arrive 700ms var(--ease-out) both; }
+.splash__glow { position: absolute; width: min(340px, 96vw); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 255, 170, 0.5), rgba(63, 117, 238, 0.3) 45%, rgba(63, 117, 238, 0.1) 70%, transparent); animation: glow-bloom 1100ms var(--ease-out) 100ms both; }
+@keyframes orb-arrive { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes glow-bloom { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+.splash__dust { position: absolute; inset: 0; pointer-events: none; }
+.splash__dust i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: rgba(5, 8, 10, 0.35); opacity: 0; animation: dust-in 900ms var(--ease-out) forwards; }
+@keyframes dust-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.splash .orb { filter: drop-shadow(0 10px 24px rgba(12, 17, 15, 0.16)); opacity: 1; width: 104px; height: 104px; aspect-ratio: auto; }
