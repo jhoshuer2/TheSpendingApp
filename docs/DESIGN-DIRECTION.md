@@ -4,8 +4,17 @@ Source of truth for visuals: `.claude/skills/spal-design/` (tokens, Satoshi, com
 
 ## Decisions
 - Colors, type (Satoshi) and components come from the design system. Nothing outside the tokens.
-- No photography, sky/gradient backdrops or saturated multicolor fills. Product UI is flat paper/night surfaces. (The design system's "aura" is off until a gradient direction is decided.)
+- No photography and no saturated multicolour fills. Colour still means direction (green in, clay out, ochre owed; iris for SPAL AI).
+- **Atmosphere is on** (decided Oct 2026, after feedback that the app felt flat and text-heavy): the design system's Aura on the moments that matter, such as Today's next-step hero, celebrations, onboarding and empty states. One aura per screen, never behind dense lists or more than two lines of body copy. Text on it keeps at least 4.5:1 (the aura is dimmed to guarantee it), and it drifts slowly.
 - Celebration moments may use the SPAL mascot/symbol and illustration in system colors.
+
+## Alive, not busy
+The app should feel like something you open every day, not something you read.
+- **Voice:** the mascot (orb) says one short thing, in the owner's language, never guilt. It replaces explanatory paragraphs and callouts.
+- **Reward:** finishing something lands with a moment: the amount counts up and settles, one short burst of confetti, the mascot cheers, Undo stays in reach.
+- **Habit:** a visible streak of days with something recorded. When it breaks it resets quietly; no message, no red.
+- **Less text:** one idea per block. If a screen needs a paragraph to be understood, change the screen.
+- **Motion:** settle only (fast out, long gentle stop), transform and opacity, once. Everything is complete and readable with motion off.
 
 ## Layout principles
 1. **One focal element per screen** (big number, headline or hero card), everything else clearly secondary.
@@ -70,4 +79,4 @@ Primary "Continue with email" pill, a quiet divider ("or continue with"), Google
 - Charts follow the dataviz rules: tokens only, labelled, accessible.
 
 ### Not adopting
-Photographic or gradient backgrounds, saturated per-screen palettes, dark-by-default screens, paywall screens (later stage), and italic-serif accent words in headlines. The design system is Satoshi only. If you want an emphasis style in headlines, Satoshi Italic is available in the system; this is an open question.
+Photographic backgrounds, saturated per-screen palettes, dark-by-default screens, paywall screens (later stage), and italic-serif accent words in headlines. The design system is Satoshi only. If you want an emphasis style in headlines, Satoshi Italic is available in the system; this is an open question.

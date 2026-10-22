@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
+import { Aura } from "../design-system/Aura";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
+import { Orb } from "../design-system/Orb";
 import { SpalSymbol } from "../design-system/SpalSymbol";
-import { WeekStrip } from "../design-system/WeekStrip";
 import { firstName, todayLabel } from "../lib/format";
 import { useToast } from "../lib/toast";
 import { useAuth } from "../lib/auth";
@@ -10,16 +11,20 @@ import { moduleById } from "../profile/modules";
 import { NEED_LABEL } from "../profile/scoring";
 import { useProfile } from "../profile/store";
 import { NEED_ICON } from "../profile/ui";
+import { streakInfo } from "../records/calc";
+import { useRecords } from "../records/store";
 
 const DAY = 24 * 60 * 60 * 1000;
 
-/** One next step, a short queue, and a quiet sense of progress. Never guilt. */
+/** One next step, said warmly, with the habit in view. Never guilt. */
 export function Today() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const { recs, stored, done, insights, welcome, snooze, dismiss, restore } = useProfile();
+  const { recs, stored, welcome, snooze, dismiss, restore } = useProfile();
+  const { state: books } = useRecords();
   const { next, upNext } = recs;
   const { show } = useToast();
+  const streak = streakInfo(books, new Date());
 
   const finished = Object.entries(stored.progress)
     .filter(([, p]) => p.doneAt)
@@ -27,13 +32,31 @@ export function Today() {
   const latest = finished[0];
   const recent = latest && Date.now() - new Date(latest[1].doneAt!).getTime() < DAY ? moduleById(latest[0]) : undefined;
   const ticked = next ? (stored.progress[next.module.id]?.steps.length ?? 0) : 0;
-  const learning = stored.activity.learning;
-  const { week } = insights;
-  const weekSummary = `Active on ${week.activeDays} of the last 7 days, ${week.stepsFinished} ${week.stepsFinished === 1 ? "step" : "steps"} finished this week.`;
 
-  // One note at a time, most useful first.
-  const gapIsNew = insights.gap !== null && insights.gap.need !== next?.module.need; // no point repeating what the main step already says
-  const note = welcome ? "welcome" : recent ? "recent" : gapIsNew ? "gap" : null;
+  // What the mascot says: one thing, most useful first.
+  const voice = welcome ? (
+    <>
+      <b>Welcome back.</b>
+      <span>{welcome.inProgress ? `You were partway through "${welcome.inProgress.title}".` : "Good to see you. Here's an easy one."}</span>
+      {welcome.inProgress && welcome.inProgress.id !== next?.module.id && (
+        <Button size="md" onClick={() => navigate(`/module/${welcome.inProgress!.id}`)}>
+          Pick up where I left off
+        </Button>
+      )}
+    </>
+  ) : recent ? (
+    <>
+      <b>Nice work.</b>
+      <span>You finished "{recent.title}".</span>
+    </>
+  ) : streak.count >= 2 ? (
+    <>
+      <b>{streak.count} days in a row.</b>
+      <span>{streak.doneToday ? "Today is recorded." : "Record something today to keep it going."}</span>
+    </>
+  ) : (
+    <b>{streak.doneToday ? "Today is recorded. Nice." : "Two minutes is all this takes."}</b>
+  );
 
   const hide = (kind: "snooze" | "dismiss") => {
     if (!next) return;
@@ -47,53 +70,19 @@ export function Today() {
     <>
       <div className="page-head page-head--row">
         <div>
-        <h1 className="title title--page">Hi, {firstName(session?.name)}</h1>
-        <p>{todayLabel()}</p>
+          <h1 className="title title--page">Hi, {firstName(session?.name)}</h1>
+          <p>{todayLabel()}</p>
         </div>
-        <Link to="/assistant" className="assist-btn" aria-label="Talk to SPAL Assistant">
-          <Icon name="sparkles" size={20} />
+        <Link to="/assistant" className="orb-link" aria-label="Talk to SPAL Assistant">
+          <Orb size={44} />
         </Link>
       </div>
 
-      {note === "welcome" && welcome && (
-        <div className="callout enter" style={{ marginTop: "var(--space-6)" }}>
-          <span className="check" aria-hidden="true">
-            <Icon name="check" size={14} stroke={2.4} />
-          </span>
-          <div className="callout-body">
-            <p>
-              <b>Welcome back.</b>
-              <span>
-                {welcome.inProgress
-                  ? welcome.inProgress.id === next?.module.id
-                    ? `You were partway through "${welcome.inProgress.title}". It's right below when you're ready.`
-                    : `You were partway through "${welcome.inProgress.title}". Pick up where you left off, or start fresh below.`
-                  : "Good to see you. Here's a step to ease back in."}
-              </span>
-            </p>
-            {welcome.inProgress && welcome.inProgress.id !== next?.module.id && (
-              <Button size="md" onClick={() => navigate(`/module/${welcome.inProgress!.id}`)}>
-                Pick up where I left off
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {note === "recent" && recent && (
-        <div className="callout enter" style={{ marginTop: "var(--space-6)" }}>
-          <span className="check" aria-hidden="true">
-            <Icon name="check" size={14} stroke={2.4} />
-          </span>
-          <p>
-            <b>Nice work.</b>
-            <span>You finished "{recent.title}". Keep going.</span>
-          </p>
-        </div>
-      )}
+      <div className="voice enter">{voice}</div>
 
       {next ? (
-        <article className="hero enter" style={{ marginTop: "var(--space-6)", ["--i" as string]: 1 }} aria-labelledby="next-title">
+        <article className="hero hero--night enter" data-theme="night" style={{ marginTop: "var(--space-5)", ["--i" as string]: 1 }} aria-labelledby="next-title">
+          <Aura variant="night" />
           <div className="chips">
             <span className="chip">
               <Icon name="clock" size={14} />
@@ -135,29 +124,25 @@ export function Today() {
         </div>
       )}
 
-      {note === "gap" && insights.gap && (
-        <div className="callout enter" style={{ marginTop: "var(--space-6)" }}>
-          <span className="check" aria-hidden="true">
-            <Icon name="compass" size={14} stroke={2} />
-          </span>
-          <div className="callout-body">
-            <p>
-              <b>Worth a look</b>
-              <span>
-                {insights.gap.text} You could try "{insights.gap.module.title}".
-              </span>
-            </p>
-            <Link to={`/module/${insights.gap.module.id}`} className="btn btn--secondary btn--md">
-              Take a look
-            </Link>
-          </div>
+      <div className="streak enter" style={{ ["--i" as string]: 2 }} role="img" aria-label={`${streak.count} ${streak.count === 1 ? "day" : "days"} in a row. Recorded on ${streak.days.filter((d) => d.done).length} of the last 7 days.`}>
+        <span className={`streak__badge${streak.count > 0 ? " streak__badge--on" : ""}`}>
+          <Icon name="flame" size={20} />
+          {streak.count}
+        </span>
+        <div className="streak__days">
+          {streak.days.map((d, i) => (
+            <span key={d.key} className={`streak__day${d.done ? " streak__day--done" : ""}${d.today ? " streak__day--today" : ""}`} style={{ ["--i" as string]: i }}>
+              <i />
+              <span>{d.label}</span>
+            </span>
+          ))}
         </div>
-      )}
+      </div>
 
       {upNext.length > 0 && (
         <>
           <h2 className="section-title">Up next</h2>
-          <div className="list enter" style={{ ["--i" as string]: 2 }}>
+          <div className="list enter" style={{ ["--i" as string]: 3 }}>
             {upNext.map(({ module: m }) => (
               <Link key={m.id} to={`/module/${m.id}`} className="row">
                 <span className="tile">
@@ -165,9 +150,7 @@ export function Today() {
                 </span>
                 <span className="row__main">
                   <span className="row__title">{m.title}</span>
-                  <span className="row__sub">
-                    {m.minutes} min · {NEED_LABEL[m.need]}
-                  </span>
+                  <span className="row__sub">{m.minutes} min</span>
                 </span>
                 <span className="row__end">
                   <Icon name="chevron-right" size={18} />
@@ -177,34 +160,6 @@ export function Today() {
           </div>
         </>
       )}
-
-      {learning && (week.activeDays > 0 || week.stepsFinished > 0) && (
-        <>
-          <h2 className="section-title">This week</h2>
-          <div className="card stack enter" style={{ ["--i" as string]: 3 }}>
-            <WeekStrip days={week.days} summary={weekSummary} />
-            <p className="hero__why">
-              {week.stepsFinished === 0 ? "Showing up counts." : week.stepsFinished === 1 ? "1 step finished this week." : `${week.stepsFinished} steps finished this week.`}
-              {week.stepsFinished > week.prevStepsFinished && week.prevStepsFinished > 0 ? " That's more than last week." : ""}
-            </p>
-          </div>
-        </>
-      )}
-
-      {!learning && done.size > 0 && (
-        <>
-          <h2 className="section-title">Your progress</h2>
-          <div className="card stack enter" style={{ ["--i" as string]: 3 }}>
-            <div className="pills" aria-hidden="true">
-              {Array.from({ length: Math.max(7, done.size) }).map((_, i) => (
-                <i key={i} className={i < done.size ? "on" : ""} />
-              ))}
-            </div>
-            <p className="hero__why">{done.size === 1 ? "1 step finished." : `${done.size} steps finished.`} Every one makes the next easier.</p>
-          </div>
-        </>
-      )}
-
     </>
   );
 }

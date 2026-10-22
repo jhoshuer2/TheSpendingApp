@@ -13,6 +13,7 @@ Art-direct the page. Decide type, grid, colour and motion before you write marku
 
 - **Use SPAL's tokens.** Font is Satoshi, and colour, spacing, radius and components come from `.claude/skills/spal-design/` and `docs/DESIGN-DIRECTION.md`. Where this file names a palette, font stack, pairing or hex value, ignore it.
 - **The direction card** keeps its Ratio, Body, Display, Grid, Unit, Signature and Motion-off lines. Its Paper, Ink, Muted, Rule and Accent lines are filled from SPAL tokens, never invented.
+- **Alive, not quiet.** SPAL deliberately uses the Aura atmosphere, the Orb mascot, count-up numbers, confetti on rewards and a daily streak (`docs/DESIGN-DIRECTION.md`, "Alive, not busy"). The "banned by default" gradient and glass rules do not apply to these. The rest still does: one aura per screen, text above 4.5:1, nothing moves with motion off.
 - **Cards are allowed.** SPAL's grouped raised cards, pills and rounded surfaces are the brand. The "hairlines, not cards" rule and generic tells 2 and 10 do not apply to app screens. The rest of the tells still do.
 - **Mobile app limits.** Touch targets stay at least 44px, and `npm run check:layout` must pass. Display sizes are capped to what fits at 320px, so use the focal-element rule in `docs/DESIGN-DIRECTION.md` rather than 5x body.
 - **Motion** stays in the three speed bands, uses transform and opacity only, and honours `prefers-reduced-motion`.

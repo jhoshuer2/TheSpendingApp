@@ -85,7 +85,10 @@ await step("opening and ticking a step records an active day and when it was ope
   assert.ok(c.activity.lastSeen, "lastSeen should be recorded");
   await p.getByRole("button", { name: "Back" }).click();
   await p.getByRole("link", { name: "Today" }).click();
+  await p.getByRole("img", { name: /0 days in a row/ }).waitFor(); // Today shows the recording streak; nothing recorded yet
+  await p.getByRole("link", { name: "Journey" }).click(); // the weekly rhythm lives on Journey
   await p.getByRole("img", { name: /Active on 1 of the last 7 days/ }).waitFor();
+  await p.getByRole("link", { name: "Today" }).click();
 });
 
 await step("finishing a step unlocks a milestone on Journey, and the recap counts it", async () => {
@@ -149,7 +152,7 @@ await step("after days away, a warm welcome back (no guilt, nothing lost)", asyn
   }, KEY);
   await p.goto(BASE + "/app/today");
   await p.getByText("Welcome back.").waitFor();
-  const text = await p.locator(".callout").first().innerText();
+  const text = await p.locator(".voice").first().innerText();
   assert.ok(!/miss|lost|streak|behind|haven't been/i.test(text), "welcome back must not use guilt language: " + text);
   await p.reload(); // same visit again soon after: the note should not nag on every load
   assert.equal(await p.getByText("Welcome back.").count(), 0);
