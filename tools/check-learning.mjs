@@ -100,7 +100,7 @@ await step("finishing a step unlocks a milestone on Journey, and the recap count
   await p.getByRole("link", { name: "Journey" }).click();
   await p.getByText("1 step finished so far.").waitFor();
   await p.getByRole("img", { name: /1 step finished this week/ }).waitFor();
-  await p.getByText("First step done").waitFor();
+  await p.getByText("First step done", { exact: true }).waitFor();
   await p.getByText("Milestones").waitFor();
   assert.equal(await p.getByText("Milestones").locator("..").getByText("1 of 5").count(), 1);
 });
