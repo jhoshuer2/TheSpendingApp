@@ -22,6 +22,7 @@ npm run check:customers         # customers, reminders, receipts through the rea
 npm run check:stock             # stock counts and low-stock warnings through the real screens
 npm run check:register          # the business-name registration guide through the real screens
 npm run check:assistant         # fake Supabase + scripted model: chat, cards, undo, Pidgin, limits
+npm run check:csp               # serves dist/ with the headers from vercel.json and fails on anything the Content-Security-Policy blocks (needs `npm run build`)
 npm run check:assistant-layout  # the assistant screens at 7 phone sizes
 node tools/eval-assistant.mjs   # YOUR Anthropic key: how well the real model handles English and Pidgin
 npm run test:db        # migration + security rules on a disposable Postgres (PGURL=...)

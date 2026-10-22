@@ -20,7 +20,8 @@
     "check:customers": "node tools/check-customers.mjs",
     "check:write": "node tools/check-write.mjs",
     "check:stock": "node tools/check-stock.mjs",
-    "check:register": "node tools/check-register.mjs"
+    "check:register": "node tools/check-register.mjs",
+    "check:csp": "node tools/check-csp.mjs && CSP=1 bash tools/check-backend.sh && CSP=1 CHECK=check-assistant bash tools/check-backend.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",
