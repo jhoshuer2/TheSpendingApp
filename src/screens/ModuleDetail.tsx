@@ -7,6 +7,7 @@ import { moduleById } from "../profile/modules";
 import { evaluateAuto } from "../records/calc";
 import { useRecords } from "../records/store";
 import { NEED_LABEL } from "../profile/scoring";
+import { useToast } from "../lib/toast";
 import { useProfile } from "../profile/store";
 
 /** A step with its checklist. Tick things off as you do them; finish when they're all done. */
@@ -14,6 +15,7 @@ export function ModuleDetail() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { stored, toggleStep, finishModule, openModule } = useProfile();
+  const { celebrate } = useToast();
   const { state: books } = useRecords();
   const m = moduleById(id);
   // Remember when this step was first opened (it helps SPAL learn your pace). Does nothing when learning is off.
@@ -132,7 +134,9 @@ export function ModuleDetail() {
                 fullWidth
                 disabled={!all}
                 onClick={() => {
+                  const first = !Object.values(stored.progress).some((p) => p.doneAt);
                   finishModule(m.id);
+                  celebrate({ title: first ? "Your first step done!" : "Step done!", line: `${m.title}.`, first });
                   navigate("/app/today", { replace: true });
                 }}
               >

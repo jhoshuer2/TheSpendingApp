@@ -96,6 +96,7 @@ await step("progress survives a reload", async () => {
 await step("finishing moves Today on to a different step and celebrates", async () => {
   await p.getByRole("button", { name: "Finish this step" }).click();
   await p.waitForURL("**/app/today");
+  await p.getByRole("status").filter({ hasText: /Your first step done!|Step done!/ }).waitFor(); // the reward lands
   await p.getByText("Nice work.").waitFor();
   const newTitle = (await p.getByRole("article").getByRole("heading").innerText()).trim();
   assert.notEqual(newTitle, title);

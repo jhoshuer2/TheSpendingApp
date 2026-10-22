@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
+import { Aura } from "../design-system/Aura";
+import { NumberCountUp } from "../design-system/CountUp";
 import { Icon } from "../design-system/Icon";
+import { Orb } from "../design-system/Orb";
 import { ProgressBar } from "../design-system/ProgressBar";
-import { SpalSymbol } from "../design-system/SpalSymbol";
 import { WeekStrip } from "../design-system/WeekStrip";
 import { shortDate } from "../lib/format";
 import { moduleById } from "../profile/modules";
@@ -19,7 +21,7 @@ export function Journey() {
   });
   const finished = entries.filter((e) => e.p.doneAt).sort((a, b) => b.p.doneAt!.localeCompare(a.p.doneAt!));
   const started = entries.filter((e) => !e.p.doneAt && !e.p.dismissed && e.p.steps.length > 0);
-  const { week, areas, milestones, gap, paceDays } = insights;
+  const { week, areas, milestones, gap } = insights;
   const weekSummary = `Active on ${week.activeDays} of the last 7 days, ${week.stepsFinished} ${week.stepsFinished === 1 ? "step" : "steps"} finished this week.`;
   const unlocked = milestones.filter((m) => m.unlocked).length;
 
@@ -32,7 +34,9 @@ export function Journey() {
           <p>Your progress builds up here.</p>
         </div>
         <div className="empty enter">
-          <SpalSymbol symbol="growth" size={72} />
+          <Link to="/assistant" className="orb-link orb-link--big" aria-label="Talk to SPAL Assistant">
+            <Orb size={88} />
+          </Link>
           <h2>Nothing finished yet</h2>
           <p>Finish a step from Today and you'll start to see how far you've come.</p>
           <Link to="/app/today" className="btn btn--secondary btn--md">
@@ -45,43 +49,31 @@ export function Journey() {
 
   return (
     <>
-      <div className="page-head">
+      <div className="page-head page-head--row">
         <h1 className="title title--page">Journey</h1>
-        <p>{finished.length === 0 ? "Your progress builds up here." : `${finished.length} ${finished.length === 1 ? "step" : "steps"} finished so far.`}</p>
+        <Link to="/assistant" className="orb-link" aria-label="Talk to SPAL Assistant">
+          <Orb size={44} />
+        </Link>
       </div>
 
-      {learning ? (
-        <>
-          <h2 className="section-title">This week</h2>
-          <div className="card stack enter">
-            <WeekStrip days={week.days} summary={weekSummary} />
-            <p className="hero__why">
-              {week.activeDays === 0 ? "A quiet week so far. Any step, big or small, gets you going." : `Active on ${week.activeDays} of the last 7 days.`} {week.stepsFinished} {week.stepsFinished === 1 ? "step" : "steps"} finished
-              {week.prevStepsFinished > 0 ? `, ${week.prevStepsFinished} the week before.` : "."}
-              {paceDays ? ` You usually finish a step within about ${paceDays} ${paceDays === 1 ? "day" : "days"}.` : ""}
-            </p>
-          </div>
-        </>
-      ) : (
-        <p className="note">Learning is off, so your weekly rhythm isn't shown. You can turn it on in Profile.</p>
-      )}
+      <section className="stat enter" data-theme="night" style={{ marginTop: "var(--space-5)" }} aria-label="Your progress">
+        <Aura variant="night" />
+        <span className="stat__label">Steps finished</span>
+        <NumberCountUp value={finished.length} className="stat__num" />
+        <p className="stat__sub">{finished.length === 1 ? "1 step finished so far." : `${finished.length} steps finished so far.`}</p>
+        {learning && <WeekStrip days={week.days} summary={weekSummary} />}
+      </section>
+      {!learning && <p className="note">Learning is off, so your weekly rhythm isn't shown. You can turn it on in Profile.</p>}
 
       {gap && (
-        <div className="callout enter" style={{ marginTop: "var(--space-6)" }}>
-          <span className="check" aria-hidden="true">
-            <Icon name="compass" size={14} stroke={2} />
+        <div className="voice voice--plain enter">
+          <b>A gap worth a look</b>
+          <span>
+            {gap.text} You could try "{gap.module.title}".
           </span>
-          <div className="callout-body">
-            <p>
-              <b>A gap worth a look</b>
-              <span>
-                {gap.text} You could try "{gap.module.title}".
-              </span>
-            </p>
-            <Link to={`/module/${gap.module.id}`} className="btn btn--secondary btn--md">
-              Take a look
-            </Link>
-          </div>
+          <Link to={`/module/${gap.module.id}`} className="btn btn--secondary btn--md">
+            Take a look
+          </Link>
         </div>
       )}
 
@@ -108,8 +100,8 @@ export function Journey() {
         Milestones <span className="row__sub">{unlocked} of {milestones.length}</span>
       </h2>
       <div className="milestones enter">
-        {milestones.map((m) => (
-          <div key={m.id} className={`milestone${m.unlocked ? "" : " milestone--locked"}`}>
+        {milestones.map((m, i) => (
+          <div key={m.id} className={`milestone${m.unlocked ? "" : " milestone--locked"}`} style={{ ["--i" as string]: i }}>
             <span className="tile">
               <Icon name={m.unlocked ? "check" : "trending-up"} size={20} />
             </span>

@@ -28,7 +28,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={api}>
       {children}
-      {reward && <Reward key={reward.n} kobo={reward.kobo} first={reward.first} streak={reward.streak} onUndo={reward.onUndo} onClose={closeReward} />}
+      {reward && <Reward key={reward.n} kobo={reward.kobo} first={reward.first} streak={reward.streak} title={reward.title} line={reward.line} onUndo={reward.onUndo} onClose={closeReward} />}
       {t && <Toast key={t.n} message={t.message} actionLabel={t.undo ? "Undo" : undefined} onAction={t.undo} onClose={close} />}
     </Ctx.Provider>
   );

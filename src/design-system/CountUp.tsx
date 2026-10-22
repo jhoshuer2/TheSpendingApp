@@ -43,3 +43,16 @@ export function MoneyCountUp({ kobo, size, from = 0 }: { kobo: number; size?: nu
     </>
   );
 }
+
+/** A whole number that counts up to its value (steps finished, days). Screen readers hear the final number. */
+export function NumberCountUp({ value, className }: { value: number; className?: string }) {
+  const v = useCountUp(value, 0, 560);
+  return (
+    <>
+      <span className={className} aria-hidden="true">
+        {v}
+      </span>
+      <span className="sr-only">{value}</span>
+    </>
+  );
+}
