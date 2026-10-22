@@ -131,3 +131,4 @@
 .idhead { display:flex; align-items:center; gap:var(--space-4); }
 .idhead .title { margin:0; min-width:0; overflow-wrap:anywhere; }
 .row__main .hbar { margin-top:var(--space-2); }
+.row__amount--fixed { min-width:84px; text-align:right; }

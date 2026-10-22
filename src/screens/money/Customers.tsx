@@ -32,7 +32,7 @@ function Row({ c, now, owing, biggest }: { c: CustomerEntry; now: Date; owing?: 
         </StatusLine>
         {owing && biggest ? <HatchBar value={c.owed} max={biggest} tone="owed" height={6} label={`Owes ${Math.round((c.owed / biggest) * 100)}% of the largest debt`} /> : null}
       </span>
-      {owing ? <Money kobo={c.owed} size={16} className="money--owed" /> : <span className="row__end"><Icon name="chevron-right" size={18} /></span>}
+      {owing ? <span className="row__amount row__amount--fixed"><Money kobo={c.owed} size={16} className="money--owed" /></span> : <span className="row__end"><Icon name="chevron-right" size={18} /></span>}
     </Link>
   );
 }
