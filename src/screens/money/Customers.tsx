@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../design-system/Button";
 import { Field } from "../../design-system/Field";
+import { HatchBar } from "../../design-system/Charts";
 import { Icon } from "../../design-system/Icon";
+import { Avatar, StatusLine } from "../../design-system/Identity";
 import { Money } from "../../design-system/Money";
 import { SpalSymbol } from "../../design-system/SpalSymbol";
 import { useBack } from "../../lib/useBack";
@@ -19,17 +21,16 @@ const ago = (iso: string | undefined, now: Date): string => {
   return `Last bought ${new Date(iso).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}`;
 };
 
-function Row({ c, now, owing }: { c: CustomerEntry; now: Date; owing?: boolean }) {
+function Row({ c, now, owing, biggest }: { c: CustomerEntry; now: Date; owing?: boolean; biggest?: number }) {
   return (
     <Link to={`/money/customer/${c.key}`} className="row">
-      <span className="tile">
-        <Icon name="user" size={20} />
-      </span>
+      <Avatar name={c.name} />
       <span className="row__main">
         <span className="row__title">{c.name}</span>
-        <span className="row__sub">
+        <StatusLine tone={owing ? "warn" : c.lastAt ? "good" : "neutral"}>
           {owing ? `Owes since ${new Date(c.owedSales[0].at).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}` : ago(c.lastAt, now)}
-        </span>
+        </StatusLine>
+        {owing && biggest ? <HatchBar value={c.owed} max={biggest} tone="owed" height={6} label={`Owes ${Math.round((c.owed / biggest) * 100)}% of the largest debt`} /> : null}
       </span>
       {owing ? <Money kobo={c.owed} size={16} className="money--owed" /> : <span className="row__end"><Icon name="chevron-right" size={18} /></span>}
     </Link>
@@ -83,7 +84,7 @@ export function Customers() {
                 <h2 className="section-title">Owe you</h2>
                 <div className="list">
                   {owing.map((c) => (
-                    <Row key={c.key} c={c} now={now} owing />
+                    <Row key={c.key} c={c} now={now} owing biggest={owing[0].owed} />
                   ))}
                 </div>
               </>

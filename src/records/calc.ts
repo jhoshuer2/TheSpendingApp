@@ -51,6 +51,41 @@ export function summarize(s: RecordsState, range: Range): Summary {
   return { sold, received, spent, kept: received - spent, salesCount: sales.filter((x) => within(x.at, range)).length, expensesCount: exp.length };
 }
 
+/** Of what was sold in the period, how much is paid and how much is still owed (amounts in kobo, and how many sales). */
+export function salesStand(s: RecordsState, range: Range): { paid: { amount: number; count: number }; owed: { amount: number; count: number } } {
+  const out = { paid: { amount: 0, count: 0 }, owed: { amount: 0, count: 0 } };
+  for (const x of liveSales(s)) {
+    if (!within(x.at, range)) continue;
+    const bucket = x.paid ? out.paid : out.owed;
+    bucket.amount += x.amount;
+    bucket.count += 1;
+  }
+  return out;
+}
+
+/** What sold most in the period, by number sold, from the items on each sale. Sales typed as a plain amount have no items and are left out. */
+export function topSellers(s: RecordsState, range: Range, limit: number): { name: string; qty: number; amount: number }[] {
+  const by = new Map<string, { name: string; qty: number; amount: number }>();
+  for (const x of liveSales(s)) {
+    if (!within(x.at, range)) continue;
+    for (const it of x.items) {
+      const key = it.name.trim().toLowerCase();
+      const cur = by.get(key) ?? { name: it.name, qty: 0, amount: 0 };
+      cur.qty += it.qty;
+      cur.amount += it.qty * it.unitPrice;
+      by.set(key, cur);
+    }
+  }
+  return [...by.values()].sort((a, b) => b.qty - a.qty || b.amount - a.amount).slice(0, limit);
+}
+
+/** Spending in the period by category, biggest first. */
+export function spendingByCategory(s: RecordsState, range: Range): { category: ExpenseCategory; label: string; amount: number }[] {
+  const by = new Map<ExpenseCategory, number>();
+  for (const x of liveExpenses(s)) if (within(x.at, range)) by.set(x.category, (by.get(x.category) ?? 0) + x.amount);
+  return [...by.entries()].map(([category, amount]) => ({ category, label: categoryLabel[category], amount })).sort((a, b) => b.amount - a.amount);
+}
+
 /** Sales customers haven't paid for yet, oldest first, and the total. */
 export function owed(s: RecordsState) {
   const list = liveSales(s).filter((x) => !x.paid).sort((a, b) => a.at.localeCompare(b.at));

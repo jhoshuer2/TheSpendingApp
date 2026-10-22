@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Aura } from "../../design-system/Aura";
+import { BarRow, Delta, Donut, HatchDefs, StackBar, type Tone } from "../../design-system/Charts";
 import { Button } from "../../design-system/Button";
 import { MoneyCountUp } from "../../design-system/CountUp";
 import { DayBars } from "../../design-system/DayBars";
 import { Icon } from "../../design-system/Icon";
+import { Avatar, IconTile, SectionLabel, StatusLine } from "../../design-system/Identity";
 import { Money } from "../../design-system/Money";
 import { Segmented } from "../../design-system/Segmented";
 import { Orb } from "../../design-system/Orb";
-import { dailySales, dayLabel, groupByDay, ledger, localDay, owed, periodRanges, summarize, type LedgerEntry, type Period } from "../../records/calc";
-import { compareText, recordInsights } from "../../records/insights";
+import { dailySales, dayLabel, groupByDay, ledger, localDay, owed, periodRanges, salesStand, spendingByCategory, summarize, topSellers, type LedgerEntry, type Period } from "../../records/calc";
+import { recordInsights } from "../../records/insights";
 import { useToast } from "../../lib/toast";
 import { useRecords } from "../../records/store";
 import { leftLabel, runningLow, stockLines } from "../../records/stock";
@@ -20,6 +22,8 @@ const PERIODS: { value: Period; label: string }[] = [
   { value: "month", label: "This month" },
 ];
 const WORDS: Record<Period, string> = { day: "today", week: "this week", month: "this month" };
+const PREV: Record<Period, string> = { day: "yesterday", week: "last week", month: "last month" };
+const TONES: Tone[] = ["in", "info", "owed", "out", "ink"];
 const PAGE = 30;
 const FIRST_PAGE = 10; // the rest is one tap away, not a wall
 
@@ -29,12 +33,10 @@ function EntryRow({ e }: { e: LedgerEntry }) {
   const tone = e.kind === "expense" ? "out" : e.owing ? "owed" : "in";
   return (
     <Link to={`/money/record/${e.kind}/${e.id}`} className="row">
-      <span className="tile">
-        <Icon name={e.kind === "sale" ? "arrow-down-left" : "arrow-up-right"} size={20} />
-      </span>
+      <IconTile icon={e.kind === "sale" ? "sale" : "expense"} tint={e.kind === "sale" ? (e.owing ? "sand" : "mint") : "blush"} />
       <span className="row__main">
         <span className="row__title">{e.title}</span>
-        <span className="row__sub">{[time(e.at), e.sub].filter(Boolean).join(" · ")}</span>
+        <StatusLine tone={e.owing ? "warn" : e.kind === "sale" ? "good" : "neutral"}>{[time(e.at), e.sub].filter(Boolean).join(" · ")}</StatusLine>
       </span>
       <span className="row__amount">
         <Money kobo={e.kind === "expense" ? -e.amount : e.amount} size={16} sign={e.kind === "sale" ? "plus" : "none"} className={`money--${tone}`} />
@@ -56,7 +58,12 @@ export function MoneyHome() {
   const entries = ledger(state);
   const groups = groupByDay(entries.slice(0, limit));
   const insight = recordInsights(state, now)[0]; // one thing said well, not three
-  const compare = compareText(state, period, now);
+  const ranges = periodRanges(period, now);
+  const prevKept = summarize(state, ranges.previous).kept;
+  const pct = prevKept > 0 ? ((sum.kept - prevKept) / prevKept) * 100 : null;
+  const stand = salesStand(state, ranges.current);
+  const sellers = topSellers(state, ranges.current, 4);
+  const spending = spendingByCategory(state, ranges.current);
   const week = dailySales(state, now);
   const empty = entries.length === 0;
   const low = runningLow(state);
@@ -124,6 +131,7 @@ export function MoneyHome() {
         </>
       ) : (
         <>
+          <HatchDefs />
           {insight && (
             <div className="voice voice--optional enter">
               <b>{insight.title}</b>
@@ -136,7 +144,15 @@ export function MoneyHome() {
 
           <section className="kept enter" data-theme="night" style={{ marginTop: "var(--space-4)" }} aria-label={`What you kept ${WORDS[period]}`}>
             <Aura variant="night" />
-            <span className="kept__label">{sum.kept >= 0 ? `You kept ${WORDS[period]}` : `You spent more than you received ${WORDS[period]}`}</span>
+            <div className="kept__head">
+              <span className="kept__label">{sum.kept >= 0 ? `You kept ${WORDS[period]}` : `You spent more than you received ${WORDS[period]}`}</span>
+              {pct !== null && (
+                <span className="kept__delta">
+                  <Delta pct={pct} />
+                  <span>{PREV[period]}</span>
+                </span>
+              )}
+            </div>
             <MoneyCountUp kobo={sum.kept} size={48} />
             <div className="kept__split">
               <div>
@@ -149,7 +165,6 @@ export function MoneyHome() {
               </div>
             </div>
             <DayBars days={week} what="Sold each day this week" />
-            {compare && <span className="kept__note">{compare}</span>}
           </section>
 
           <div className="actions" style={{ marginTop: "var(--space-4)" }}>
@@ -162,18 +177,31 @@ export function MoneyHome() {
           </div>
           {shortcuts}
 
+          {stand.owed.count > 0 && (
+            <>
+              <h2 className="section-title">Where your sales stand</h2>
+              <div className="card enter">
+                <StackBar
+                  segments={[
+                    { label: "Paid", value: stand.paid.amount, tone: "in", solid: true, detail: stand.paid.count },
+                    { label: "Still owed", value: stand.owed.amount, tone: "owed", detail: stand.owed.count },
+                  ]}
+                />
+              </div>
+            </>
+          )}
+
           {owing.list.length > 0 && (
             <>
-              <h2 className="section-title">
-                Owed to you <span className="row__sub">{owing.list.length === 1 ? "1 person" : `${owing.list.length} sales`}</span>
-              </h2>
+              <SectionLabel count={owing.list.length}>Owed to you</SectionLabel>
               <div className="list">
                 {owing.list.map((x) => (
                   <div className="row" key={x.id} style={{ cursor: "default" }}>
                     <Link to={`/money/record/sale/${x.id}`} className="row__link">
+                      <Avatar name={x.customer || "?"} />
                       <span className="row__main">
                         <span className="row__title">{x.customer || "Not paid yet"}</span>
-                        <span className="row__sub">{localDay(x.at) === localDay(now.toISOString()) ? "Today" : new Date(x.at).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}</span>
+                        <StatusLine tone="warn">{localDay(x.at) === localDay(now.toISOString()) ? "Today" : `Since ${new Date(x.at).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}`}</StatusLine>
                       </span>
                       <Money kobo={x.amount} size={16} className="money--owed" />
                     </Link>
@@ -188,21 +216,44 @@ export function MoneyHome() {
 
           {low.length > 0 && (
             <>
-              <h2 className="section-title">
-                Running low <span className="row__sub">{low.length === 1 ? "1 product" : `${low.length} products`}</span>
-              </h2>
+              <SectionLabel count={low.length}>Running low</SectionLabel>
               <div className="list">
                 {low.slice(0, 4).map((l) => (
                   <Link key={l.product.id} to="/money/stock" className="row">
+                    <IconTile icon="box" tint="sand" />
                     <span className="row__main">
                       <span className="row__title">{l.product.name}</span>
-                      <span className="row__sub row__sub--warn">{leftLabel(l.left)}</span>
+                      <StatusLine tone="bad">{leftLabel(l.left)}</StatusLine>
                     </span>
                     <span className="row__end">
                       <Icon name="chevron-right" size={18} />
                     </span>
                   </Link>
                 ))}
+              </div>
+            </>
+          )}
+
+          {sellers.length >= 2 && (
+            <>
+              <h2 className="section-title">What sells best</h2>
+              <div className="card stack enter" style={{ gap: "var(--space-5)" }}>
+                {sellers.map((x, i) => (
+                  <BarRow key={x.name} label={x.name} display={x.qty} value={x.qty} max={sellers[0].qty} tone={TONES[i % TONES.length]} delay={i * 80} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {spending.length >= 2 && (
+            <>
+              <h2 className="section-title">Where the money went</h2>
+              <div className="card enter">
+                <Donut
+                  segments={spending.slice(0, 4).map((x, i) => ({ label: x.label.split(" or ")[0], value: x.amount, tone: TONES[i % TONES.length] }))}
+                  center={<Money kobo={sum.spent} size={24} />}
+                  caption={`spent ${WORDS[period]}`}
+                />
               </div>
             </>
           )}

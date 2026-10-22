@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calendarDaysAgo, dailySales, dayLabel, streakInfo, evaluateAuto, groupByDay, ledger, owed, periodRanges, saleTitle, summarize } from "./calc";
+import { calendarDaysAgo, dailySales, salesStand, spendingByCategory, topSellers, dayLabel, streakInfo, evaluateAuto, groupByDay, ledger, owed, periodRanges, saleTitle, summarize } from "./calc";
 import { compareText, recordInsights } from "./insights";
 import { digitsToKobo, formatNaira, MAX_DIGITS, naira, pressKey, toKobo } from "./money";
 import { cleanExpense, cleanProduct, cleanSale, EMPTY_RECORDS, isRecordsDirty, mergePulled, requeueRejected, sanitizeRecords, saleLimitProblem, type RecordsState } from "./state";
@@ -195,6 +195,24 @@ describe("sales per day", () => {
   it("ignores deleted sales and counts unpaid ones as sold", () => {
     const s = state([sale({ at: t(0), amount: 100_000, deletedAt: t(0) }), sale({ at: t(0), amount: 70_000, paid: false, customer: "Ada" })]);
     expect(dailySales(s, NOW)[6].total).toBe(70_000);
+  });
+});
+
+describe("the numbers behind the Money charts", () => {
+  const week = periodRanges("week", NOW).current;
+  it("splits what was sold in the period into paid and still owed", () => {
+    const s = state([sale({ at: t(0), amount: 300_000 }), sale({ at: t(1), amount: 100_000, paid: false, customer: "Ada" }), sale({ at: t(2), amount: 50_000, paid: false, customer: "Bayo" }), sale({ at: t(40), amount: 999_000 })]);
+    expect(salesStand(s, week)).toEqual({ paid: { amount: 300_000, count: 1 }, owed: { amount: 150_000, count: 2 } });
+  });
+  it("ranks what sold by how many were sold, using item names", () => {
+    const item = (name: string, qty: number) => ({ name, qty, unitPrice: 100_000 });
+    const s = state([sale({ at: t(0), items: [item("Jollof rice", 3), item("Zobo", 1)], amount: 400_000 }), sale({ at: t(1), items: [item("Zobo", 4)], amount: 400_000 }), sale({ at: t(2), items: [item("Jollof rice", 1)], amount: 100_000 }), sale({ at: t(0), items: [], amount: 70_000 })]);
+    expect(topSellers(s, week, 5).map((x) => [x.name, x.qty])).toEqual([["Zobo", 5], ["Jollof rice", 4]]);
+    expect(topSellers(s, week, 1)).toHaveLength(1);
+  });
+  it("totals spending by category, biggest first, for the period only", () => {
+    const s = state([], [exp({ at: t(0), category: "stock", amount: 500_000 }), exp({ at: t(1), category: "transport", amount: 100_000 }), exp({ at: t(2), category: "stock", amount: 250_000 }), exp({ at: t(60), category: "rent", amount: 9_000_000 })]);
+    expect(spendingByCategory(s, week).map((x) => [x.category, x.amount])).toEqual([["stock", 750_000], ["transport", 100_000]]);
   });
 });
 

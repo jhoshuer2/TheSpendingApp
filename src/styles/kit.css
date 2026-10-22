@@ -120,3 +120,14 @@
 .kit__icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
 .kit__icon { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-3) 0; border-radius: var(--radius-md); background: var(--surface-card); box-shadow: var(--shadow-1); font-size: var(--text-micro); color: var(--text-secondary); }
 @media (prefers-reduced-motion: reduce) { .plate { animation: none; } }
+
+/* Money hero, kit style: hatched week bars in mint, a delta chip instead of a sentence */
+.kept__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.kept__delta { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); color: rgba(255, 255, 255, 0.9); }
+.kept .daybars__col i { background: repeating-linear-gradient(135deg, #4cc88a 0 3px, #1e6a46 3px 5px); }
+.kept .daybars__day--today .daybars__col i { background: #8cd3a8; }
+.kept .daybars__col i.daybars__none { background: rgba(255, 255, 255, 0.22); }
+
+.idhead { display:flex; align-items:center; gap:var(--space-4); }
+.idhead .title { margin:0; min-width:0; overflow-wrap:anywhere; }
+.row__main .hbar { margin-top:var(--space-2); }

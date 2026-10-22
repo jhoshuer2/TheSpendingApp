@@ -52,10 +52,10 @@ export function StatusLine({ tone = "neutral", children }: { tone?: Status; chil
 /** A small section label with the number of things in it. */
 export function SectionLabel({ children, count }: { children: ReactNode; count?: number }) {
   return (
-    <div className="seclabel">
+    <h2 className="seclabel">
       <span>{children}</span>
       {count !== undefined && <b className="seclabel__count">{count}</b>}
-    </div>
+    </h2>
   );
 }
 
