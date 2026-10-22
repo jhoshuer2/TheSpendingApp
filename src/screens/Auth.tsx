@@ -39,7 +39,7 @@ function Frame({ onSubmit, title, lede, children, footer }: { onSubmit?: (e: For
         </button>
       </header>
       <main className="screen__body">
-        <h1 className="title title--page enter">{title}</h1>
+        <h1 className="title title--hero enter">{title}</h1>
         {lede && (
           <p className="lede enter" style={{ ["--i" as string]: 1 }}>
             {lede}
@@ -108,7 +108,7 @@ export function Auth({ mode }: { mode: Mode }) {
         title="Check your email"
         lede={`We sent a link to ${confirmEmail}. Open it to finish creating your account, then log in.`}
         footer={
-          <Button type="button" fullWidth onClick={() => navigate("/login", { replace: true })}>
+          <Button variant="ink" type="button" fullWidth onClick={() => navigate("/login", { replace: true })}>
             Go to log in
           </Button>
         }
@@ -123,7 +123,7 @@ export function Auth({ mode }: { mode: Mode }) {
       lede={c.lede}
       footer={
         <>
-          <Button type="submit" fullWidth loading={busy}>
+          <Button variant="ink" type="submit" fullWidth loading={busy}>
             {c.submit}
           </Button>
           <div className="auth-switch">
@@ -219,7 +219,7 @@ export function ForgotPassword() {
         title="Check your email"
         lede={`If there's an account for ${sentTo}, we've sent a link to reset the password. It can take a few minutes.`}
         footer={
-          <Button type="button" fullWidth onClick={() => navigate("/login", { replace: true })}>
+          <Button variant="ink" type="button" fullWidth onClick={() => navigate("/login", { replace: true })}>
             Back to log in
           </Button>
         }
@@ -233,7 +233,7 @@ export function ForgotPassword() {
       title="Reset your password"
       lede="Enter your email and we'll send you a link to choose a new one."
       footer={
-        <Button type="submit" fullWidth loading={busy}>
+        <Button variant="ink" type="submit" fullWidth loading={busy}>
           Send link
         </Button>
       }
@@ -275,7 +275,7 @@ export function ResetPassword() {
         title="This link has expired"
         lede="Reset links only work once, for a short time. Ask for a new one."
         footer={
-          <Button type="button" fullWidth onClick={() => navigate("/forgot-password", { replace: true })}>
+          <Button variant="ink" type="button" fullWidth onClick={() => navigate("/forgot-password", { replace: true })}>
             Send a new link
           </Button>
         }
@@ -301,7 +301,7 @@ export function ResetPassword() {
       onSubmit={submit}
       title="Choose a new password"
       footer={
-        <Button type="submit" fullWidth loading={busy}>
+        <Button variant="ink" type="submit" fullWidth loading={busy}>
           Save password
         </Button>
       }

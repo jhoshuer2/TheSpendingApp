@@ -62,7 +62,7 @@ export function Onboarding() {
       </header>
 
       <main className="screen__body" key={q.id}>
-        <h1 className="title title--page enter" ref={heading} tabIndex={-1} style={{ outline: "none" }}>
+        <h1 className="title title--hero enter" ref={heading} tabIndex={-1} style={{ outline: "none" }}>
           {q.title}
         </h1>
         {q.lede && (
@@ -78,7 +78,7 @@ export function Onboarding() {
       </main>
 
       <footer className="screen__footer">
-        <Button fullWidth disabled={!answered} onClick={next}>
+        <Button variant="ink" fullWidth disabled={!answered} onClick={next}>
           {last ? "Finish" : "Continue"}
         </Button>
       </footer>
@@ -162,6 +162,7 @@ export function Summary() {
 
       <footer className="screen__footer">
         <Button
+          variant="ink"
           fullWidth
           onClick={() => {
             completeOnboarding();

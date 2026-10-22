@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "ink" | "outline";
   /** md = 48px, lg = 56px. (The design system's 36px "sm" is omitted: it is below the 44px touch target.) */
   size?: "md" | "lg";
   loading?: boolean;

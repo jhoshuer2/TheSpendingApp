@@ -10,43 +10,42 @@ import { Orb } from "../design-system/Orb";
 
 const DEMO_WEEK = [3, 5, 4, 6, 9, 2, 7].map((n, i) => ({ key: `d${i}`, label: "FSSMTWT"[i], total: n * 100_000, today: i === 6 }));
 
-/** Each slide shows the product itself in miniature, so the app explains itself before a word is read. */
-const SLIDES: { title: string; body: string; art: () => JSX.Element }[] = [
+/** One idea per slide: a two-tone headline and a single large hero, no boxes around it. */
+const SLIDES: { a: string; b: string; art: () => JSX.Element }[] = [
   {
-    title: "Record a sale in seconds",
-    body: "Type the amount. That's it.",
+    a: "Record a sale.",
+    b: "In seconds.",
     art: () => (
-      <div className="art">
-        <span className="art__label">How much?</span>
-        <MoneyCountUp kobo={450_000} size={48} />
-        <span className="art__pill">
+      <div className="art-pro">
+        <MoneyCountUp kobo={450_000} size={88} />
+        <span className="art-pro__pill">
           <Icon name="check" size={16} stroke={2.4} /> Sale in!
         </span>
       </div>
     ),
   },
   {
-    title: "See what you actually keep",
-    body: "Your profit, not just your sales.",
+    a: "Know what you keep.",
+    b: "Not just what you sold.",
     art: () => (
-      <div className="art">
-        <span className="art__label">You kept this week</span>
-        <MoneyCountUp kobo={1_360_000} size={44} />
-        <DayBars days={DEMO_WEEK} what="Sold each day this week (example)" />
+      <div className="art-pro">
+        <span className="art-pro__label">You kept this week</span>
+        <MoneyCountUp kobo={1_360_000} size={64} />
+        <DayBars days={DEMO_WEEK} what="Sold each day this week (example)" tone="light" />
       </div>
     ),
   },
   {
-    title: "A guide that cheers you on",
-    body: "One next step at a time.",
+    a: "A guide that talks.",
+    b: "Cheering you on.",
     art: () => (
-      <div className="art art--guide">
-        <Orb size={88} />
-        <div className="voice art__voice">
+      <div className="art-pro">
+        <Orb size={132} />
+        <div className="voice">
           <b>Two minutes is all this takes.</b>
         </div>
-        <div className="art__streak" aria-hidden="true">
-          <Icon name="flame" size={18} />
+        <div className="art-pro__streak" aria-hidden="true">
+          <Icon name="flame" size={20} />
           {[0, 1, 2, 3, 4].map((i) => (
             <i key={i} style={{ ["--i" as string]: i }} />
           ))}
@@ -67,8 +66,7 @@ export function Welcome() {
 
   return (
     <div
-      className="screen welcome"
-      data-theme="night"
+      className="screen welcome-pro"
       onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
       onTouchEnd={(e) => {
         if (touchX.current === null) return;
@@ -77,7 +75,7 @@ export function Welcome() {
         if (Math.abs(dx) > 50) go(i + (dx < 0 ? 1 : -1));
       }}
     >
-      <Aura variant="night" />
+      <Aura variant="dawn" />
       <header className="screen__header" style={{ justifyContent: "flex-end" }}>
         {!last && (
           <button className="link-btn" onClick={() => navigate("/signup")}>
@@ -87,16 +85,20 @@ export function Welcome() {
       </header>
 
       <main className="screen__body welcome__body">
-        <div className="welcome__visual" key={`v${i}`}>
-          <div className="enter">{slide.art()}</div>
-        </div>
         <div className="welcome__copy" key={`c${i}`} aria-live="polite">
-          <h1 className="title enter" style={{ ["--i" as string]: 1 }}>
-            {slide.title}
+          <h1 className="hl">
+            <span className="hl__a enter" style={{ ["--i" as string]: 1 }}>
+              {slide.a}
+            </span>
+            <span className="hl__b enter" style={{ ["--i" as string]: 2 }}>
+              {slide.b}
+            </span>
           </h1>
-          <p className="lede enter" style={{ ["--i" as string]: 2 }}>
-            {slide.body}
-          </p>
+        </div>
+        <div className="welcome__visual" key={`v${i}`}>
+          <div className="enter" style={{ ["--i" as string]: 3 }}>
+            {slide.art()}
+          </div>
         </div>
       </main>
 
@@ -106,7 +108,7 @@ export function Welcome() {
         </div>
         {last ? (
           <>
-            <Button fullWidth onClick={() => navigate("/signup")}>
+            <Button variant="ink" fullWidth onClick={() => navigate("/signup")}>
               Get started
             </Button>
             <button className="link-btn" onClick={() => navigate("/login")}>
@@ -114,7 +116,7 @@ export function Welcome() {
             </button>
           </>
         ) : (
-          <Button fullWidth iconRight={<Icon name="arrow-right" size={18} />} onClick={() => go(i + 1)}>
+          <Button variant="ink" fullWidth iconRight={<Icon name="arrow-right" size={18} />} onClick={() => go(i + 1)}>
             Next
           </Button>
         )}
