@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Kit } from "../screens/Kit";
 import { AuthProvider } from "../lib/auth";
 import { RouteTitle } from "../lib/pageTitle";
 import { ToastProvider } from "../lib/toast";
@@ -47,6 +48,7 @@ export function App() {
             <Routes>
               <Route path="/" element={<Splash />} />
               <Route path="/welcome" element={<Welcome />} />
+              <Route path="/kit" element={<Kit />} />
               <Route path="/signup" element={<Auth key="signup" mode="signup" />} />
               <Route path="/login" element={<Auth key="login" mode="login" />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />

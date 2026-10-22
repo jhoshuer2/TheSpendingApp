@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 const TITLES: [RegExp, string][] = [
   [/^\/$/, ""],
   [/^\/welcome$/, "Welcome"],
+  [/^\/kit$/, "UI kit"],
   [/^\/signup$/, "Create account"],
   [/^\/login$/, "Log in"],
   [/^\/forgot-password$/, "Forgot password"],
