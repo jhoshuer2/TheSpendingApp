@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "../lib/auth";
+import { RouteTitle } from "../lib/pageTitle";
 import { ToastProvider } from "../lib/toast";
 import { ProfileProvider } from "../profile/store";
 import { AssistantProvider } from "../assistant/store";
@@ -39,6 +40,7 @@ export function App() {
         <RecordsProvider>
         <AutoSteps />
         <BrowserRouter>
+        <RouteTitle />
           <div className="app">
             <ToastProvider>
             <AssistantProvider>

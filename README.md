@@ -12,13 +12,15 @@ npm run dev            # http://localhost:5173
 npm run build          # typecheck + production build (with service worker)
 npm test               # unit tests
 npm run preview -- --port 4173
-npm run check:layout   # needs the preview server; screenshots land in tools/out/
+npm run check:layout   # needs the preview server; screenshots land in tools/out/. Slow (96 screens x 7 sizes, several minutes): don't cap it with a short timeout
 npm run check:flow     # needs the preview server; drives sign up > onboarding > finish a step > reload
 npm run check:learning # needs the preview server; hide/undo, learning switch, welcome back
 npm run check:money    # needs the preview server; records through the real screens, checks the arithmetic
 npm run check:backend  # fake Supabase + real browser: accounts, sync, offline, password reset, learning data
 npm run check:write             # your business facts and the Write-for-me drafts through the real screens
 npm run check:customers         # customers, reminders, receipts through the real screens
+npm run check:stock             # stock counts and low-stock warnings through the real screens
+npm run check:register          # the business-name registration guide through the real screens
 npm run check:assistant         # fake Supabase + scripted model: chat, cards, undo, Pidgin, limits
 npm run check:assistant-layout  # the assistant screens at 7 phone sizes
 node tools/eval-assistant.mjs   # YOUR Anthropic key: how well the real model handles English and Pidgin
@@ -32,16 +34,16 @@ npm run test:db        # migration + security rules on a disposable Postgres (PG
 | Path | What |
 |---|---|
 | `src/styles/` | Design tokens copied from the design system (colour, type, spacing, depth, motion), plus base, component and screen CSS. `effects.css` omits the atmosphere/gradient tokens on purpose. |
-| `src/design-system/` | Components ported to TypeScript: Button, Field, Icon, SpalSymbol, PageDots, BottomNav. |
+| `src/design-system/` | Components ported to TypeScript: AmountPad, BottomNav, Button, Field, Icon, Money, OptionCard, PageDots, ProgressBar, Segmented, SpalSymbol, Switch, Toast, WeekStrip. |
 | `src/messages/` | Reminder and receipt wording (English and Pidgin), message preferences, clipboard helper. Pure TypeScript, unit tested. |
 | `src/assistant/` | The assistant: tools that read your books and build proposals, the conversation engine, saved chat, the store. Pure TypeScript, unit tested. The server half is `supabase/functions/`. |
 | `src/records/` | The books: sales, expenses, products. Money, period maths (what you kept), insights from real numbers, offline-first sync. Pure TypeScript, unit tested. |
 | `src/learning/` | What SPAL notices and says about how someone is doing: weekly rhythm, areas, milestones, gaps, welcome back. Pure TypeScript, unit tested. |
 | `src/profile/` | The product logic, pure TypeScript and unit tested: questions, scoring (band and needs map), the module library, the recommender, and the local store. |
-| `src/screens/` | Splash, Welcome, Auth, Onboarding (questions, building, summary), Today, ModuleDetail, Library, Journey, Profile, Shell, and `money/` (Money home, record a sale, add an expense, products, record detail). |
+| `src/screens/` | Splash, Welcome, Auth, Onboarding (questions, building, summary), Today, ModuleDetail, Library, Journey, Profile, Shell, Assistant, Business, Register, Write, WriteDraft, and `money/` (Money home, record a sale, add an expense, products, stock count, customers, message drafts, record detail). |
 | `src/backend/` | Auth and server storage behind one interface: Supabase, or local demo mode. |
 | `supabase/` | The database migration and its security tests. |
-| `src/lib/` | Validation, formatting and the auth provider. |
+| `src/lib/` | Validation, formatting, the auth provider, toasts, back navigation and per-screen page titles. |
 
 ## Rules
 

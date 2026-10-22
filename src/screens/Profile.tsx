@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
@@ -19,6 +19,15 @@ export function Profile() {
   const { profile, sync, prepareSignOut, stored, insights, setLearning, resetLearning, restore } = useProfile();
   const records = useRecords();
   const [confirmReset, setConfirmReset] = useState(false);
+  // The confirm card replaces the button that opened it, so hand focus to the card, and back to the button when it closes.
+  const confirmRef = useRef<HTMLDivElement>(null);
+  const forgetRef = useRef<HTMLButtonElement>(null);
+  const wasConfirming = useRef(false);
+  useEffect(() => {
+    if (confirmReset) confirmRef.current?.focus();
+    else if (wasConfirming.current) forgetRef.current?.focus();
+    wasConfirming.current = confirmReset;
+  }, [confirmReset]);
   const learning = stored.activity.learning;
   const refused = records.rejectedCount > 0 ? ` ${records.rejectedCount === 1 ? "1 record couldn't" : `${records.rejectedCount} records couldn't`} be saved to your account. ${records.rejectedCount === 1 ? "It's" : "They're"} kept on this phone.` : "";
   const saved =
@@ -149,7 +158,7 @@ export function Profile() {
           </span>
         </button>
         {!confirmReset && (
-          <button type="button" className="row" onClick={() => setConfirmReset(true)}>
+          <button type="button" className="row" ref={forgetRef} onClick={() => setConfirmReset(true)}>
             <span className="tile">
               <Icon name="eye" size={20} />
             </span>
@@ -164,7 +173,7 @@ export function Profile() {
         )}
       </div>
       {confirmReset && (
-        <div className="card stack" role="alertdialog" aria-label="Forget what SPAL has noticed" style={{ marginTop: "var(--space-3)" }}>
+        <div ref={confirmRef} tabIndex={-1} className="card stack" role="alertdialog" aria-label="Forget what SPAL has noticed" style={{ marginTop: "var(--space-3)" }}>
           <p className="hero__why">
             <b>Forget what SPAL has noticed?</b>
             This clears your active days and when you opened steps. Your finished steps and hidden steps stay.

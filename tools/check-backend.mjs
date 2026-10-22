@@ -183,6 +183,28 @@ await step("offline: sales and expenses are kept on the phone and sent once, whe
   await A.p.getByText("All changes saved").waitFor();
 });
 
+await step("a backlog sent after being offline is settled in one write, not one full rewrite of the books per record", async () => {
+  await fake("offline?on=1");
+  await A.p.getByRole("link", { name: "Money", exact: true }).click();
+  for (let i = 0; i < 12; i++) {
+    await A.p.getByRole("button", { name: "Record a sale" }).first().click();
+    await key(A.p, "9", "Three zeros");
+    await A.p.getByRole("button", { name: "Record ₦9,000" }).click();
+    await A.p.waitForURL("**/app/money");
+  }
+  await A.p.evaluate(() => {
+    window.__writes = 0;
+    const set = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k, v) { if (String(k).startsWith("spal.records")) window.__writes++; return set.call(this, k, v); };
+  });
+  await fake("offline?on=0");
+  await A.p.evaluate(() => window.dispatchEvent(new Event("online")));
+  await poll("the backlog synced", async () => (await sales()).filter((r) => r.amount === 900000).length === 12, 15000);
+  await A.p.waitForTimeout(1500);
+  const writes = await A.p.evaluate(() => window.__writes);
+  assert.ok(writes <= 4, `the books were rewritten ${writes} times to settle 12 records`);
+});
+
 await step("a big set of books loads completely (2,500 sales, three pages), and the next load only asks for what changed", async () => {
   await fake("seed-sales?email=ada@example.com&n=2500");
   const C = await device();

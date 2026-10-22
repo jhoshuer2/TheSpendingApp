@@ -50,6 +50,8 @@ const naira = (kobo: number) => Math.round(kobo) / 100;
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 const text = (v: unknown, max: number): string | undefined => (typeof v === "string" && v.trim() ? v.trim().replace(/\s+/g, " ").slice(0, max) : undefined);
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/g, " ").trim();
+/** One name contains the other. An empty one (a name made only of emoji or symbols) matches nothing, not everything. */
+const overlaps = (a: string, b: string) => a !== "" && b !== "" && (a.includes(b) || b.includes(a));
 const categories = new Set<string>(EXPENSE_CATEGORIES);
 
 /** Whole-naira-or-kobo amount the assistant gave, as kobo, or an explanation the assistant can act on. */
@@ -83,7 +85,7 @@ function matchProduct(name: string, products: Product[]): Product | undefined {
   const exact = products.filter((p) => norm(p.name) === n);
   if (exact.length === 1) return exact[0];
   if (exact.length > 1) return undefined;
-  const part = products.filter((p) => norm(p.name).includes(n) || n.includes(norm(p.name)));
+  const part = products.filter((p) => overlaps(norm(p.name), n));
   return part.length === 1 ? part[0] : undefined;
 }
 
@@ -159,7 +161,7 @@ export function buildMarkPaidProposal(input: unknown, state: RecordsState): Buil
   const owing = [...new Map(unpaid.map((s) => [norm(s.customer as string), s.customer as string] as const)).values()];
   const n = norm(name);
   const exact = owing.filter((c) => norm(c) === n);
-  const hits = exact.length ? exact : owing.filter((c) => n.length >= 2 && (norm(c).includes(n) || n.includes(norm(c))));
+  const hits = exact.length ? exact : owing.filter((c) => n.length >= 2 && overlaps(norm(c), n));
   if (hits.length === 0) return { ok: false, error: owing.length ? `Nobody called "${name}" owes anything. People who owe: ${owing.slice(0, 10).join(", ")}.` : `Nobody owes anything right now, so there is nothing to mark as paid.` };
   if (hits.length > 1) return { ok: false, error: `More than one customer matches "${name}": ${hits.slice(0, 5).join(", ")}. Ask the person which one.` };
   const sales = unpaid.filter((s) => norm(s.customer as string) === norm(hits[0]));
@@ -290,7 +292,7 @@ function matchCustomer(name: string, list: CustomerEntry[]): { hit: CustomerEntr
   const n = normName(name);
   if (!n) return { error: "Which customer? Ask the person." };
   const exact = list.filter((c) => normName(c.name) === n);
-  const hits = exact.length ? exact : list.filter((c) => n.length >= 2 && (normName(c.name).includes(n) || n.includes(normName(c.name))));
+  const hits = exact.length ? exact : list.filter((c) => n.length >= 2 && overlaps(normName(c.name), n));
   if (hits.length === 0) return { error: `No customer called "${name.slice(0, 40)}". Ask the person who they mean.` };
   if (hits.length > 1) return { error: `More than one customer matches "${name.slice(0, 40)}": ${hits.slice(0, 5).map((c) => c.name).join(", ")}. Ask which one.` };
   return { hit: hits[0] };
@@ -388,7 +390,7 @@ export function buildStockProposal(input: unknown, state: RecordsState): Built {
     const name = text(u.product, 80);
     if (!name) return { ok: false, error: `${label}: which product? Ask the person.` };
     const exact = products.filter((p) => normName(p.name) === normName(name));
-    const near = exact.length ? exact : products.filter((p) => normName(name).length >= 2 && (normName(p.name).includes(normName(name)) || normName(name).includes(normName(p.name))));
+    const near = exact.length ? exact : products.filter((p) => normName(name).length >= 2 && overlaps(normName(p.name), normName(name)));
     if (near.length === 0) return { ok: false, error: `${label}: no product called "${name.slice(0, 40)}". Their products: ${products.slice(0, 10).map((p) => p.name).join(", ") || "none yet"}. Ask which one they mean.` };
     if (near.length > 1) return { ok: false, error: `${label}: more than one product matches "${name.slice(0, 40)}": ${near.slice(0, 5).map((p) => p.name).join(", ")}. Ask which one.` };
     const p = near[0];

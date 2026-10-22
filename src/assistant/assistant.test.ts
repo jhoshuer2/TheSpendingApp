@@ -38,6 +38,12 @@ describe("propose_records", () => {
     const two = buildRecordsProposal({ sales: [{ amount: 3000, items: [{ name: "Wig", qty: 1 }, { name: "Gel", qty: 1 }] }] }, books(), NOW);
     expect(two.ok && two.proposal.sales[0].items.map((i) => i.unitPrice)).toEqual([0, 0]);
   });
+  it("does not mistake a product whose name is only an emoji for whatever was sold", () => {
+    const pizza: Product = { id: "p-pizza-0001", name: "🍕", price: 300000 };
+    const r = buildRecordsProposal({ sales: [{ amount: 3000, items: [{ name: "Wig", qty: 2 }] }] }, books({ products: { [pizza.id]: pizza } }), NOW);
+    expect(r.ok && r.proposal.sales[0].items[0]).toMatchObject({ name: "Wig", qty: 2, unitPrice: 150000 });
+    expect(r.ok && r.proposal.sales[0].items[0].productId).toBeUndefined();
+  });
   it("rejects explicit prices that don't add up, but allows a discount on product prices", () => {
     expect(buildRecordsProposal({ sales: [{ amount: 1000, items: [{ name: "Wig", qty: 1, unit_price: 5000 }] }] }, books(), NOW).ok).toBe(false);
     expect(buildRecordsProposal({ sales: [{ amount: 4000, items: [{ name: "Jollof rice", qty: 3 }] }] }, books(), NOW).ok).toBe(true);

@@ -61,7 +61,6 @@ export function buildCustomers(state: RecordsState): CustomerEntry[] {
   return [...byNorm.values()];
 }
 
-export const findCustomer = (state: RecordsState, key: string): CustomerEntry | undefined => buildCustomers(state).find((c) => c.key === key);
 
 /** People who owe you, biggest debt first, then everyone by who bought most recently. */
 export function sortCustomers(list: CustomerEntry[]): { owing: CustomerEntry[]; everyone: CustomerEntry[] } {
