@@ -6,7 +6,8 @@ export function pageIssues() {
   const app = document.querySelector(".app").getBoundingClientRect();
   for (const el of document.querySelectorAll(".app *")) {
     const r = el.getBoundingClientRect();
-    if (r.width && (r.right > app.right + 0.5 || r.left < app.left - 0.5) && !el.closest(".screen__body")) {
+    // The aura is a clipped, decorative layer whose colour fields start outside their frame on purpose; it cannot cause overflow.
+    if (r.width && (r.right > app.right + 0.5 || r.left < app.left - 0.5) && !el.closest(".screen__body") && !el.closest(".aura")) {
       issues.push(`overflow-x: <${el.tagName.toLowerCase()} class="${el.className}">`);
     }
   }

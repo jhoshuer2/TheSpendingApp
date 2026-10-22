@@ -157,7 +157,7 @@ export function Summary() {
             </div>
           ))}
         </div>
-        <p className="note">SPAL learns from what you open, finish and skip. Turn it off or reset it any time in Profile.</p>
+        <p className="note">SPAL learns from the steps you open, finish and skip, and the days you're active. Turn it off or reset it any time in Profile.</p>
       </main>
 
       <footer className="screen__footer">
