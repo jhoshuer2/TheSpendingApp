@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../design-system/Button";
 import { Icon } from "../../design-system/Icon";
+import { Avatar, IconTile, StatusLine } from "../../design-system/Identity";
 import { Money } from "../../design-system/Money";
 import { greetingName } from "../../messages/templates";
 import { saleTitle } from "../../records/calc";
@@ -35,7 +36,10 @@ export function CustomerDetail() {
       </header>
 
       <main className="screen__body">
-        <h1 className="title title--page enter">{c.name}</h1>
+        <div className="idhead enter">
+          <Avatar name={c.name} size={64} />
+          <h1 className="title title--page">{c.name}</h1>
+        </div>
         {c.note && <p className="lede enter" style={{ ["--i" as string]: 1 }}>{c.note}</p>}
 
         {c.owed > 0 && (
@@ -85,9 +89,10 @@ export function CustomerDetail() {
             <div className="list">
               {c.sales.slice(0, 30).map((s) => (
                 <Link key={s.id} to={`/money/record/sale/${s.id}`} className="row">
+                  <IconTile icon="sale" tint={s.paid ? "mint" : "sand"} />
                   <span className="row__main">
                     <span className="row__title">{saleTitle(s)}</span>
-                    <span className="row__sub">{when(s.at)}{s.paid ? "" : " · not paid yet"}</span>
+                    <StatusLine tone={s.paid ? "good" : "warn"}>{when(s.at)}{s.paid ? "" : " · not paid yet"}</StatusLine>
                   </span>
                   <Money kobo={s.amount} size={16} className={s.paid ? "money--in" : "money--owed"} sign={s.paid ? "plus" : "none"} />
                 </Link>
