@@ -58,3 +58,26 @@
 @keyframes confetti-burst { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; transform: translate(var(--x), calc(var(--y) + 60px)) rotate(var(--r)); } }
 
 @media (prefers-reduced-motion: reduce) { .confetti { display: none; } }
+
+/* Money: the number you came for, on the atmosphere, with the week behind it */
+.kept { position: relative; overflow: hidden; isolation: isolate; }
+.kept > :not(.aura) { position: relative; z-index: 1; }
+.kept .aura i { filter: blur(34px) brightness(0.68); }
+.kept .kept__label, .kept .kept__split span, .kept .kept__note { color: rgba(255, 255, 255, 0.9); }
+
+.daybars { display: flex; align-items: flex-end; gap: var(--space-2); height: 88px; }
+.daybars__day { flex: 1; display: flex; flex-direction: column; align-items: stretch; gap: var(--space-1); height: 100%; }
+.daybars__col { flex: 1; display: flex; align-items: flex-end; }
+.daybars__col i { display: block; width: 100%; border-radius: 4px 4px 0 0; background: rgba(255, 255, 255, 0.55); transform-origin: bottom; animation: bar-grow var(--dur-4) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 40ms); }
+.daybars__day--today .daybars__col i { background: #8cd3a8; }
+.daybars__col i.daybars__none { background: rgba(255, 255, 255, 0.22); border-radius: 2px; }
+.daybars__label { text-align: center; font-size: var(--text-micro); color: rgba(255, 255, 255, 0.9); }
+.daybars__day--today .daybars__label { color: #fff; font-weight: 500; }
+@keyframes bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* Shortcuts: four things you do often, as icons, not sentences */
+.shortcuts { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); margin-top: var(--space-5); }
+.shortcut { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-1); min-height: var(--hit-min); border-radius: var(--radius-md); background: var(--surface-card); box-shadow: var(--shadow-1); color: var(--text-primary); text-decoration: none; font-size: var(--text-caption); font-weight: 500; text-align: center; transition: transform var(--dur-1) var(--ease-out); }
+.shortcut:active { transform: scale(var(--press-scale)); }
+.shortcut .tile { border-radius: var(--radius-full); }
+.orb-link--big { width: auto; min-height: 96px; padding: 0 var(--space-4); }

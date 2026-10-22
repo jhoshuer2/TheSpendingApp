@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calendarDaysAgo, dayLabel, streakInfo, evaluateAuto, groupByDay, ledger, owed, periodRanges, saleTitle, summarize } from "./calc";
+import { calendarDaysAgo, dailySales, dayLabel, streakInfo, evaluateAuto, groupByDay, ledger, owed, periodRanges, saleTitle, summarize } from "./calc";
 import { compareText, recordInsights } from "./insights";
 import { digitsToKobo, formatNaira, MAX_DIGITS, naira, pressKey, toKobo } from "./money";
 import { cleanExpense, cleanProduct, cleanSale, EMPTY_RECORDS, isRecordsDirty, mergePulled, requeueRejected, sanitizeRecords, saleLimitProblem, type RecordsState } from "./state";
@@ -180,6 +180,21 @@ describe("the daily streak", () => {
   });
   it("ignores deleted records", () => {
     expect(streakInfo(state([sale({ at: t(0), deletedAt: t(0) })]), NOW).count).toBe(0);
+  });
+});
+
+describe("sales per day", () => {
+  it("totals each of the last seven days, oldest first, with today marked", () => {
+    const s = state([sale({ at: t(0, 9), amount: 100_000 }), sale({ at: t(0, 14), amount: 50_000 }), sale({ at: t(2), amount: 300_000 }), sale({ at: t(9), amount: 999_000 })], [exp({ at: t(1), amount: 40_000 })]);
+    const d = dailySales(s, NOW);
+    expect(d).toHaveLength(7);
+    expect(d.map((x) => x.total)).toEqual([0, 0, 0, 0, 300_000, 0, 150_000]);
+    expect(d[6].today).toBe(true);
+    expect(d[0].today).toBe(false);
+  });
+  it("ignores deleted sales and counts unpaid ones as sold", () => {
+    const s = state([sale({ at: t(0), amount: 100_000, deletedAt: t(0) }), sale({ at: t(0), amount: 70_000, paid: false, customer: "Ada" })]);
+    expect(dailySales(s, NOW)[6].total).toBe(70_000);
   });
 });
 

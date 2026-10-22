@@ -127,6 +127,18 @@ export function streakInfo(s: RecordsState, now: Date): Streak {
   return { count, doneToday, days };
 }
 
+/** What was sold on each of the last seven days (paid or not), oldest first. For the little bar strip on Money. */
+export function dailySales(s: RecordsState, now: Date): { key: string; label: string; total: number; today: boolean }[] {
+  const sold = new Map<string, number>();
+  for (const x of liveSales(s)) sold.set(localDay(x.at), (sold.get(localDay(x.at)) ?? 0) + x.amount);
+  return Array.from({ length: 7 }, (_, i) => {
+    const back = 6 - i;
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - back, 12);
+    const key = localDay(d.toISOString());
+    return { key, label: d.toLocaleDateString("en-NG", { weekday: "narrow" }), total: sold.get(key) ?? 0, today: back === 0 };
+  });
+}
+
 /** "Today", "Yesterday", or "Mon 12 Oct", for grouping the list. */
 export function dayLabel(key: string, now: Date): string {
   const d = new Date(`${key}T12:00:00`);
