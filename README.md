@@ -48,7 +48,7 @@ npm run test:db        # migration + security rules on a disposable Postgres (PG
 - Every colour, size, space and radius comes from a token. No one-off values.
 - One primary action per screen, in the thumb zone. Touch targets are at least 44x44px (the design system's 36px small button is not used).
 - Inputs are 16px so iOS Safari does not zoom on focus.
-- No gradients or photography in product UI.
+- No photography. The only gradient is the Aura atmosphere, used sparingly (see `docs/DESIGN-DIRECTION.md`, "Alive, not busy").
 
 ## How personalisation works
 
