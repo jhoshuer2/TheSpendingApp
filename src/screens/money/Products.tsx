@@ -1,7 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useBack } from "../../lib/useBack";
 import { Button } from "../../design-system/Button";
+import { HatchBar } from "../../design-system/Charts";
 import { Icon } from "../../design-system/Icon";
+import { Avatar, StatusLine } from "../../design-system/Identity";
 import { Money } from "../../design-system/Money";
 import { SpalSymbol } from "../../design-system/SpalSymbol";
 import { naira } from "../../records/money";
@@ -39,16 +41,18 @@ export function Products() {
           <div className="list enter" style={{ marginTop: "var(--space-6)" }}>
             {products.map((p) => (
               <Link key={p.id} to={`/money/product/${p.id}`} className="row">
+                <Avatar name={p.name} />
                 <span className="row__main">
                   <span className="row__title">{p.name}</span>
                   {(() => {
                     const left = stockLeft(state, p);
                     const status = stockStatus(left, p.lowAt);
-                    return left !== null ? <span className={`row__sub${status && status !== "ok" ? " row__sub--warn" : ""}`}>{status === "low" ? `Running low: ${leftLabel(left)}` : leftLabel(left)}</span> : null;
+                    return left !== null ? <StatusLine tone={status === "ok" ? "good" : status === "low" ? "warn" : "bad"}>{status === "low" ? `Running low: ${leftLabel(left)}` : leftLabel(left)}</StatusLine> : null;
                   })()}
                   <span className="row__sub">{p.cost !== undefined ? (p.price > p.cost ? `Costs ${naira(p.cost)} · you keep ${naira(p.price - p.cost)}` : `Costs ${naira(p.cost)}. Check the price`) : "Add what it costs you"}</span>
+                  {p.cost !== undefined && p.price > p.cost && <HatchBar value={p.price - p.cost} max={p.price} height={6} label={`You keep ${Math.round(((p.price - p.cost) / p.price) * 100)}% of the price`} />}
                 </span>
-                <Money kobo={p.price} size={16} />
+                <span className="row__amount row__amount--fixed"><Money kobo={p.price} size={16} /></span>
                 <span className="row__end">
                   <Icon name="chevron-right" size={18} />
                 </span>
@@ -74,6 +78,7 @@ export function Products() {
             <div className="list">
               {removed.map((p) => (
                 <div className="row row--static" key={p.id}>
+                  <Avatar name={p.name} />
                   <span className="row__main">
                     <span className="row__title">{p.name}</span>
                     <span className="row__sub">Past sales keep their record</span>

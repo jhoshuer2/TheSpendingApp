@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../design-system/Button";
+import { HatchBar, HatchDefs, StackBar, type Segment } from "../../design-system/Charts";
 import { Icon } from "../../design-system/Icon";
+import { Avatar, StatusLine } from "../../design-system/Identity";
 import { SpalSymbol } from "../../design-system/SpalSymbol";
 import { useBack } from "../../lib/useBack";
 import { useToast } from "../../lib/toast";
@@ -18,6 +20,8 @@ export function StockCount() {
   const untracked = useMemo(() => liveProducts(state).filter((p) => p.stock === undefined), [state]);
   const [typed, setTyped] = useState<Record<string, string>>({});
   const [error, setError] = useState<string>();
+  const counts = { ok: lines.filter((l) => l.status === "ok").length, low: lines.filter((l) => l.status === "low").length, out: lines.filter((l) => l.status === "out").length };
+  const most = Math.max(1, ...lines.map((l) => l.left));
   const changed = lines.filter((l) => typed[l.product.id] !== undefined && typed[l.product.id] !== String(Math.max(0, l.left)));
 
   const save = () => {
@@ -50,12 +54,27 @@ export function StockCount() {
             <p>{untracked.length ? "Pick a product below and tell SPAL how many you have." : "Add your products first, then count them."}</p>
           </div>
         ) : (
-          <div className="list enter" style={{ marginTop: "var(--space-6)", ["--i" as string]: 2 }}>
+          <>
+          {lines.length >= 2 && (
+            <div className="card enter" style={{ marginTop: "var(--space-5)", ["--i" as string]: 2 }}>
+              <HatchDefs />
+              <StackBar
+                segments={([
+                  { label: "Plenty", value: counts.ok, tone: "in", solid: true },
+                  { label: "Running low", value: counts.low, tone: "owed" },
+                  { label: "Out", value: counts.out, tone: "out" },
+                ] as Segment[]).filter((x) => x.value > 0)}
+              />
+            </div>
+          )}
+          <div className="list enter" style={{ marginTop: "var(--space-4)", ["--i" as string]: 3 }}>
             {lines.map((l) => (
               <div className="row" key={l.product.id} style={{ cursor: "default" }}>
+                <Avatar name={l.product.name} />
                 <span className="row__main">
                   <span className="row__title">{l.product.name}</span>
-                  <span className={`row__sub${l.status !== "ok" ? " row__sub--warn" : ""}`}>{l.status === "low" ? `Running low: ${leftLabel(l.left)}` : leftLabel(l.left)}</span>
+                  <StatusLine tone={l.status === "ok" ? "good" : l.status === "low" ? "warn" : "bad"}>{l.status === "low" ? `Running low: ${leftLabel(l.left)}` : leftLabel(l.left)}</StatusLine>
+                  <HatchBar value={Math.max(0, l.left)} max={most} tone={l.status === "ok" ? "in" : l.status === "low" ? "owed" : "out"} height={6} label={leftLabel(l.left)} />
                 </span>
                 <input
                   className="count-input"
@@ -71,6 +90,7 @@ export function StockCount() {
               </div>
             ))}
           </div>
+          </>
         )}
         {error && (
           <p className="form-error" role="alert" style={{ marginTop: "var(--space-3)" }}>
@@ -84,6 +104,7 @@ export function StockCount() {
             <div className="list">
               {untracked.map((p) => (
                 <Link key={p.id} to={`/money/product/${p.id}`} className="row">
+                  <Avatar name={p.name} />
                   <span className="row__main">
                     <span className="row__title">{p.name}</span>
                     <span className="row__sub">Tap to count it</span>
