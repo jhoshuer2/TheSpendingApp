@@ -125,7 +125,7 @@ export function MoneyHome() {
       ) : (
         <>
           {insight && (
-            <div className="voice enter">
+            <div className="voice voice--optional enter">
               <b>{insight.title}</b>
               <span>{insight.body}</span>
             </div>

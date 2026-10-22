@@ -4,7 +4,6 @@
 
 /* ---------- Welcome (one idea per screen) ---------- */
 .welcome__visual { flex: 1; min-height: 0; display: grid; place-items: center; color: var(--text-primary); }
-.welcome__visual svg { width: clamp(96px, 30dvh, 208px); height: auto; aspect-ratio: 1; }
 .welcome__copy { text-align: center; padding-top: var(--space-6); }
 .welcome__copy .lede { margin-inline: auto; max-width: 32ch; }
 .welcome__dots { padding-top: var(--space-4); padding-bottom: var(--space-5); }

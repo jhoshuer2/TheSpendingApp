@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { Aura } from "../design-system/Aura";
 import { Button } from "../design-system/Button";
+import { Confetti } from "../design-system/Confetti";
 import { Icon } from "../design-system/Icon";
 import { OptionCard } from "../design-system/OptionCard";
 import { ProgressBar } from "../design-system/ProgressBar";
-import { SpalSymbol } from "../design-system/SpalSymbol";
+import { Orb } from "../design-system/Orb";
 import { isAnswered, visibleQuestions, type Option } from "../profile/questions";
 import { BAND_LABEL, BAND_NOTE, NEED_LABEL } from "../profile/scoring";
 import { useProfile } from "../profile/store";
@@ -105,12 +107,18 @@ export function Building() {
 
   if (!hasAnswers) return <Navigate to="/onboarding" replace />;
   return (
-    <div className="screen" role="status" aria-live="polite">
+    <div className="screen building-screen" data-theme="night" role="status" aria-live="polite">
+      <Aura variant="night" />
       <div className="building">
-        <SpalSymbol symbol="insight" size="100%" />
-        <p key={line} className="enter">
-          {LINES[line]}
-        </p>
+        <Orb size={120} />
+        <ul className="building__steps">
+          {LINES.map((l, i) => (
+            <li key={l} className={i <= line ? "building__step building__step--on" : "building__step"}>
+              <span className="building__tick" aria-hidden="true">{i < line || (i === line && line === LINES.length - 1) ? <Icon name="check" size={14} stroke={2.6} /> : null}</span>
+              {l}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
@@ -126,21 +134,17 @@ export function Summary() {
   return (
     <div className="screen">
       <main className="screen__body">
-        <h1 className="title title--page enter" style={{ paddingTop: "var(--space-8)" }}>
-          Here's how we see your business
-        </h1>
-        <p className="lede enter" style={{ ["--i" as string]: 1 }}>
-          This shapes what SPAL shows you. You can change it any time.
-        </p>
-
-        <div className="card enter stack" style={{ marginTop: "var(--space-6)", ["--i" as string]: 2 }}>
-          <p className="row__sub">Where you are</p>
-          <p className="hero__title">{BAND_LABEL[profile.band]}</p>
-          <p className="hero__why">{BAND_NOTE[profile.band]}</p>
+        <div className="plan enter" data-theme="night">
+          <Aura variant="night" />
+          <Confetti pieces={26} />
+          <Orb size={64} />
+          <h1 className="plan__kicker">Your plan is ready</h1>
+          <p className="plan__band">{BAND_LABEL[profile.band]}</p>
+          <p className="plan__note">{BAND_NOTE[profile.band]}</p>
         </div>
 
         <h2 className="section-title">What we'll focus on first</h2>
-        <div className="list enter" style={{ ["--i" as string]: 3 }}>
+        <div className="list enter" style={{ ["--i" as string]: 2 }}>
           {focus.map((n) => (
             <div className="row" key={n.id}>
               <span className="tile">
@@ -153,7 +157,7 @@ export function Summary() {
             </div>
           ))}
         </div>
-        <p className="note">SPAL learns from the steps you open, finish and skip, and the days you're active, so it can suggest better ones. You can turn this off or reset it in Profile.</p>
+        <p className="note">SPAL learns from what you open, finish and skip. Turn it off or reset it any time in Profile.</p>
       </main>
 
       <footer className="screen__footer">

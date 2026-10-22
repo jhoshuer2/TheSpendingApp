@@ -3,23 +3,56 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
 import { PageDots } from "../design-system/PageDots";
-import { SpalSymbol, type SymbolName } from "../design-system/SpalSymbol";
+import { Aura } from "../design-system/Aura";
+import { MoneyCountUp } from "../design-system/CountUp";
+import { DayBars } from "../design-system/DayBars";
+import { Orb } from "../design-system/Orb";
 
-const SLIDES: { symbol: SymbolName; title: string; body: string }[] = [
+const DEMO_WEEK = [3, 5, 4, 6, 9, 2, 7].map((n, i) => ({ key: `d${i}`, label: "FSSMTWT"[i], total: n * 100_000, today: i === 6 }));
+
+/** Each slide shows the product itself in miniature, so the app explains itself before a word is read. */
+const SLIDES: { title: string; body: string; art: () => JSX.Element }[] = [
   {
-    symbol: "focus",
-    title: "Your business, one step at a time",
-    body: "SPAL shows you what to do next, based on where your business is today.",
+    title: "Record a sale in seconds",
+    body: "Type the amount. That's it.",
+    art: () => (
+      <div className="art">
+        <span className="art__label">How much?</span>
+        <MoneyCountUp kobo={450_000} size={48} />
+        <span className="art__pill">
+          <Icon name="check" size={16} stroke={2.4} /> Sale in!
+        </span>
+      </div>
+    ),
   },
   {
-    symbol: "insight",
-    title: "It learns how you work",
-    body: "The more you use it, the better it fits you. No clutter, no features you'll never touch.",
+    title: "See what you actually keep",
+    body: "Your profit, not just your sales.",
+    art: () => (
+      <div className="art">
+        <span className="art__label">You kept this week</span>
+        <MoneyCountUp kobo={1_360_000} size={44} />
+        <DayBars days={DEMO_WEEK} what="Sold each day this week (example)" />
+      </div>
+    ),
   },
   {
-    symbol: "growth",
-    title: "Grow with a little encouragement",
-    body: "See how far you've come, and get a nudge when it counts.",
+    title: "A guide that cheers you on",
+    body: "One next step at a time.",
+    art: () => (
+      <div className="art art--guide">
+        <Orb size={88} />
+        <div className="voice art__voice">
+          <b>Two minutes is all this takes.</b>
+        </div>
+        <div className="art__streak" aria-hidden="true">
+          <Icon name="flame" size={18} />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <i key={i} style={{ ["--i" as string]: i }} />
+          ))}
+        </div>
+      </div>
+    ),
   },
 ];
 
@@ -34,7 +67,8 @@ export function Welcome() {
 
   return (
     <div
-      className="screen"
+      className="screen welcome"
+      data-theme="night"
       onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
       onTouchEnd={(e) => {
         if (touchX.current === null) return;
@@ -43,6 +77,7 @@ export function Welcome() {
         if (Math.abs(dx) > 50) go(i + (dx < 0 ? 1 : -1));
       }}
     >
+      <Aura variant="night" />
       <header className="screen__header" style={{ justifyContent: "flex-end" }}>
         {!last && (
           <button className="link-btn" onClick={() => navigate("/signup")}>
@@ -53,9 +88,7 @@ export function Welcome() {
 
       <main className="screen__body welcome__body">
         <div className="welcome__visual" key={`v${i}`}>
-          <div className="enter">
-            <SpalSymbol symbol={slide.symbol} size="100%" />
-          </div>
+          <div className="enter">{slide.art()}</div>
         </div>
         <div className="welcome__copy" key={`c${i}`} aria-live="polite">
           <h1 className="title enter" style={{ ["--i" as string]: 1 }}>

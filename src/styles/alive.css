@@ -81,3 +81,42 @@
 .shortcut:active { transform: scale(var(--press-scale)); }
 .shortcut .tile { border-radius: var(--radius-full); }
 .orb-link--big { width: auto; min-height: 96px; padding: 0 var(--space-4); }
+
+/* First run: night, atmosphere, the product in miniature */
+.splash { position: relative; overflow: hidden; isolation: isolate; }
+.splash__mark { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-5); }
+.splash .aura i, .welcome .aura i, .building-screen .aura i, .plan .aura i { filter: blur(40px) brightness(0.62); }
+
+.welcome, .building-screen { position: relative; isolation: isolate; overflow: hidden; background: var(--surface-app); }
+.welcome > :not(.aura), .building-screen > :not(.aura) { position: relative; z-index: 1; }
+.welcome .lede { color: rgba(255, 255, 255, 0.9); }
+
+.art { width: min(300px, 100%); display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); padding: var(--space-5); border-radius: var(--radius-lg); background: rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16); backdrop-filter: blur(10px); }
+.art .daybars { width: 100%; height: 72px; }
+.art__label { font-size: var(--text-body-sm); color: rgba(255, 255, 255, 0.9); }
+.art__pill { display: inline-flex; align-items: center; gap: var(--space-1); height: var(--space-8); padding: 0 var(--space-4); border-radius: var(--radius-full); background: #8cd3a8; color: #0b100e; font-size: var(--text-body-sm); font-weight: 500; }
+.art--guide { align-items: center; background: none; box-shadow: none; backdrop-filter: none; padding: 0; }
+.art__voice { margin-top: 0; text-align: center; }
+.art__streak { display: flex; align-items: center; gap: var(--space-2); color: #8cd3a8; }
+.art__streak i { width: 12px; height: 12px; border-radius: 50%; background: #8cd3a8; animation: dot-pop var(--dur-3) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 80ms + 400ms); }
+
+.building__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-4); text-align: left; }
+.building__step { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-title-3); color: rgba(255, 255, 255, 0.55); transition: color var(--dur-3) var(--ease-out); }
+.building__step--on { color: #fff; }
+.building__tick { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.4); color: #0b100e; }
+.building__step--on .building__tick { background: #8cd3a8; box-shadow: none; animation: dot-pop var(--dur-3) var(--ease-out) both; }
+
+.plan { position: relative; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); margin-top: var(--space-6); padding: var(--space-6) var(--space-5); border-radius: var(--radius-lg); }
+.plan > :not(.aura):not(.confetti) { position: relative; z-index: 1; }
+.plan .confetti { top: 28%; left: 50%; }
+.plan__kicker { font-size: var(--text-body-sm); font-weight: 500; color: rgba(255, 255, 255, 0.9); }
+.plan__band { font-size: var(--text-display); line-height: var(--lh-display); letter-spacing: var(--ls-display); font-weight: 500; color: #fff; }
+.plan__note { font-size: var(--text-body); color: rgba(255, 255, 255, 0.9); }
+
+/* An answer lands: the check pops */
+.opt--on .check svg { animation: dot-pop var(--dur-3) var(--ease-out) both; }
+
+/* Short phones: the action comes first. The week's bars wait for more room. */
+@media (max-height: 700px) { .kept .daybars { display: none; } }
+@media (max-height: 600px) { .voice--optional { display: none; } }
+.welcome .link-btn, .welcome .link-btn strong { color: #fff; }
