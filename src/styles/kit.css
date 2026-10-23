@@ -132,3 +132,8 @@
 .idhead .title { margin:0; min-width:0; overflow-wrap:anywhere; }
 .row__main .hbar { margin-top:var(--space-2); }
 .row__amount--fixed { min-width:84px; text-align:right; }
+
+.bar--hatch { height: 8px; background: var(--surface-sunken); }
+.area__top { align-items: center; }
+.area__lead { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.bar i.hatch { background: repeating-linear-gradient(135deg, var(--t) 0 3px, var(--ts) 3px 5px); }

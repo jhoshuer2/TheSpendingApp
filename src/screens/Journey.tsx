@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Aura } from "../design-system/Aura";
 import { NumberCountUp } from "../design-system/CountUp";
 import { Icon } from "../design-system/Icon";
+import { IconTile, StatusLine, tintFor } from "../design-system/Identity";
 import { Orb } from "../design-system/Orb";
 import { ProgressBar } from "../design-system/ProgressBar";
 import { WeekStrip } from "../design-system/WeekStrip";
@@ -84,12 +85,15 @@ export function Journey() {
             {areas.map((a) => (
               <div className="area" key={a.need}>
                 <div className="area__top">
-                  <span className="row__title">{a.label}</span>
+                  <span className="area__lead">
+                    <IconTile icon={NEED_ICON[a.need]} tint={tintFor(a.label)} size={32} />
+                    <span className="row__title">{a.label}</span>
+                  </span>
                   <span className="row__sub">
                     {a.finished} of {a.total}
                   </span>
                 </div>
-                <ProgressBar value={a.finished} max={a.total} label={`${a.label}: ${a.finished} of ${a.total} steps finished`} />
+                <ProgressBar tone="in" value={a.finished} max={a.total} label={`${a.label}: ${a.finished} of ${a.total} steps finished`} />
               </div>
             ))}
           </div>
@@ -117,12 +121,10 @@ export function Journey() {
           <div className="list">
             {started.map(({ m, p }) => (
               <Link key={m.id} to={`/module/${m.id}`} className="row">
-                <span className="tile">
-                  <Icon name={NEED_ICON[m.need]} size={20} />
-                </span>
+                <IconTile icon={NEED_ICON[m.need]} tint={tintFor(NEED_LABEL[m.need])} />
                 <span className="row__main">
                   <span className="row__title">{m.title}</span>
-                  <span className="row__sub">{p.steps.length} of {m.steps.length} steps done</span>
+                  <StatusLine tone="info">{p.steps.length} of {m.steps.length} steps done</StatusLine>
                 </span>
                 <span className="row__end">
                   <Icon name="chevron-right" size={18} />
@@ -139,14 +141,12 @@ export function Journey() {
           <div className="list">
             {finished.map(({ m, p }) => (
               <Link key={m.id} to={`/module/${m.id}`} className="row">
-                <span className="tile">
-                  <Icon name="check" size={20} />
-                </span>
+                <IconTile icon="check" tint="mint" />
                 <span className="row__main">
                   <span className="row__title">{m.title}</span>
-                  <span className="row__sub">
+                  <StatusLine tone="good">
                     {NEED_LABEL[m.need]} · {shortDate(p.doneAt!)}
-                  </span>
+                  </StatusLine>
                 </span>
               </Link>
             ))}

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Aura } from "../design-system/Aura";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
+import { IconTile, tintFor } from "../design-system/Identity";
 import { Orb } from "../design-system/Orb";
 import { Switch } from "../design-system/Switch";
 import { shortDate } from "../lib/format";
@@ -90,9 +91,7 @@ export function Profile() {
       <div className="list">
         {profile.needs.slice(0, 3).map((n) => (
           <div className="row" key={n.id}>
-            <span className="tile">
-              <Icon name={NEED_ICON[n.id]} size={20} />
-            </span>
+            <IconTile icon={NEED_ICON[n.id]} tint={tintFor(NEED_LABEL[n.id])} />
             <span className="row__main">
               <span className="row__title">{NEED_LABEL[n.id]}</span>
             </span>
@@ -144,9 +143,7 @@ export function Profile() {
       <h2 className="section-title">Your business</h2>
       <div className="list">
         <Link to="/business" className="row">
-          <span className="tile">
-            <Icon name="briefcase" size={20} />
-          </span>
+          <IconTile icon="briefcase" tint="sky" />
           <span className="row__main">
             <span className="row__title">{stored.answers.businessName || "Business details"}</span>
             <span className="row__sub">{stored.answers.about || "Name, what you sell, where you are, your hours"}</span>
@@ -160,9 +157,7 @@ export function Profile() {
       <h2 className="section-title">Your answers and data</h2>
       <div className="list">
         <button type="button" className="row" onClick={() => navigate("/onboarding")}>
-          <span className="tile">
-            <Icon name="pencil" size={20} />
-          </span>
+          <IconTile icon="pencil" tint="lilac" />
           <span className="row__main">
             <span className="row__title">Change my answers</span>
             <span className="row__sub">Redo the questions SPAL started from</span>
@@ -173,9 +168,7 @@ export function Profile() {
         </button>
         {!confirmReset && (
           <button type="button" className="row" ref={forgetRef} onClick={() => setConfirmReset(true)}>
-            <span className="tile">
-              <Icon name="eye" size={20} />
-            </span>
+            <IconTile icon="eye" tint="sand" />
             <span className="row__main">
               <span className="row__title">Forget what SPAL has noticed</span>
               <span className="row__sub">Clears your active days and when you opened steps</span>
