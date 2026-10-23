@@ -137,3 +137,13 @@
 .area__top { align-items: center; }
 .area__lead { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
 .bar i.hatch { background: repeating-linear-gradient(135deg, var(--t) 0 3px, var(--ts) 3px 5px); }
+
+/* Calm Today: a white card, a quiet week of rings, rows with room. No gradient. */
+.hero--calm { gap: var(--space-4); padding: var(--space-6) var(--space-5); border-radius: var(--radius-xl); }
+.hero--calm .hero__title { font-size: var(--text-title-1); font-weight: 600; }
+.row__sub--meta { display: inline-flex; align-items: center; gap: var(--space-1); }
+.streak__day i { width: 26px; height: 26px; box-shadow: none; background: var(--surface-sunken); }
+.streak__day--done i { background: var(--accent-soft); box-shadow: inset 0 0 0 2.5px var(--accent); }
+.streak__day--today span { background: var(--surface-sunken); padding: 0 var(--space-2); border-radius: var(--radius-full); }
+.stat, .me { background: var(--surface-card); color: var(--text-primary); box-shadow: var(--shadow-1); }
+.me .chip, .stat .chip { background: rgba(255, 255, 255, 0.14); color: #fff; }

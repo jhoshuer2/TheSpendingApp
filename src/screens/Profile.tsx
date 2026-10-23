@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Aura } from "../design-system/Aura";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
 import { IconTile, tintFor } from "../design-system/Identity";
@@ -66,7 +65,6 @@ export function Profile() {
       </div>
 
       <section className="me enter" data-theme="night" style={{ marginTop: "var(--space-5)" }}>
-        <Aura variant="night" />
         <span className="me__avatar" aria-hidden="true">
           {(session?.name ?? "?").trim().charAt(0).toUpperCase()}
         </span>

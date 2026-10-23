@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Aura } from "../design-system/Aura";
 import { NumberCountUp } from "../design-system/CountUp";
 import { Icon } from "../design-system/Icon";
 import { IconTile, StatusLine, tintFor } from "../design-system/Identity";
@@ -58,7 +57,6 @@ export function Journey() {
       </div>
 
       <section className="stat enter" data-theme="night" style={{ marginTop: "var(--space-5)" }} aria-label="Your progress">
-        <Aura variant="night" />
         <span className="stat__label">Steps finished</span>
         <NumberCountUp value={finished.length} className="stat__num" />
         <p className="stat__sub">{finished.length === 1 ? "1 step finished so far." : `${finished.length} steps finished so far.`}</p>

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Aura } from "../design-system/Aura";
 import { Button } from "../design-system/Button";
 import { Icon } from "../design-system/Icon";
+import { IconTile, tintFor } from "../design-system/Identity";
 import { Orb } from "../design-system/Orb";
 import { SpalSymbol } from "../design-system/SpalSymbol";
 import { firstName, todayLabel } from "../lib/format";
@@ -81,8 +81,7 @@ export function Today() {
       <div className="voice enter">{voice}</div>
 
       {next ? (
-        <article className="hero hero--night enter" data-theme="night" style={{ marginTop: "var(--space-5)", ["--i" as string]: 1 }} aria-labelledby="next-title">
-          <Aura variant="night" />
+        <article className="hero hero--calm enter" style={{ marginTop: "var(--space-5)", ["--i" as string]: 1 }} aria-labelledby="next-title">
           <div className="chips">
             <span className="chip">
               <Icon name="clock" size={14} />
@@ -145,12 +144,13 @@ export function Today() {
           <div className="list enter" style={{ ["--i" as string]: 3 }}>
             {upNext.map(({ module: m }) => (
               <Link key={m.id} to={`/module/${m.id}`} className="row">
-                <span className="tile">
-                  <Icon name={NEED_ICON[m.need]} size={20} />
-                </span>
+                <IconTile icon={NEED_ICON[m.need]} tint={tintFor(NEED_LABEL[m.need])} size={48} />
                 <span className="row__main">
                   <span className="row__title">{m.title}</span>
-                  <span className="row__sub">{m.minutes} min</span>
+                  <span className="row__sub row__sub--meta">
+                    <Icon name="clock" size={14} />
+                    {m.minutes} min
+                  </span>
                 </span>
                 <span className="row__end">
                   <Icon name="chevron-right" size={18} />
