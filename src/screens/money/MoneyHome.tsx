@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Aura } from "../../design-system/Aura";
 import { BarRow, Delta, Donut, HatchDefs, StackBar, type Tone } from "../../design-system/Charts";
 import { Button } from "../../design-system/Button";
 import { MoneyCountUp } from "../../design-system/CountUp";
@@ -143,7 +142,6 @@ export function MoneyHome() {
           </div>
 
           <section className="kept enter" data-theme="night" style={{ marginTop: "var(--space-4)" }} aria-label={`What you kept ${WORDS[period]}`}>
-            <Aura variant="night" />
             <div className="kept__head">
               <span className="kept__label">{sum.kept >= 0 ? `You kept ${WORDS[period]}` : `You spent more than you received ${WORDS[period]}`}</span>
               {pct !== null && (
