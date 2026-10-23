@@ -10,6 +10,11 @@ trap cleanup EXIT
 node tools/fake-supabase.mjs "$FAKE_PORT" >/dev/null 2>&1 & pids+=($!)
 VITE_SUPABASE_URL="http://localhost:$FAKE_PORT" VITE_SUPABASE_ANON_KEY=fake node node_modules/vite/bin/vite.js build --outDir dist-fake >/dev/null
 # Run vite directly (not via npx) so $! is the server itself and cleanup really stops it.
-node node_modules/vite/bin/vite.js preview --outDir dist-fake --port "$APP_PORT" >/dev/null 2>&1 & pids+=($!)
+if [ "${CSP:-}" = "1" ]; then
+  # Serve with the real headers from vercel.json, so the Content-Security-Policy is enforced while the app talks to Supabase.
+  node tools/serve-headers.mjs --dir dist-fake --port "$APP_PORT" --extra-connect "http://localhost:$FAKE_PORT" >/dev/null 2>&1 & pids+=($!)
+else
+  node node_modules/vite/bin/vite.js preview --outDir dist-fake --port "$APP_PORT" >/dev/null 2>&1 & pids+=($!)
+fi
 for _ in $(seq 1 50); do curl -sf "http://localhost:$APP_PORT" >/dev/null && break; sleep 0.2; done
 APP_URL="http://localhost:$APP_PORT" FAKE_URL="http://localhost:$FAKE_PORT" node "tools/${CHECK:-check-backend}.mjs"
