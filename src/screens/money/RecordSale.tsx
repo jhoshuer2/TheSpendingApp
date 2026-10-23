@@ -4,6 +4,8 @@ import { AmountPad } from "../../design-system/AmountPad";
 import { Button } from "../../design-system/Button";
 import { Field } from "../../design-system/Field";
 import { Icon } from "../../design-system/Icon";
+import { ProductThumb } from "../../design-system/Identity";
+import { productPhoto } from "../../records/productImages";
 import { Money } from "../../design-system/Money";
 import { Segmented } from "../../design-system/Segmented";
 import { useBack } from "../../lib/useBack";
@@ -105,6 +107,7 @@ export function RecordSale() {
           <div className="list" style={{ marginTop: "var(--space-3)" }}>
             {products.map((p) => (
               <div className="row" key={p.id} style={{ cursor: "default" }}>
+                <ProductThumb name={p.name} photo={productPhoto(p.name)} />
                 <span className="row__main">
                   <span className="row__title">{p.name}</span>
                   {(() => {
