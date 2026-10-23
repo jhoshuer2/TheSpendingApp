@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Icon } from "../design-system/Icon";
+import { IconTile, StatusLine, tintFor } from "../design-system/Identity";
 import { Orb } from "../design-system/Orb";
 import { MODULES } from "../profile/modules";
 import { NEED_LABEL } from "../profile/scoring";
@@ -38,12 +39,10 @@ export function Library() {
           <div className="list">
             {g.items.map((m) => (
               <Link key={m.id} to={`/module/${m.id}`} className="row">
-                <span className={`tile${done.has(m.id) ? " tile--done" : ""}`}>
-                  <Icon name={done.has(m.id) ? "check" : NEED_ICON[m.need]} size={20} />
-                </span>
+                <IconTile icon={done.has(m.id) ? "check" : NEED_ICON[m.need]} tint={done.has(m.id) ? "mint" : tintFor(NEED_LABEL[m.need])} />
                 <span className="row__main">
                   <span className="row__title">{m.title}</span>
-                  <span className="row__sub">
+                  <StatusLine tone={done.has(m.id) ? "good" : "neutral"}>
                     {done.has(m.id)
                       ? "Finished"
                       : stored.progress[m.id]?.dismissed
@@ -51,7 +50,7 @@ export function Library() {
                         : stored.progress[m.id]?.snoozedUntil && Date.parse(stored.progress[m.id].snoozedUntil!) > Date.now()
                           ? `${m.minutes} min · Back in your suggestions later`
                           : `${m.minutes} min`}
-                  </span>
+                  </StatusLine>
                 </span>
                 <span className="row__end">
                   <Icon name="chevron-right" size={18} />
