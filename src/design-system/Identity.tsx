@@ -86,3 +86,12 @@ export function ProductCard({ name, price, tint = "mint", image, action }: { nam
     </article>
   );
 }
+
+/** A product's picture in a small quiet tile: its photo when there is one, a plain plate until then. */
+export function ProductThumb({ name, photo, size = 48 }: { name: string; photo?: string; size?: number }) {
+  return (
+    <span className={`pthumb tint--${tintFor(name)}`} style={{ width: size, height: size }} aria-hidden="true">
+      {photo ? <img src={photo} alt="" loading="lazy" /> : <Plate />}
+    </span>
+  );
+}

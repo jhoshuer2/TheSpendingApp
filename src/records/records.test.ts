@@ -3,6 +3,7 @@ import { calendarDaysAgo, dailySales, salesStand, spendingByCategory, topSellers
 import { compareText, recordInsights } from "./insights";
 import { digitsToKobo, formatNaira, MAX_DIGITS, naira, pressKey, toKobo } from "./money";
 import { cleanExpense, cleanProduct, cleanSale, EMPTY_RECORDS, isRecordsDirty, mergePulled, requeueRejected, sanitizeRecords, saleLimitProblem, type RecordsState } from "./state";
+import { productPhoto } from "./productImages";
 import { whenToIso } from "../screens/money/WhenPicker";
 import type { Expense, Product, Sale } from "./types";
 
@@ -359,5 +360,19 @@ describe("merging what the server sends", () => {
     const local: RecordsState = { ...EMPTY_RECORDS, cursor: "2026-10-09T00:00:00.000Z" };
     expect(mergePulled(local, { customers: [], products: [], sales: [], expenses: [], cursor: "2026-10-01T00:00:00.000Z" }).cursor).toBe("2026-10-09T00:00:00.000Z");
     expect(mergePulled(local, { customers: [], products: [], sales: [], expenses: [] }).cursor).toBe("2026-10-09T00:00:00.000Z");
+  });
+});
+
+describe("product photos", () => {
+  it("has no photo yet, so every product gets the placeholder", () => {
+    expect(productPhoto("Jollof rice (plate)")).toBeUndefined();
+  });
+  it("matches a photo by what the name says, and only when that photo exists", () => {
+    const have = new Set(["jollof-rice", "fried-rice"]);
+    expect(productPhoto("Jollof rice (plate)", have)).toBe("/products/jollof-rice.webp");
+    expect(productPhoto("Party JOLLOF tray", have)).toBe("/products/jollof-rice.webp");
+    expect(productPhoto("Fried rice", have)).toBe("/products/fried-rice.webp");
+    expect(productPhoto("Zobo (bottle)", have)).toBeUndefined();
+    expect(productPhoto("Something else", have)).toBeUndefined();
   });
 });

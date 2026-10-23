@@ -3,10 +3,11 @@ import { useBack } from "../../lib/useBack";
 import { Button } from "../../design-system/Button";
 import { HatchBar } from "../../design-system/Charts";
 import { Icon } from "../../design-system/Icon";
-import { Avatar, StatusLine } from "../../design-system/Identity";
+import { ProductThumb, Avatar, StatusLine } from "../../design-system/Identity";
 import { Money } from "../../design-system/Money";
 import { SpalSymbol } from "../../design-system/SpalSymbol";
 import { naira } from "../../records/money";
+import { productPhoto } from "../../records/productImages";
 import { useRecords } from "../../records/store";
 import { leftLabel, stockLeft, stockStatus } from "../../records/stock";
 
@@ -41,7 +42,7 @@ export function Products() {
           <div className="list enter" style={{ marginTop: "var(--space-6)" }}>
             {products.map((p) => (
               <Link key={p.id} to={`/money/product/${p.id}`} className="row">
-                <Avatar name={p.name} />
+                <ProductThumb name={p.name} photo={productPhoto(p.name)} />
                 <span className="row__main">
                   <span className="row__title">{p.name}</span>
                   {(() => {
