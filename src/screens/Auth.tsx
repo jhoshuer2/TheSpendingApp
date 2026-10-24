@@ -1,8 +1,10 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { Aura } from "../design-system/Aura";
 import { Button } from "../design-system/Button";
 import { Field } from "../design-system/Field";
 import { Icon } from "../design-system/Icon";
+import { Orb } from "../design-system/Orb";
 import { useAuth } from "../lib/auth";
 import { validateEmail, validateName, validatePassword } from "../lib/validate";
 
@@ -32,13 +34,17 @@ const COPY = {
 function Frame({ onSubmit, title, lede, children, footer }: { onSubmit?: (e: FormEvent) => void; title: string; lede?: string; children?: ReactNode; footer: ReactNode }) {
   const navigate = useNavigate();
   return (
-    <form className="screen" onSubmit={onSubmit} noValidate>
+    <form className="screen screen--account" onSubmit={onSubmit} noValidate>
+      <Aura variant="soft" />
       <header className="screen__header">
         <button type="button" className="icon-btn" aria-label="Back" onClick={() => navigate(-1)}>
           <Icon name="chevron-left" size={20} />
         </button>
       </header>
       <main className="screen__body">
+        <span className="account__mark enter" aria-hidden="true">
+          <Orb size={44} />
+        </span>
         <h1 className="title title--hero enter">{title}</h1>
         {lede && (
           <p className="lede enter" style={{ ["--i" as string]: 1 }}>

@@ -8,6 +8,8 @@ const PALETTES = {
   night: { base: "#05080a", fields: [[-32, 38, 112, 92, "#3f75ee", 0.56, 26], [8, 52, 86, 62, "#0fa37f", 0.4, 22], [42, -38, 96, 78, "#00ffaa", 0.36, 30], [-26, -34, 74, 62, "#dcefff", 0.1, 34]] },
   // Light and airy for dark text: white, a mint wash, a sky-blue wash.
   dawn: { base: "#f8f8f4", fields: [[38, -32, 104, 84, "#00ffaa", 0.3, 28], [-38, 42, 116, 94, "#3f75ee", 0.22, 32], [14, 54, 92, 64, "#9cc4ff", 0.26, 24], [-22, -28, 72, 62, "#ffffff", 0.95, 30]] },
+  // Pastel and gentle for dark text: warm white with blush, lilac, mint and sky washes. Onboarding and account screens only.
+  soft: { base: "#fbfaf8", fields: [[30, -30, 100, 78, "#ffb3a3", 0.42, 30], [-40, 8, 96, 80, "#c8b6ff", 0.38, 34], [-10, 56, 110, 70, "#9be8cf", 0.34, 28], [40, 44, 90, 66, "#a9ccff", 0.34, 32]] },
 } as const;
 
 const hex = (h: string): [number, number, number] => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as [number, number, number];
