@@ -264,8 +264,59 @@ describe("how the stage is named", () => {
   it("calls someone who hasn't started 'getting ready to launch', and everyone else by their band", () => {
     expect(stageLabel({ stage: "idea" })).toBe("Getting ready to launch");
     expect(stageNote({ stage: "idea" })).toMatch(/before you launch|get ready/i);
-    expect(stageLabel({ stage: "under1" })).toBe(BAND_LABEL.starting);
-    expect(stageNote({ stage: "under1" })).toBe(BAND_NOTE.starting);
+    expect(stageLabel({ stage: "under1" })).toBe("Finding your feet");
+    expect(stageNote({ stage: "under1" })).toMatch(/selling/);
+    expect(stageLabel({ stage: "y1to3" })).toBe(BAND_LABEL.growing);
+    expect(stageNote({ stage: "y1to3" })).toBe(BAND_NOTE.growing);
+    expect(BAND_NOTE.starting).toBeTruthy();
     expect(stageLabel({ stage: "y3plus", team: "t6to15" })).toBe(BAND_LABEL.scaling);
+  });
+});
+
+describe("each running stage gets steps that fit it", () => {
+  const ids = (a: Answers) => MODULES.filter((m) => fitsPerson(m, bandFor(a), a)).map((m) => m.id);
+
+  it("gives a first-year business steps about what it keeps and who comes back", () => {
+    const got = ids({ stage: "under1", team: "solo" });
+    expect(got).toEqual(expect.arrayContaining(["money-profit", "customers-ask", "run-first-months", "run-repeat-customers", "records-sales"]));
+    for (const not of ["grow-cashflow", "grow-prices", "scale-routines", "team-first-helper", "team-delegate"]) expect(got).not.toContain(not);
+  });
+  it("gives a business of one to three years steps about cash, prices and keeping customers", () => {
+    const got = ids({ stage: "y1to3", team: "solo" });
+    expect(got).toEqual(expect.arrayContaining(["grow-cashflow", "grow-prices", "run-repeat-customers", "money-profit"]));
+    for (const not of ["run-first-months", "scale-routines", "idea-test", "setup-name"]) expect(got).not.toContain(not);
+  });
+  it("gives an established business steps about routines and cash, and none for starting out", () => {
+    const got = ids({ stage: "y3plus", team: "t6to15" });
+    expect(got).toEqual(expect.arrayContaining(["scale-routines", "grow-cashflow", "grow-prices"]));
+    for (const not of ["run-first-months", "run-repeat-customers", "idea-costs", "setup-plan", "setup-name"]) expect(got).not.toContain(not);
+  });
+  it("doesn't tell a team to plan their first helper, or a one-person business to hand tasks over", () => {
+    expect(ids({ stage: "y1to3", team: "solo" })).toContain("team-first-helper");
+    expect(ids({ stage: "y1to3", team: "solo", sales: "gt2m" })).not.toContain("team-delegate");
+    expect(ids({ stage: "y1to3", team: "t6to15", sales: "k500to2m" })).not.toContain("team-first-helper");
+    expect(ids({ stage: "y1to3", team: "t6to15", sales: "k500to2m" })).toContain("team-delegate");
+    expect(ids({ stage: "y3plus", team: "t16plus" })).not.toContain("team-first-helper");
+  });
+  it("still offers both when the team size isn't known", () => {
+    const got = ids({ stage: "y3plus", sales: "gt2m" });
+    expect(got).toEqual(expect.arrayContaining(["team-first-helper", "team-delegate"]));
+  });
+  it("explains the profile of each stage in its own terms", () => {
+    const first = buildProfile({ stage: "under1", have: ["none"] });
+    expect(first.needs.find((n) => n.id === "customers")?.reasons.join(" ")).toMatch(/first year/i);
+    expect(first.needs.find((n) => n.id === "money")?.reasons.join(" ")).toMatch(/first year/i);
+    const mid = buildProfile({ stage: "y1to3", have: ["bank", "tracking"] });
+    expect(mid.needs.find((n) => n.id === "money")?.reasons.join(" ")).toMatch(/prices and cash/i);
+    const old = buildProfile({ stage: "y3plus", team: "t6to15" });
+    expect(old.needs.find((n) => n.id === "team")?.reasons.join(" ")).toMatch(/routines|step back/i);
+  });
+  it("keeps every new step real: enough steps, a real tool route, a known need", () => {
+    for (const id of ["run-first-months", "run-repeat-customers", "grow-cashflow", "grow-prices", "scale-routines"]) {
+      const m = MODULES.find((x) => x.id === id)!;
+      expect(m, id).toBeDefined();
+      expect(m.steps.length).toBeGreaterThanOrEqual(3);
+      expect(m.stages, id).toBeDefined();
+    }
   });
 });
