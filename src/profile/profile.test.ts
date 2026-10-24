@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { MODULES } from "./modules";
+import { fitsPerson, MODULES } from "./modules";
 import { isAnswered, pruneAnswers, QUESTIONS, resolveQuestion, visibleQuestions } from "./questions";
 import { recommend } from "./recommend";
-import { bandFor, buildProfile } from "./scoring";
+import { bandFor, buildProfile, stageLabel, stageNote, BAND_LABEL, BAND_NOTE } from "./scoring";
 import { sanitizeAnswers } from "./state";
 import type { Answers, NeedId } from "./types";
 
@@ -186,5 +186,86 @@ describe("business facts in answers", () => {
     expect("hours" in a).toBe(false);
     expect("instagram" in sanitizeAnswers({ instagram: "not a handle!" })).toBe(false);
     expect("about" in sanitizeAnswers({ about: "   " })).toBe(false);
+  });
+});
+
+describe("steps fit the person's stage and what they already have", () => {
+  const ids = (a: Answers) => {
+    const band = bandFor(a);
+    return MODULES.filter((m) => fitsPerson(m, band, a)).map((m) => m.id);
+  };
+
+  it("gives someone who hasn't started steps for starting, and none that need customers or sales", () => {
+    const got = ids({ stage: "idea", type: "food" });
+    expect(got).toEqual(expect.arrayContaining(["setup-name", "idea-test", "idea-costs", "idea-first-customers"]));
+    for (const not of ["records-sales", "customers-referral", "customers-ask", "money-profit", "online-store"]) expect(got).not.toContain(not);
+  });
+  it("doesn't offer the starting-up steps to someone already running", () => {
+    for (const stage of ["under1", "y1to3", "y3plus"] as const) {
+      const got = ids({ stage });
+      for (const not of ["idea-test", "idea-costs", "idea-first-customers", "setup-name"]) expect(got).not.toContain(not);
+    }
+  });
+  it("offers running steps once the business is running", () => {
+    expect(ids({ stage: "under1" })).toContain("records-sales");
+    expect(ids({ stage: "y1to3" })).toContain("customers-referral");
+    expect(ids({ stage: "y3plus", team: "t6to15" })).toContain("team-delegate");
+  });
+  it("skips a step for something they already have", () => {
+    const base = { stage: "y1to3" } as const;
+    expect(ids({ ...base })).toEqual(expect.arrayContaining(["setup-register", "brand-logo", "online-instagram", "money-account", "online-store", "records-sales"]));
+    expect(ids({ ...base, have: ["registered"] })).not.toContain("setup-register");
+    expect(ids({ ...base, have: ["logo"] })).not.toContain("brand-logo");
+    expect(ids({ ...base, have: ["social"] })).not.toContain("online-instagram");
+    expect(ids({ ...base, have: ["bank"] })).not.toContain("money-account");
+    expect(ids({ ...base, have: ["online"] })).not.toContain("online-store");
+    expect(ids({ ...base, have: ["tracking"] })).not.toContain("records-sales");
+  });
+  it("doesn't treat 'none of these' as having something", () => {
+    expect(ids({ stage: "y1to3", have: ["none"] })).toEqual(expect.arrayContaining(["setup-register", "brand-logo", "money-account"]));
+  });
+  it("still offers everything when the stage isn't known", () => {
+    expect(ids({})).toContain("setup-name");
+  });
+  it("points someone who hasn't started at starting steps first", () => {
+    const a: Answers = { stage: "idea", goal: "start", type: "food", have: ["none"], pain: "unsure" };
+    const p = buildProfile(a);
+    const { next, upNext } = recommend(p, a, new Set());
+    const queue = [next!, ...upNext].map((r) => r.module.id);
+    expect(queue.some((id) => ["setup-name", "idea-test", "idea-costs", "idea-first-customers", "setup-plan"].includes(id))).toBe(true);
+    for (const id of queue) expect(["records-sales", "customers-referral"]).not.toContain(id);
+  });
+});
+
+describe("the profile for someone who hasn't started", () => {
+  const a: Answers = { stage: "idea", goal: "start", type: "food", have: ["none"], pain: "unsure" };
+  it("doesn't say they aren't tracking sales they haven't made", () => {
+    const records = buildProfile(a).needs.find((n) => n.id === "records");
+    expect(records?.reasons.join(" ") ?? "").not.toMatch(/tracking your sales/);
+  });
+  it("leads with starting up, not with running a business", () => {
+    const top = buildProfile(a).needs.slice(0, 4).map((n) => n.id);
+    expect(top).toEqual(expect.arrayContaining(["setup"]));
+    expect(top).not.toContain("team");
+    expect(top).not.toContain("demand");
+  });
+  it("explains the money and customers steps in terms of launching", () => {
+    const p = buildProfile(a);
+    expect(p.needs.find((n) => n.id === "money")?.reasons.join(" ")).toMatch(/cost to start|before you launch/i);
+    expect(p.needs.find((n) => n.id === "customers")?.reasons.join(" ")).toMatch(/first customers|before you launch/i);
+  });
+  it("still asks a running business about tracking", () => {
+    const records = buildProfile({ stage: "y1to3", have: ["none"] }).needs.find((n) => n.id === "records");
+    expect(records?.reasons.join(" ")).toMatch(/tracking your sales/);
+  });
+});
+
+describe("how the stage is named", () => {
+  it("calls someone who hasn't started 'getting ready to launch', and everyone else by their band", () => {
+    expect(stageLabel({ stage: "idea" })).toBe("Getting ready to launch");
+    expect(stageNote({ stage: "idea" })).toMatch(/before you launch|get ready/i);
+    expect(stageLabel({ stage: "under1" })).toBe(BAND_LABEL.starting);
+    expect(stageNote({ stage: "under1" })).toBe(BAND_NOTE.starting);
+    expect(stageLabel({ stage: "y3plus", team: "t6to15" })).toBe(BAND_LABEL.scaling);
   });
 });

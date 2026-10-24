@@ -1,4 +1,4 @@
-import { MODULES } from "../profile/modules";
+import { fitsPerson, MODULES } from "../profile/modules";
 import { prefersShort } from "../profile/recommend";
 import { NEED_LABEL } from "../profile/scoring";
 import type { StoredProfile } from "../profile/state";
@@ -46,8 +46,7 @@ export interface Insights {
   milestones: Milestone[];
 }
 
-const fits = (m: Module, profile: Profile, answers: Answers) =>
-  m.bands.includes(profile.band) && (!m.types || (answers.type !== undefined && m.types.includes(answers.type)));
+const fits = (m: Module, profile: Profile, answers: Answers) => fitsPerson(m, profile.band, answers);
 
 const median = (xs: number[]) => {
   const s = [...xs].sort((a, b) => a - b);

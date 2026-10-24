@@ -25,6 +25,8 @@ export function Today() {
   const { next, upNext } = recs;
   const { show } = useToast();
   const streak = streakInfo(books, new Date());
+  // The recording streak is for people with something to record. Someone still planning gets steps, not a zero.
+  const showStreak = stored.answers.stage !== "idea" || Object.keys(books.sales).length + Object.keys(books.expenses).length > 0;
 
   const finished = Object.entries(stored.progress)
     .filter(([, p]) => p.doneAt)
@@ -123,6 +125,7 @@ export function Today() {
         </div>
       )}
 
+      {showStreak && (
       <div className="streak enter" style={{ ["--i" as string]: 2 }} role="img" aria-label={`${streak.count} ${streak.count === 1 ? "day" : "days"} in a row. Recorded on ${streak.days.filter((d) => d.done).length} of the last 7 days.`}>
         <span className={`streak__badge${streak.count > 0 ? " streak__badge--on" : ""}`}>
           <Icon name="flame" size={20} />
@@ -137,6 +140,7 @@ export function Today() {
           ))}
         </div>
       </div>
+      )}
 
       {upNext.length > 0 && (
         <>

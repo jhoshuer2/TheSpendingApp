@@ -118,6 +118,8 @@ const SEED_BIZ = (() => {
 })();
 const SEED_PRODUCTS_ONLY = JSON.stringify({ products: { [uuid(1)]: { id: uuid(1), name: "Jollof rice (plate)", price: 250000, cost: 140000 }, [uuid(2)]: { id: uuid(2), name: "Zobo (bottle)", price: 60000 } }, sales: {}, expenses: {}, dirty: { products: [], sales: [], expenses: [] } });
 // Answers given, onboarding not finished yet.
+// Someone who hasn't started: no sales, no customers, steps about getting ready.
+const SEED_IDEA = JSON.stringify({ answers: { stage: "idea", goal: "start", type: "food", have: ["none"], pain: "unsure" }, completed: true, progress: {} });
 const SEED_PARTIAL = JSON.stringify({ answers: ANSWERS, completed: false, progress: {} });
 
 const pick = (name) => async (p) => p.getByRole("radio", { name }).click();
@@ -146,6 +148,9 @@ const SCREENS = [
       await p.getByRole("checkbox", { name: /logo/ }).click();
     },
   },
+  { name: "today-idea", path: "/app/today", authed: true, seed: SEED_IDEA },
+  { name: "money-planning", path: "/app/money", authed: true, seed: SEED_IDEA },
+  { name: "library-idea", path: "/app/library", authed: true, seed: SEED_IDEA },
   { name: "building", path: "/onboarding/building", authed: true, seed: SEED_PARTIAL, hold: true },
   { name: "summary", path: "/onboarding/summary", authed: true, seed: SEED_PARTIAL },
   { name: "today", path: "/app/today", authed: true, seed: SEED_READY },

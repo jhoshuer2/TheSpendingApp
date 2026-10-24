@@ -1,9 +1,9 @@
-import type { Module } from "./types";
+import type { Answers, Band, Module } from "./types";
 
 /** The module library. One step is shown at a time; the rest wait here until they fit. */
 export const MODULES: Module[] = [
   {
-    id: "setup-name", kind: "guide", need: "setup", bands: ["starting", "growing"], minutes: 10,
+    id: "setup-name", kind: "guide", need: "setup", bands: ["starting", "growing"], minutes: 10, stages: ["idea"],
     title: "Choose your business name",
     why: "A clear name is the base for registering, branding and your pages.",
     steps: [
@@ -14,7 +14,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "setup-register", kind: "guide", tool: { label: "Open the registration guide", to: "/business/register" }, need: "setup", bands: ["starting", "growing"], minutes: 20,
+    id: "setup-register", kind: "guide", tool: { label: "Open the registration guide", to: "/business/register" }, need: "setup", bands: ["starting", "growing"], minutes: 20, skipIfHave: "registered",
     title: "Register your business name",
     why: "Registering lets you open a business account and look trustworthy to bigger customers.",
     steps: [
@@ -26,7 +26,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "setup-plan", kind: "guide", need: "setup", bands: ["starting"], minutes: 20,
+    id: "setup-plan", kind: "guide", need: "setup", bands: ["starting"], minutes: 20, stages: ["idea", "under1"],
     title: "Write your one-page plan",
     why: "Putting it on paper shows you what you need before you spend.",
     steps: [
@@ -37,7 +37,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "money-account", kind: "guide", need: "money", bands: ["starting", "growing"], minutes: 15,
+    id: "money-account", kind: "guide", need: "money", bands: ["starting", "growing"], minutes: 15, skipIfHave: "bank",
     title: "Open a separate business account",
     why: "Keeping business money apart shows you what the business really earns.",
     steps: [
@@ -83,7 +83,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "brand-logo", kind: "guide", need: "brand", bands: ["starting", "growing"], minutes: 20,
+    id: "brand-logo", kind: "guide", need: "brand", bands: ["starting", "growing"], minutes: 20, skipIfHave: "logo",
     title: "Get a simple logo",
     why: "A logo makes your business easy to spot and remember.",
     steps: [
@@ -115,7 +115,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "online-instagram", kind: "draft", tool: { label: "Write my bio", to: "/assistant?say=Write%20my%20Instagram%20bio" }, need: "online", bands: ["starting", "growing"], minutes: 20,
+    id: "online-instagram", kind: "draft", tool: { label: "Write my bio", to: "/assistant?say=Write%20my%20Instagram%20bio" }, need: "online", bands: ["starting", "growing"], minutes: 20, skipIfHave: "social",
     title: "Start a page customers can trust",
     why: "Strangers check your page before they buy. A clear page earns their trust.",
     steps: [
@@ -126,7 +126,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "online-store", kind: "guide", need: "online", bands: ["growing", "scaling"], minutes: 30,
+    id: "online-store", kind: "guide", need: "online", bands: ["growing", "scaling"], minutes: 30, skipIfHave: "online",
     title: "Open a simple online store",
     why: "A store lets customers order any time, even when you're busy.",
     steps: [
@@ -148,7 +148,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "customers-referral", kind: "guide", need: "customers", bands: ["starting", "growing"], minutes: 15,
+    id: "customers-referral", kind: "guide", need: "customers", bands: ["starting", "growing"], minutes: 15, stages: ["under1", "y1to3", "y3plus"],
     title: "Ask happy customers to tell others",
     why: "People trust a friend's word more than any advert.",
     steps: [
@@ -170,7 +170,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "records-sales", kind: "do", need: "records", bands: ["starting", "growing", "scaling"], minutes: 10,
+    id: "records-sales", kind: "do", need: "records", bands: ["starting", "growing", "scaling"], minutes: 10, stages: ["under1", "y1to3", "y3plus"], skipIfHave: "tracking",
     title: "Write down every sale",
     why: "You can't improve what you can't see. A few taps a day is enough.",
     tool: { label: "Record a sale", to: "/money/sale" },
@@ -215,6 +215,40 @@ export const MODULES: Module[] = [
     ],
   },
   {
+    id: "idea-test", kind: "guide", need: "customers", bands: ["starting"], minutes: 20, stages: ["idea"],
+    title: "Test your idea with five people",
+    why: "Hearing it from people who could buy saves you from making something nobody wants.",
+    steps: [
+      "Write your idea in one sentence: what you'll sell and who it's for.",
+      "Pick five people who could really buy it, not only friends who'll be kind.",
+      "Ask each one: would you buy this, and what would you pay?",
+      "Write down what they said, in their words.",
+      "Note what surprised you and what you'd change.",
+    ],
+  },
+  {
+    id: "idea-costs", kind: "guide", need: "money", bands: ["starting"], minutes: 20, stages: ["idea"],
+    title: "Work out what it costs to start",
+    why: "Knowing the number before you begin tells you how much to save, and what you'll need to charge.",
+    steps: [
+      "List everything you must buy before your first sale: stock, tools, packaging, transport.",
+      "Add what you'll pay every month: data, rent, helpers.",
+      "Add it all up, then add a little extra for surprises.",
+      "Decide where the money will come from.",
+    ],
+  },
+  {
+    id: "idea-first-customers", kind: "guide", need: "customers", bands: ["starting"], minutes: 15, stages: ["idea"],
+    title: "Line up your first three customers",
+    why: "A launch with people waiting is far easier than a launch to nobody.",
+    steps: [
+      "Write down three people or places that could buy in your first week.",
+      "Message each one: say what you're starting and when.",
+      "Ask what they'd want from you.",
+      "Pick a date for your first sale and write it where you'll see it.",
+    ],
+  },
+  {
     id: "direction-goal", kind: "guide", need: "direction", bands: ["starting", "growing", "scaling"], minutes: 10,
     title: "Pick one goal for the next 30 days",
     why: "One clear goal beats ten half-started ones.",
@@ -237,5 +271,14 @@ export const MODULES: Module[] = [
     ],
   },
 ];
+
+/** Whether a step suits this person: their band and business type, their stage, and what they already have. */
+export function fitsPerson(m: Module, band: Band, answers: Answers): boolean {
+  if (!m.bands.includes(band)) return false;
+  if (m.types && !(answers.type !== undefined && m.types.includes(answers.type))) return false;
+  if (m.stages && answers.stage !== undefined && !m.stages.includes(answers.stage)) return false;
+  if (m.skipIfHave && answers.have?.includes(m.skipIfHave)) return false;
+  return true;
+}
 
 export const moduleById = (id: string): Module | undefined => MODULES.find((m) => m.id === id);

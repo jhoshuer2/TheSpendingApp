@@ -12,6 +12,7 @@ import { Orb } from "../../design-system/Orb";
 import { dailySales, dayLabel, groupByDay, ledger, localDay, owed, periodRanges, salesStand, spendingByCategory, summarize, topSellers, type LedgerEntry, type Period } from "../../records/calc";
 import { recordInsights } from "../../records/insights";
 import { useToast } from "../../lib/toast";
+import { useProfile } from "../../profile/store";
 import { useRecords } from "../../records/store";
 import { leftLabel, runningLow, stockLines } from "../../records/stock";
 
@@ -49,6 +50,7 @@ export function MoneyHome() {
   const navigate = useNavigate();
   const { state, markPaid, sync } = useRecords();
   const { show } = useToast();
+  const { stored } = useProfile();
   const [period, setPeriod] = useState<Period>("week");
   const [limit, setLimit] = useState(FIRST_PAGE);
   const now = new Date();
@@ -65,25 +67,28 @@ export function MoneyHome() {
   const spending = spendingByCategory(state, ranges.current);
   const week = dailySales(state, now);
   const empty = entries.length === 0;
+  const planning = empty && stored.answers.stage === "idea"; // nothing to sell yet: start with the costs, not a sale
   const low = runningLow(state);
   const trackedCount = stockLines(state).length;
   const hasProducts = Object.values(state.products).some((p) => !p.archived);
 
   const shortcuts = (
-    <nav className="shortcuts enter" style={{ ["--i" as string]: 2 }} aria-label="Shortcuts">
+    <nav className="shortcuts enter" style={{ ["--i" as string]: 2, ...(planning ? { gridTemplateColumns: "repeat(3, 1fr)" } : {}) }} aria-label="Shortcuts">
       <Link to="/write" className="shortcut" aria-label="Write for me">
         <span className="tile"><Icon name="pencil" size={20} /></span>
         Write
       </Link>
-      <Link to="/money/customers" className="shortcut" aria-label="Your customers">
-        <span className="tile"><Icon name="users" size={20} /></span>
-        Customers
-      </Link>
+      {!planning && (
+        <Link to="/money/customers" className="shortcut" aria-label="Your customers">
+          <span className="tile"><Icon name="users" size={20} /></span>
+          Customers
+        </Link>
+      )}
       <Link to="/money/products" className="shortcut" aria-label={hasProducts ? "Manage your products" : "Add your products"}>
         <span className="tile"><Icon name="tag" size={20} /></span>
         Products
       </Link>
-      {hasProducts ? (
+      {hasProducts && !planning ? (
         <Link to="/money/stock" className="shortcut" aria-label="Your stock">
           <span className="tile"><Icon name="package" size={20} /></span>
           {trackedCount ? `Stock (${trackedCount})` : "Stock"}
@@ -117,14 +122,29 @@ export function MoneyHome() {
           <Link to="/assistant" className="orb-link orb-link--big" aria-label="Talk to SPAL Assistant">
             <Orb size={88} />
           </Link>
-          <h2>Record your first sale</h2>
-          <p>It takes a few seconds.</p>
-          <Button onClick={() => navigate("/money/sale")} iconRight={<Icon name="plus" size={18} />}>
-            Record a sale
-          </Button>
-          <button type="button" className="link-btn" onClick={() => navigate("/money/expense")}>
-            Add an expense instead
-          </button>
+          {planning ? (
+            <>
+              <h2>Your books start here</h2>
+              <p>Write down what it costs to start. Record your first sale when you make it.</p>
+              <Button onClick={() => navigate("/money/expense")} iconRight={<Icon name="plus" size={18} />}>
+                Add a start-up cost
+              </Button>
+              <button type="button" className="link-btn" onClick={() => navigate("/money/sale")}>
+                Record a sale instead
+              </button>
+            </>
+          ) : (
+            <>
+              <h2>Record your first sale</h2>
+              <p>It takes a few seconds.</p>
+              <Button onClick={() => navigate("/money/sale")} iconRight={<Icon name="plus" size={18} />}>
+                Record a sale
+              </Button>
+              <button type="button" className="link-btn" onClick={() => navigate("/money/expense")}>
+                Add an expense instead
+              </button>
+            </>
+          )}
         </div>
         {shortcuts}
         </>

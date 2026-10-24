@@ -73,7 +73,7 @@ await step("'None of these' clears the others, and picking one clears 'None'", a
 
 await step("building, then the summary explains the profile", async () => {
   await p.waitForURL("**/onboarding/summary", { timeout: 5000 });
-  await p.getByText("Getting started").first().waitFor();
+  await p.getByText("Getting ready to launch").first().waitFor();
   await p.getByText("You said knowing what to do next is the hardest part right now").first().waitFor();
 });
 
@@ -83,6 +83,21 @@ await step("Today shows one next step with the reason for it", async () => {
   await p.getByText("Why this step").waitFor();
   assert.equal(await p.title(), "Today · SPAL", "each screen names itself in the tab");
   assert.equal(await p.getByRole("article").count(), 1);
+  // Nothing to record yet: no streak, and the steps are about starting.
+  assert.equal(await p.getByRole("img", { name: /days? in a row/ }).count(), 0);
+});
+
+await step("the library and the money tab suit someone who hasn't started", async () => {
+  await p.getByRole("link", { name: "Library" }).click();
+  await p.getByRole("heading", { name: "Library", level: 1 }).waitFor();
+  await p.getByText("Test your idea with five people").waitFor();
+  assert.equal(await p.getByText("Write down every sale").count(), 0, "no sales to write down yet");
+  assert.equal(await p.getByText("Ask happy customers to tell others").count(), 0, "no customers to ask yet");
+  await p.getByRole("link", { name: "Money" }).click();
+  await p.getByRole("heading", { name: "Your books start here" }).waitFor();
+  assert.equal(await p.getByRole("link", { name: "Your customers" }).count(), 0);
+  await p.getByRole("link", { name: "Today" }).click();
+  await p.waitForURL("**/app/today");
 });
 
 const title = (await p.getByRole("article").getByRole("heading").innerText()).trim();
