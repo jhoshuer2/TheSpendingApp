@@ -65,6 +65,8 @@ export interface Module {
   types?: BizType[];
   /** If set, only offered at these stages (so "choose a name" never reaches a business that's been running for years). */
   stages?: Stage[];
+  /** If set, only offered to businesses of this size (a team of ten has no "first helper" to plan). Unknown size sees it. */
+  teams?: Team[];
   /** Not offered when the person already has this, so nobody is told to do what they've done. */
   skipIfHave?: Exclude<Have, "none">;
   steps: string[];
