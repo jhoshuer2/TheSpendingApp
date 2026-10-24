@@ -53,7 +53,8 @@ export function Onboarding() {
   };
 
   return (
-    <div className="screen">
+    <div className="screen screen--soft">
+      <Aura variant="soft" />
       <header className="screen__header screen__header--bar">
         <button type="button" className="icon-btn" aria-label="Back" onClick={back}>
           <Icon name="chevron-left" size={20} />
