@@ -16,9 +16,14 @@ export interface Question {
   options: Option[];
   /** Hide the question for some answers, so people only see what fits them. */
   when?: (a: Answers) => boolean;
+  /** Narrow the options to the ones that make sense given earlier answers. `options` stays the full list. */
+  only?: (a: Answers) => string[] | undefined;
+  /** Say it differently given earlier answers: a different title or lede, or other labels for the same values. */
+  say?: (a: Answers) => { title?: string; lede?: string; labels?: Partial<Record<string, string>> } | undefined;
 }
 
 const started = (a: Answers) => a.stage !== undefined && a.stage !== "idea";
+const notStarted = (a: Answers) => a.stage === "idea";
 
 export const QUESTIONS: Question[] = [
   {
@@ -42,11 +47,16 @@ export const QUESTIONS: Question[] = [
       { value: "grow", label: "Grow bigger" },
       { value: "organised", label: "Get organised" },
     ],
+    only: (a) => (a.stage === "idea" ? ["start", "customers", "organised"] : a.stage === "under1" ? ["start", "customers", "earn", "organised"] : a.stage === "y1to3" ? ["start", "customers", "earn", "grow", "organised"] : a.stage === "y3plus" ? ["customers", "earn", "grow", "organised"] : undefined),
+    say: (a) => {
+      if (notStarted(a)) return { title: "What do you want to get done first?", labels: { start: "Get set up properly", customers: "Find my first customers", organised: "Plan it before I start" } };
+      if (a.stage === "under1" || a.stage === "y1to3") return { labels: { start: "Set things up properly" } };
+      return undefined;
+    },
   },
   {
     id: "type",
     title: "What kind of business is it?",
-    lede: "Or what it will be.",
     options: [
       { value: "food", label: "Food and drinks" },
       { value: "fashion", label: "Fashion and beauty" },
@@ -56,6 +66,7 @@ export const QUESTIONS: Question[] = [
       { value: "farm", label: "Farming" },
       { value: "other", label: "Something else" },
     ],
+    say: (a) => (notStarted(a) ? { title: "What kind of business will it be?", lede: "Pick the closest." } : undefined),
   },
   {
     id: "team",
@@ -96,6 +107,8 @@ export const QUESTIONS: Question[] = [
       { value: "tracking", label: "A way to track my sales" },
       { value: "none", label: "None of these yet", exclusive: true },
     ],
+    only: (a) => (notStarted(a) ? ["registered", "logo", "online", "social", "bank", "none"] : undefined),
+    say: (a) => (notStarted(a) ? { title: "What do you already have ready?" } : undefined),
   },
   {
     id: "pain",
@@ -109,13 +122,39 @@ export const QUESTIONS: Question[] = [
       { value: "brand", label: "Looking professional" },
       { value: "unsure", label: "Knowing what to do next" },
     ],
+    only: (a) => (notStarted(a) ? ["customers", "money", "organised", "brand", "unsure"] : a.team === "solo" ? ["customers", "demand", "money", "organised", "brand", "unsure"] : undefined),
+    say: (a) => (notStarted(a) ? { title: "What feels hardest about starting?", labels: { money: "Money to get going", unsure: "Knowing where to begin" } } : undefined),
   },
 ];
+
+/** A question as this person should see it: wording and options fitted to what they've already said. */
+export function resolveQuestion(q: Question, a: Answers): { id: Question["id"]; title: string; lede?: string; multi?: boolean; options: Option[] } {
+  const keep = q.only?.(a);
+  const said = q.say?.(a);
+  const options = q.options.filter((o) => !keep || keep.includes(o.value)).map((o) => ({ ...o, label: said?.labels?.[o.value] ?? o.label }));
+  return { id: q.id, title: said?.title ?? q.title, lede: said?.lede ?? q.lede, multi: q.multi, options };
+}
+
+/** Drop answers that stopped fitting because an earlier answer changed (say, "grow bigger" after switching to "haven't started"). */
+export function pruneAnswers(a: Answers): Answers {
+  const out: Record<string, unknown> = { ...a };
+  for (const q of QUESTIONS) {
+    const ok = new Set(resolveQuestion(q, a).options.map((o) => o.value));
+    const v = out[q.id];
+    if (Array.isArray(v)) {
+      const kept = v.filter((x) => ok.has(x));
+      if (kept.length) out[q.id] = kept;
+      else delete out[q.id];
+    } else if (v !== undefined && !ok.has(v as string)) delete out[q.id];
+  }
+  return out as Answers;
+}
 
 /** The questions this person will see, given what they've answered so far. */
 export const visibleQuestions = (a: Answers): Question[] => QUESTIONS.filter((q) => !q.when || q.when(a));
 
 export const isAnswered = (q: Question, a: Answers): boolean => {
+  const ok = new Set(resolveQuestion(q, a).options.map((o) => o.value));
   const v = a[q.id];
-  return Array.isArray(v) ? v.length > 0 : v !== undefined;
+  return Array.isArray(v) ? v.some((x) => ok.has(x)) : v !== undefined && ok.has(v);
 };

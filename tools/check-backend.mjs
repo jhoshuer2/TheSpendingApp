@@ -59,10 +59,10 @@ const logIn = async (p, email, password) => {
 const answer = async (p, labels) => { for (const l of labels) { await p.getByRole("radio", { name: l }).click(); await p.getByRole("button", { name: /^(Continue|Finish)/ }).click(); } };
 const onboard = async (p) => {
   await p.waitForURL("**/onboarding");
-  await answer(p, [/haven't started/, /Start properly/, /Fashion and beauty/]);
+  await answer(p, [/haven't started/, /Get set up properly/, /Fashion and beauty/]);
   await p.getByRole("checkbox", { name: /None of these/ }).click();
   await p.getByRole("button", { name: "Continue" }).click();
-  await answer(p, [/Knowing what to do next/]);
+  await answer(p, [/Knowing where to begin/]);
   await p.waitForURL("**/onboarding/summary", { timeout: 5000 });
   await p.getByRole("button", { name: "See my first step" }).click();
   await p.waitForURL("**/app/today");

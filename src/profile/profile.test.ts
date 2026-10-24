@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MODULES } from "./modules";
-import { QUESTIONS, visibleQuestions } from "./questions";
+import { isAnswered, pruneAnswers, QUESTIONS, resolveQuestion, visibleQuestions } from "./questions";
 import { recommend } from "./recommend";
 import { bandFor, buildProfile } from "./scoring";
 import { sanitizeAnswers } from "./state";
@@ -20,6 +20,42 @@ describe("questions", () => {
   });
   it("has unique option values per question", () => {
     for (const q of QUESTIONS) expect(new Set(q.options.map((o) => o.value)).size).toBe(q.options.length);
+  });
+});
+
+const ask = (id: string, a: Answers) => resolveQuestion(QUESTIONS.find((q) => q.id === id)!, a);
+const values = (id: string, a: Answers) => ask(id, a).options.map((o) => o.value);
+
+describe("questions adapt to what you've said", () => {
+  it("doesn't offer someone who hasn't started the goals of an established business", () => {
+    expect(values("goal", { stage: "idea" })).toEqual(["start", "customers", "organised"]);
+    expect(values("goal", { stage: "y3plus" })).not.toContain("start");
+    expect(values("goal", { stage: "y3plus" })).toContain("grow");
+    expect(values("goal", { stage: "under1" })).not.toContain("grow");
+  });
+  it("speaks about starting, not running, when the business hasn't started", () => {
+    expect(ask("goal", { stage: "idea" }).options.map((o) => o.label)).toContain("Find my first customers");
+    expect(ask("type", { stage: "idea" }).title).toBe("What kind of business will it be?");
+    expect(ask("type", { stage: "y1to3" }).title).toBe("What kind of business is it?");
+    expect(ask("pain", { stage: "idea" }).title).toBe("What feels hardest about starting?");
+  });
+  it("hides what can't apply yet", () => {
+    expect(values("have", { stage: "idea" })).not.toContain("tracking");
+    expect(values("pain", { stage: "idea" })).not.toContain("demand");
+    expect(values("pain", { stage: "idea" })).not.toContain("staff");
+    expect(values("pain", { stage: "y1to3", team: "solo" })).not.toContain("staff");
+    expect(values("pain", { stage: "y1to3", team: "t2to5" })).toContain("staff");
+  });
+  it("shows everything before the stage is known", () => {
+    expect(values("goal", {})).toEqual(QUESTIONS.find((q) => q.id === "goal")!.options.map((o) => o.value));
+  });
+  it("counts an answer that no longer fits as unanswered", () => {
+    expect(isAnswered(QUESTIONS.find((q) => q.id === "goal")!, { stage: "idea", goal: "grow" })).toBe(false);
+    expect(isAnswered(QUESTIONS.find((q) => q.id === "goal")!, { stage: "idea", goal: "start" })).toBe(true);
+  });
+  it("drops answers that stopped fitting when an earlier answer changed", () => {
+    expect(pruneAnswers({ stage: "idea", goal: "grow", pain: "staff", have: ["logo", "tracking"] })).toEqual({ stage: "idea", have: ["logo"] });
+    expect(pruneAnswers({ stage: "y3plus", goal: "grow", pain: "demand" })).toEqual({ stage: "y3plus", goal: "grow", pain: "demand" });
   });
 });
 
