@@ -48,7 +48,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "money-profit", kind: "do", need: "money", bands: ["growing", "scaling"], minutes: 20,
+    id: "money-profit", kind: "do", need: "money", bands: ["starting", "growing", "scaling"], minutes: 20, stages: ["under1", "y1to3", "y3plus"],
     title: "Work out what you really keep",
     why: "Sales are not profit. Knowing the difference tells you where to act.",
     tool: { label: "Open Money", to: "/app/money" },
@@ -137,7 +137,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "customers-ask", kind: "guide", need: "customers", bands: ["growing", "scaling"], minutes: 15,
+    id: "customers-ask", kind: "guide", need: "customers", bands: ["starting", "growing", "scaling"], minutes: 15, stages: ["under1", "y1to3", "y3plus"],
     title: "Ask ten customers one question",
     why: "Your customers can tell you quickly what would bring in more people like them.",
     steps: [
@@ -193,7 +193,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "team-first-helper", kind: "guide", need: "team", bands: ["growing", "scaling"], minutes: 20,
+    id: "team-first-helper", kind: "guide", need: "team", bands: ["growing", "scaling"], minutes: 20, teams: ["solo", "t2to5"],
     title: "Plan your first helper",
     why: "The right helper gives you back time to do what only you can do.",
     steps: [
@@ -204,7 +204,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: "team-delegate", kind: "guide", need: "team", bands: ["scaling"], minutes: 20,
+    id: "team-delegate", kind: "guide", need: "team", bands: ["scaling"], minutes: 20, teams: ["t2to5", "t6to15", "t16plus"],
     title: "Hand over one task for good",
     why: "A task that runs without you is how a business grows past one person.",
     steps: [
@@ -249,6 +249,61 @@ export const MODULES: Module[] = [
     ],
   },
   {
+    id: "run-first-months", kind: "guide", need: "direction", bands: ["starting"], minutes: 20, stages: ["under1"],
+    title: "Look back at your first months",
+    why: "A short look back shows you what's working while it's still easy to change.",
+    steps: [
+      "List what you've sold since you started. Which three sold best?",
+      "Write what took the most time or money for the least return.",
+      "Write what customers asked for that you don't offer yet.",
+      "Pick one thing to stop, one to keep and one to try next month.",
+    ],
+  },
+  {
+    id: "run-repeat-customers", kind: "guide", need: "customers", bands: ["starting", "growing"], minutes: 15, stages: ["under1", "y1to3"],
+    title: "Get customers to come back",
+    why: "A customer who buys again costs far less than finding a new one.",
+    steps: [
+      "List the customers who've bought from you more than once. What do they have in common?",
+      "Message three people who bought once. Thank them and tell them what's new.",
+      "Think of one small reason to come back: a new item, a bundle or a thank-you.",
+      "Write down a date to message your regulars again.",
+    ],
+  },
+  {
+    id: "grow-cashflow", kind: "guide", need: "money", bands: ["growing", "scaling"], minutes: 20, stages: ["y1to3", "y3plus"],
+    title: "Plan next month's cash",
+    why: "Most businesses that struggle are short of cash at the wrong moment, not short of customers.",
+    steps: [
+      "Write what you expect to receive next month, and when.",
+      "Write what you must pay next month, and when each bill falls due.",
+      "Find the week where money is tightest.",
+      "Decide one thing to ease it: ask for a deposit, chase what's owed, or move a purchase.",
+    ],
+  },
+  {
+    id: "grow-prices", kind: "guide", tool: { label: "Open your products", to: "/money/products" }, need: "money", bands: ["growing", "scaling"], minutes: 20, stages: ["y1to3", "y3plus"],
+    title: "Check your prices still pay",
+    why: "Costs creep up. A price that was right last year may leave you with almost nothing now.",
+    steps: [
+      "List your five best sellers and what each costs you today.",
+      "Work out what you keep on each one.",
+      "Find any that leave you with very little, and decide whether to raise the price or cut the cost.",
+      "Tell your regular customers before a price changes.",
+    ],
+  },
+  {
+    id: "scale-routines", kind: "guide", need: "team", bands: ["growing", "scaling"], minutes: 20, stages: ["y3plus"],
+    title: "Write down how a day runs",
+    why: "Routines on paper let others do the work well, so you can step back.",
+    steps: [
+      "Write the five things that happen every day, in order.",
+      "Next to each, write who does it and how they know it's done well.",
+      "Mark the ones only you can do, and ask why.",
+      "Share the list with your team and ask what's missing.",
+    ],
+  },
+  {
     id: "direction-goal", kind: "guide", need: "direction", bands: ["starting", "growing", "scaling"], minutes: 10,
     title: "Pick one goal for the next 30 days",
     why: "One clear goal beats ten half-started ones.",
@@ -277,6 +332,7 @@ export function fitsPerson(m: Module, band: Band, answers: Answers): boolean {
   if (!m.bands.includes(band)) return false;
   if (m.types && !(answers.type !== undefined && m.types.includes(answers.type))) return false;
   if (m.stages && answers.stage !== undefined && !m.stages.includes(answers.stage)) return false;
+  if (m.teams && answers.team !== undefined && !m.teams.includes(answers.team)) return false;
   if (m.skipIfHave && answers.have?.includes(m.skipIfHave)) return false;
   return true;
 }

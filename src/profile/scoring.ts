@@ -25,9 +25,13 @@ export const BAND_NOTE: Record<Band, string> = {
 };
 
 /** The stage in words. Someone with only an idea isn't "getting started" in the same way as someone who opened last month. */
-export const stageLabel = (a: Answers): string => (a.stage === "idea" ? "Getting ready to launch" : BAND_LABEL[bandFor(a)]);
+export const stageLabel = (a: Answers): string => (a.stage === "idea" ? "Getting ready to launch" : a.stage === "under1" ? "Finding your feet" : BAND_LABEL[bandFor(a)]);
 export const stageNote = (a: Answers): string =>
-  a.stage === "idea" ? "You're planning something new. We'll help you get ready before you launch, one small step at a time." : BAND_NOTE[bandFor(a)];
+  a.stage === "idea"
+    ? "You're planning something new. We'll help you get ready before you launch, one small step at a time."
+    : a.stage === "under1"
+      ? "You've started selling. We'll help you keep simple records, find customers who come back, and know what you keep."
+      : BAND_NOTE[bandFor(a)];
 
 const PAIN: Record<NonNullable<Answers["pain"]>, { need: NeedId; text: string }> = {
   customers: { need: "customers", text: "getting customers" },
@@ -94,6 +98,16 @@ export function buildProfile(a: Answers): Profile {
   if (idea) {
     add("money", 1, "Knowing what it will cost to start helps you plan before you launch");
     add("customers", 1, "Finding your first customers before you launch makes day one easier");
+  }
+
+  if (a.stage === "under1") {
+    add("customers", 1, "In your first year, customers who come back matter most");
+    add("money", 1, "In your first year, knowing what you keep matters most");
+  }
+  if (a.stage === "y1to3") add("money", 1, "At this stage, prices and cash flow set how fast you can grow");
+  if (a.stage === "y3plus") {
+    add("team", 1, "Written routines let you step back as the business grows");
+    add("money", 1, "At this stage, prices and cash flow set how fast you can grow");
   }
 
   if (band === "starting") {

@@ -120,6 +120,9 @@ const SEED_PRODUCTS_ONLY = JSON.stringify({ products: { [uuid(1)]: { id: uuid(1)
 // Answers given, onboarding not finished yet.
 // Someone who hasn't started: no sales, no customers, steps about getting ready.
 const SEED_IDEA = JSON.stringify({ answers: { stage: "idea", goal: "start", type: "food", have: ["none"], pain: "unsure" }, completed: true, progress: {} });
+// A first-year business, and an established one with a big team: the library and today shift with the stage.
+const SEED_FIRST_YEAR = JSON.stringify({ answers: { stage: "under1", goal: "customers", type: "food", team: "solo", sales: "lt100k", have: ["none"], pain: "customers" }, completed: true, progress: {} });
+const SEED_ESTABLISHED = JSON.stringify({ answers: { stage: "y3plus", goal: "grow", type: "shop", team: "t6to15", sales: "gt2m", have: ["registered", "bank", "tracking"], pain: "demand" }, completed: true, progress: {} });
 const SEED_PARTIAL = JSON.stringify({ answers: ANSWERS, completed: false, progress: {} });
 
 const pick = (name) => async (p) => p.getByRole("radio", { name }).click();
@@ -151,6 +154,10 @@ const SCREENS = [
   { name: "today-idea", path: "/app/today", authed: true, seed: SEED_IDEA },
   { name: "money-planning", path: "/app/money", authed: true, seed: SEED_IDEA },
   { name: "library-idea", path: "/app/library", authed: true, seed: SEED_IDEA },
+  { name: "library-first-year", path: "/app/library", authed: true, seed: SEED_FIRST_YEAR },
+  { name: "today-first-year", path: "/app/today", authed: true, seed: SEED_FIRST_YEAR },
+  { name: "library-established", path: "/app/library", authed: true, seed: SEED_ESTABLISHED },
+  { name: "today-established", path: "/app/today", authed: true, seed: SEED_ESTABLISHED },
   { name: "building", path: "/onboarding/building", authed: true, seed: SEED_PARTIAL, hold: true },
   { name: "summary", path: "/onboarding/summary", authed: true, seed: SEED_PARTIAL },
   { name: "today", path: "/app/today", authed: true, seed: SEED_READY },
