@@ -45,9 +45,15 @@ await step("a person who hasn't started is not asked about team or sales", async
   await pick(/haven't started/);
   assert.equal(await p.getByRole("progressbar").getAttribute("aria-valuemax"), "5");
   await next();
-  await pick(/Start properly/); await next();
+  // The goals fit someone who hasn't started: no "grow bigger", and the wording is about starting.
+  await p.getByRole("heading", { name: "What do you want to get done first?" }).waitFor();
+  assert.equal(await p.getByRole("radio", { name: /Grow bigger/ }).count(), 0);
+  assert.equal(await p.getByRole("radio", { name: /Earn more from what I sell/ }).count(), 0);
+  await pick(/Get set up properly/); await next();
+  await p.getByRole("heading", { name: "What kind of business will it be?" }).waitFor();
   await pick(/Fashion and beauty/); await next();
-  await p.getByRole("heading", { name: "What do you already have?" }).waitFor();
+  await p.getByRole("heading", { name: "What do you already have ready?" }).waitFor();
+  assert.equal(await p.getByRole("checkbox", { name: /A way to track my sales/ }).count(), 0);
 });
 
 await step("'None of these' clears the others, and picking one clears 'None'", async () => {
@@ -59,7 +65,10 @@ await step("'None of these' clears the others, and picking one clears 'None'", a
   await p.getByRole("checkbox", { name: /A page on social media/ }).click();
   await p.getByRole("checkbox", { name: /None of these/ }).click();
   await next();
-  await pick(/Knowing what to do next/); await next();
+  await p.getByRole("heading", { name: "What feels hardest about starting?" }).waitFor();
+  assert.equal(await p.getByRole("radio", { name: /Hiring and managing people/ }).count(), 0);
+  assert.equal(await p.getByRole("radio", { name: /Keeping up with demand/ }).count(), 0);
+  await pick(/Knowing where to begin/); await next();
 });
 
 await step("building, then the summary explains the profile", async () => {

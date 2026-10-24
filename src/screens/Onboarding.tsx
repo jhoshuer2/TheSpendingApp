@@ -7,7 +7,7 @@ import { Icon } from "../design-system/Icon";
 import { OptionCard } from "../design-system/OptionCard";
 import { ProgressBar } from "../design-system/ProgressBar";
 import { Orb } from "../design-system/Orb";
-import { isAnswered, visibleQuestions, type Option } from "../profile/questions";
+import { isAnswered, pruneAnswers, resolveQuestion, visibleQuestions, type Option } from "../profile/questions";
 import { BAND_LABEL, BAND_NOTE, NEED_LABEL } from "../profile/scoring";
 import { useProfile } from "../profile/store";
 import type { Answers } from "../profile/types";
@@ -22,9 +22,10 @@ export function Onboarding() {
   const heading = useRef<HTMLHeadingElement>(null);
 
   const questions = visibleQuestions(answers);
-  const q = questions[Math.min(idx, questions.length - 1)];
+  const raw = questions[Math.min(idx, questions.length - 1)];
+  const q = resolveQuestion(raw, answers); // wording and options fitted to what they've said so far
   const last = idx >= questions.length - 1;
-  const answered = isAnswered(q, answers);
+  const answered = isAnswered(raw, answers);
 
   // Move focus to the new question so screen-reader users hear it.
   useEffect(() => heading.current?.focus(), [idx]);
@@ -42,7 +43,9 @@ export function Onboarding() {
   };
 
   const next = () => {
-    saveAnswers(answers);
+    const fitted = pruneAnswers(answers); // an earlier answer may have changed since a later one was given
+    setAnswers(fitted);
+    saveAnswers(fitted);
     if (last) navigate("/onboarding/building", { replace: true });
     else setIdx(idx + 1);
   };
