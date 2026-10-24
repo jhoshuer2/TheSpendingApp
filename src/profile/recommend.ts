@@ -1,4 +1,4 @@
-import { MODULES } from "./modules";
+import { fitsPerson, MODULES } from "./modules";
 import type { Progress } from "./state";
 import { NEED_LABEL } from "./scoring";
 import type { Answers, Module, NeedId, Profile } from "./types";
@@ -60,7 +60,7 @@ export function recommend(profile: Profile, answers: Answers, done: ReadonlySet<
     const p = progress[m.id];
     if (p?.dismissed) return false;
     if (p?.snoozedUntil && Date.parse(p.snoozedUntil) > now.getTime()) return false;
-    return m.bands.includes(profile.band) && (!m.types || (answers.type !== undefined && m.types.includes(answers.type)));
+    return fitsPerson(m, profile.band, answers);
   });
 
   const worked = new Map<NeedId, number>();

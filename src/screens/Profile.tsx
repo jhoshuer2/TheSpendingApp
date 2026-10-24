@@ -8,7 +8,7 @@ import { Switch } from "../design-system/Switch";
 import { shortDate } from "../lib/format";
 import { useAuth } from "../lib/auth";
 import { moduleById } from "../profile/modules";
-import { BAND_LABEL, NEED_LABEL } from "../profile/scoring";
+import { NEED_LABEL, stageLabel } from "../profile/scoring";
 import { useAssistant } from "../assistant/store";
 import { useProfile } from "../profile/store";
 import { streakInfo } from "../records/calc";
@@ -71,7 +71,7 @@ export function Profile() {
         <p className="profile__name">{session?.name}</p>
         <p className="me__email">{session?.email}</p>
         <div className="chips">
-          <span className="chip">{BAND_LABEL[profile.band]}</span>
+          <span className="chip">{stageLabel(stored.answers)}</span>
           {streak.count > 0 && (
             <span className="chip">
               <Icon name="flame" size={14} />

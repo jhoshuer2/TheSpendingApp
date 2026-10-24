@@ -8,7 +8,7 @@ import { OptionCard } from "../design-system/OptionCard";
 import { ProgressBar } from "../design-system/ProgressBar";
 import { Orb } from "../design-system/Orb";
 import { isAnswered, pruneAnswers, resolveQuestion, visibleQuestions, type Option } from "../profile/questions";
-import { BAND_LABEL, BAND_NOTE, NEED_LABEL } from "../profile/scoring";
+import { NEED_LABEL, stageLabel, stageNote } from "../profile/scoring";
 import { useProfile } from "../profile/store";
 import type { Answers } from "../profile/types";
 import { NEED_ICON } from "../profile/ui";
@@ -143,8 +143,8 @@ export function Summary() {
           <Confetti pieces={26} />
           <Orb size={64} />
           <h1 className="plan__kicker">Your plan is ready</h1>
-          <p className="plan__band">{BAND_LABEL[profile.band]}</p>
-          <p className="plan__note">{BAND_NOTE[profile.band]}</p>
+          <p className="plan__band">{stageLabel(stored.answers)}</p>
+          <p className="plan__note">{stageNote(stored.answers)}</p>
         </div>
 
         <h2 className="section-title">What we'll focus on first</h2>

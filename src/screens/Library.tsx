@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Icon } from "../design-system/Icon";
 import { IconTile, StatusLine, tintFor } from "../design-system/Identity";
 import { Orb } from "../design-system/Orb";
-import { MODULES } from "../profile/modules";
+import { fitsPerson, MODULES } from "../profile/modules";
 import { NEED_LABEL } from "../profile/scoring";
 import { useProfile } from "../profile/store";
 import { NEED_ICON } from "../profile/ui";
@@ -10,7 +10,7 @@ import { NEED_ICON } from "../profile/ui";
 /** Everything that fits this business. Nothing is pushed; start whatever you like. */
 export function Library() {
   const { profile, stored, done } = useProfile();
-  const fits = MODULES.filter((m) => m.bands.includes(profile.band) && (!m.types || (stored.answers.type && m.types.includes(stored.answers.type))));
+  const fits = MODULES.filter((m) => fitsPerson(m, profile.band, stored.answers));
   const groups = profile.needs
     .map((n) => ({ need: n.id, items: fits.filter((m) => m.need === n.id) }))
     .filter((g) => g.items.length > 0);

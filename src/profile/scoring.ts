@@ -24,6 +24,11 @@ export const BAND_NOTE: Record<Band, string> = {
   scaling: "You're established. We'll focus on keeping up with demand and building your team.",
 };
 
+/** The stage in words. Someone with only an idea isn't "getting started" in the same way as someone who opened last month. */
+export const stageLabel = (a: Answers): string => (a.stage === "idea" ? "Getting ready to launch" : BAND_LABEL[bandFor(a)]);
+export const stageNote = (a: Answers): string =>
+  a.stage === "idea" ? "You're planning something new. We'll help you get ready before you launch, one small step at a time." : BAND_NOTE[bandFor(a)];
+
 const PAIN: Record<NonNullable<Answers["pain"]>, { need: NeedId; text: string }> = {
   customers: { need: "customers", text: "getting customers" },
   demand: { need: "demand", text: "keeping up with demand" },
@@ -85,6 +90,12 @@ export function buildProfile(a: Answers): Profile {
       break;
   }
 
+  const idea = a.stage === "idea";
+  if (idea) {
+    add("money", 1, "Knowing what it will cost to start helps you plan before you launch");
+    add("customers", 1, "Finding your first customers before you launch makes day one easier");
+  }
+
   if (band === "starting") {
     add("setup", 1, "You're just getting started");
     add("direction", 1, "You're just getting started");
@@ -102,7 +113,7 @@ export function buildProfile(a: Answers): Profile {
   if (nothing || !have.has("online")) add("online", 2, "You're not online with a website or store yet");
   if (nothing || !have.has("social")) add("online", 1, "You don't have a social media page for your business yet");
   if (nothing || !have.has("bank")) add("money", 1, "You don't have a separate business account yet");
-  if (nothing || !have.has("tracking")) add("records", band === "starting" ? 1 : 2, "You're not tracking your sales yet");
+  if (!idea && (nothing || !have.has("tracking"))) add("records", band === "starting" ? 1 : 2, "You're not tracking your sales yet");
 
   if (a.team === "solo" && band !== "starting") add("demand", 1, "You're running it on your own, so demand can outgrow you");
 

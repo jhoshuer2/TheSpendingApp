@@ -63,5 +63,9 @@ export interface Module {
   bands: Band[];
   /** If set, the module is only offered to these business types. */
   types?: BizType[];
+  /** If set, only offered at these stages (so "choose a name" never reaches a business that's been running for years). */
+  stages?: Stage[];
+  /** Not offered when the person already has this, so nobody is told to do what they've done. */
+  skipIfHave?: Exclude<Have, "none">;
   steps: string[];
 }
