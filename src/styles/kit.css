@@ -186,3 +186,7 @@
 .screen--account .field__label { padding-left: var(--space-2); }
 .screen--account .note { text-align: center; }
 .welcome-soft .screen__footer { gap: var(--space-3); }
+
+/* Answer cards with an icon: the tile leads, the text fills, the check sits last. */
+.opt .itile { flex: none; }
+.opt__text { flex: 1; }

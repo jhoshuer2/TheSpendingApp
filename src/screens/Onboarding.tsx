@@ -4,6 +4,7 @@ import { Aura } from "../design-system/Aura";
 import { Button } from "../design-system/Button";
 import { Confetti } from "../design-system/Confetti";
 import { Icon } from "../design-system/Icon";
+import { tintFor } from "../design-system/Identity";
 import { OptionCard } from "../design-system/OptionCard";
 import { ProgressBar } from "../design-system/ProgressBar";
 import { Orb } from "../design-system/Orb";
@@ -76,7 +77,7 @@ export function Onboarding() {
         )}
         <div className="opts enter" role={q.multi ? "group" : "radiogroup"} aria-label={q.title} style={{ ["--i" as string]: 2 }}>
           {q.options.map((o) => (
-            <OptionCard key={o.value} label={o.label} hint={o.hint} kind={q.multi ? "checkbox" : "radio"} selected={isOn(o)} onSelect={() => pick(o)} />
+            <OptionCard key={o.value} label={o.label} hint={o.hint} icon={o.icon} tint={tintFor(o.value)} kind={q.multi ? "checkbox" : "radio"} selected={isOn(o)} onSelect={() => pick(o)} />
           ))}
         </div>
       </main>
