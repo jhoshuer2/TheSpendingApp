@@ -18,6 +18,15 @@ describe("questions", () => {
   it("asks everything once the business has started", () => {
     expect(visibleQuestions({ stage: "y1to3" })).toHaveLength(QUESTIONS.length);
   });
+  it("gives every option an icon, so each answer can be told apart at a glance", () => {
+    for (const q of QUESTIONS) for (const o of q.options) expect(o.icon, `${q.id}/${o.value}`).toBeTruthy();
+  });
+  it("keeps the icon when the wording changes for a stage", () => {
+    const goal = QUESTIONS.find((q) => q.id === "goal")!;
+    const idea = resolveQuestion(goal, { stage: "idea" }).options.find((o) => o.value === "customers")!;
+    expect(idea.label).toBe("Find my first customers");
+    expect(idea.icon).toBe(goal.options.find((o) => o.value === "customers")!.icon);
+  });
   it("has unique option values per question", () => {
     for (const q of QUESTIONS) expect(new Set(q.options.map((o) => o.value)).size).toBe(q.options.length);
   });
